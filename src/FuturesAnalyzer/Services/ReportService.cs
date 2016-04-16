@@ -1,0 +1,86 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using CsvHelper;
+using FuturesAnalyzer.Models;
+using FuturesAnalyzer.Models.States;
+
+namespace FuturesAnalyzer.Services
+{
+    public class ReportService: IReportService
+    {
+        public static int WarmUpLength = 6;
+
+        public List<DailyPrice> LoadDailyPrices(string fileName)
+        {
+            var fileText = File.ReadAllText(fileName);
+            var stringReader = new StringReader(fileText);
+            var csvReader = new CsvReader(stringReader);
+            var dailyPrices = new List<DailyPrice>();
+            while (csvReader.Read())
+            {
+                var dailyPrice = new DailyPrice
+                {
+                    Date = csvReader.GetField<DateTime>(0),
+                    AveragePrice = csvReader.GetField<decimal>(1),
+                    OpenPrice = csvReader.GetField<decimal>(2),
+                    HighestPrice = csvReader.GetField<decimal>(3),
+                    LowesetPrice = csvReader.GetField<decimal>(4)
+                };
+                dailyPrices.Add(dailyPrice);
+            }
+            return dailyPrices.OrderBy(p => p.Date).ToList();
+        }
+
+        public IEnumerable<DailyAccountData> GenerateReport(Account account, List<DailyPrice> dailyPrices)
+        {
+            var lastDailyPrice = WarmUp(account, dailyPrices);
+            var report = new List<DailyAccountData>();
+            foreach (var dailyPrice in dailyPrices)
+            {
+                report.Add(new DailyAccountData
+                {
+                    Date = dailyPrice.Date,
+                    CloseTransaction = account.MarketState.TryClose(dailyPrice),
+                    OpenTransaction = account.MarketState.TryOpen(dailyPrice, lastDailyPrice),
+                    Balance = account.Balance,
+                    Contract = account.Contract
+                });
+                var currentState = account.MarketState;
+                currentState.HighestPrice = Math.Max(currentState.HighestPrice, dailyPrice.HighestPrice);
+                currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.LowesetPrice);
+                lastDailyPrice = dailyPrice;
+            }
+            return report;
+        }
+
+        private static DailyPrice WarmUp(Account account, List<DailyPrice> dailyPrices)
+        {
+            var direction = 0;
+            for (var i = 1; i < WarmUpLength; i++)
+            {
+                direction += Math.Sign(dailyPrices[i].AveragePrice - dailyPrices[i - 1].AveragePrice);
+            }
+            if (direction > 1)
+            {
+                account.MarketState = new UpState();
+            }
+            else if (direction < -1)
+            {
+                account.MarketState = new DownState();
+            }
+            else
+            {
+                account.MarketState = new AmbiguousState();
+            }
+            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
+            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
+            account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
+            account.MarketState.Account = account;
+            var lastDailyPrice = dailyPrices[WarmUpLength - 1];
+            dailyPrices.RemoveRange(0, WarmUpLength);
+            return lastDailyPrice;
+        }
+    }
+}
