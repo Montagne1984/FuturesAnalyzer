@@ -5,23 +5,23 @@
 <form id="form" asp-action="Report" method="post" class="form-inline" style="margin-top: 20px;">
     <div class="form-group form-inline">
         <label asp-for="TransactionFeeRate">交易手续费率</label>
-        <input type="number" min="0" step="0.0001" asp-for="TransactionFeeRate" class="form-control"/>
+        <input type="number" min="0" step="0.0001" asp-for="TransactionFeeRate" class="form-control" />
     </div>
     <div class="form-group">
         <label asp-for="StopLossCriteria">止损点</label>
-        <input type="number" min="0" step="0.01" asp-for="StopLossCriteria" class="form-control"/>
+        <input type="number" min="0" step="0.01" asp-for="StopLossCriteria" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label asp-for="StopProfitCriteria">止盈点</label>
-        <input type="number" min="0" step="0.1" asp-for="StopProfitCriteria" class="form-control"/>
+        <input type="number" min="0" step="0.1" asp-for="StopProfitCriteria" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label asp-for="StartProfitCriteria">起盈点</label>
-        <input type="number" min="0" step="0.01" asp-for="StartProfitCriteria" class="form-control"/>
+        <input type="number" min="0" step="0.01" asp-for="StartProfitCriteria" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label asp-for="OpenCriteria">开仓点</label>
-        <input type="number" min="0" step="0.01" asp-for="OpenCriteria" class="form-control"/>
+        <input type="number" min="0" step="0.01" asp-for="OpenCriteria" class="form-control" />
     </div>
     <div class="checkbox">
         <label asp-for="FollowTrend">
@@ -44,7 +44,7 @@
         <input type="date" asp-for="EndDate" class="form-control" />
     </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
-</form>  
+</form>
 <div id="chart"></div>
 @section scripts
 {
@@ -73,12 +73,12 @@
                 values[this.name] = $(this).val();
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
-            values['FollowTrend'] = $('FollowTrend').attr('checked');
+            values['FollowTrend'] = $('#FollowTrend')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
                 var categories = [];
                 var contracts = [];
                 var balances = [];
-                $.each(data, function(index, value) {
+                $.each(data, function (index, value) {
                     categories.push(value.Date);
                     contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction : 0);
                     balances.push(value.Balance);
@@ -95,19 +95,6 @@
                         crosshair: true
                     }],
                     yAxis: [{ // Primary yAxis
-                        labels: {
-                            format: '{value}元',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
-                            }
-                        },
-                        title: {
-                            text: '价格',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
-                            }
-                        }
-                    }, { // Secondary yAxis
                         title: {
                             text: '盈亏',
                             style: {
@@ -118,6 +105,19 @@
                             format: '{value}元',
                             style: {
                                 color: Highcharts.getOptions().colors[0]
+                            }
+                        }
+                    }, { // Secondary yAxis
+                        labels: {
+                            format: '{value}元',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        },
+                        title: {
+                            text: '合约价格',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
                             }
                         },
                         opposite: true
@@ -135,7 +135,7 @@
                         backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
                     },
                     series: [{
-                        name: '价格',
+                        name: '合约价格',
                         type: 'column',
                         yAxis: 1,
                         data: contracts,
