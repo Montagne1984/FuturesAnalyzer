@@ -210,52 +210,175 @@
             });
         });
 
+        //var settings = {
+        //    '热轧卷板': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.01,
+        //        StopProfitCriteria: 0.1,
+        //        StartProfitCriteria: 0.16,
+        //        OpenCriteria: 0.01,
+        //        FollowTrend: true
+        //    },
+        //    '铝': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.02,
+        //        StopProfitCriteria: 0.2,
+        //        StartProfitCriteria: 0.1,
+        //        OpenCriteria: 0.01,
+        //        FollowTrend: false
+        //    },
+        //    '黄金': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.02,
+        //        StopProfitCriteria: 0.1,
+        //        StartProfitCriteria: 0.06,
+        //        OpenCriteria: 0.01,
+        //        FollowTrend: true
+        //    },
+        //    '锌': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.03,
+        //        StopProfitCriteria: 0.2,
+        //        StartProfitCriteria: 0.09,
+        //        OpenCriteria: 0.01,
+        //        FollowTrend: false
+        //    },
+        //    '铜': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.02,
+        //        StopProfitCriteria: 0.1,
+        //        StartProfitCriteria: 0.07,
+        //        OpenCriteria: 0.02,
+        //        FollowTrend: false
+        //    },
+        //    '螺纹钢': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.01,
+        //        StopProfitCriteria: 0.1,
+        //        StartProfitCriteria: 0.13,
+        //        OpenCriteria: 0.01,
+        //        FollowTrend: true
+        //    },
+        //    '铅': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.01,
+        //        StopProfitCriteria: 0.2,
+        //        StartProfitCriteria: 0.05,
+        //        OpenCriteria: 0.02,
+        //        FollowTrend: false
+        //    },
+        //    '白银': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.02,
+        //        StopProfitCriteria: 0.2,
+        //        StartProfitCriteria: 0.03,
+        //        OpenCriteria: 0.02,
+        //        FollowTrend: false
+        //    },
+        //    '沥青': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.03,
+        //        StopProfitCriteria: 0.2,
+        //        StartProfitCriteria: 0.1,
+        //        OpenCriteria: 0.02,
+        //        FollowTrend: true
+        //    },
+        //    '锡': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.01,
+        //        StopProfitCriteria: 0.1,
+        //        StartProfitCriteria: 0.06,
+        //        OpenCriteria: 0.02,
+        //        FollowTrend: false
+        //    },
+        //    '镍': {
+        //        TransactionFeeRate: 0.0008,
+        //        StopLossCriteria: 0.02,
+        //        StopProfitCriteria: 0.1,
+        //        StartProfitCriteria: 0.06,
+        //        OpenCriteria: 0.02,
+        //        FollowTrend: false
+        //    }
+        //};
+
         var settings = {
+            '热轧卷板': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.006,
+                StopProfitCriteria: 0.09,
+                StartProfitCriteria: 0.157,
+                OpenCriteria: 0.012,
+                FollowTrend: true
+            },
             '铝': {
                 TransactionFeeRate: 0.0008,
                 StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.1,
+                StopProfitCriteria: 0.19,
+                StartProfitCriteria: 0.096,
                 OpenCriteria: 0.01,
-                FollowTrend: false
-            },
-            '热轧卷板': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.16,
-                OpenCriteria: 0.01,
-                FollowTrend: true
-            },
-            '白银': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.03,
-                OpenCriteria: 0.02,
                 FollowTrend: false
             },
             '黄金': {
                 TransactionFeeRate: 0.0008,
                 StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.1,
+                StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.06,
                 OpenCriteria: 0.01,
                 FollowTrend: true
             },
-            '沥青': {
+            '锌': {
                 TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.03,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.1,
-                OpenCriteria: 0.02,
-                FollowTrend: true
+                StopLossCriteria: 0.035,
+                StopProfitCriteria: 0.19,
+                StartProfitCriteria: 0.09,
+                OpenCriteria: 0.012,
+                FollowTrend: false
             },
             '铜': {
                 TransactionFeeRate: 0.0008,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.07,
+                StartProfitCriteria: 0.076,
+                OpenCriteria: 0.018,
+                FollowTrend: false
+            },
+            '螺纹钢': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.007,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.128,
+                OpenCriteria: 0.01,
+                FollowTrend: true
+            },
+            '铅': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.011,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.052,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            },
+            '白银': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.017,
+                StopProfitCriteria: 0.17,
+                StartProfitCriteria: 0.03,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            },
+            '沥青': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.026,
+                StopProfitCriteria: 0.18,
+                StartProfitCriteria: 0.101,
+                OpenCriteria: 0.02,
+                FollowTrend: true
+            },
+            '锡': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.09,
+                StartProfitCriteria: 0.065,
                 OpenCriteria: 0.02,
                 FollowTrend: false
             },
@@ -264,39 +387,7 @@
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.06,
-                OpenCriteria: 0.02,
-                FollowTrend: false
-            },
-            '铅': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.05,
-                OpenCriteria: 0.02,
-                FollowTrend: false
-            },
-            '螺纹钢': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.13,
-                OpenCriteria: 0.01,
-                FollowTrend: true
-            },
-            '锡': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.06,
-                OpenCriteria: 0.02,
-                FollowTrend: false
-            },
-            '锌': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.03,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.09,
-                OpenCriteria: 0.01,
+                OpenCriteria: 0.021,
                 FollowTrend: false
             }
         };
