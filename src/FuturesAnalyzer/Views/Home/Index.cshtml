@@ -31,6 +31,7 @@
     <select asp-for="SelectedProductName" class="form-control">
         <option>热轧卷板</option>
         <option>铝</option>
+        <option>黄金</option>
         <option>橡胶</option>
         <option>锌</option>
         <option>铜</option>
@@ -214,6 +215,14 @@
                 StartProfitCriteria: 0.12,
                 OpenCriteria: 0.02,
                 FollowTrend: false
+            },
+            '黄金': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.06,
+                OpenCriteria: 0.01,
+                FollowTrend: true
             }
         };
 
