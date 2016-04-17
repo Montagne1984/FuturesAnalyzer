@@ -53,6 +53,7 @@
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
 </form>
 <div id="chart"></div>
+<label id="summary"></label>
 @section scripts
 {
     <script src="http://code.highcharts.com/highcharts.js"></script>
@@ -85,13 +86,47 @@
                 var categories = [];
                 var contracts = [];
                 var balances = [];
-                var maxSingleProfit = 0;
-                var maxSingle
+                var maxSingleDelta = 0;
+                var minSingleDelta = 0;
+                var minBalance = 0;
+                var maxBalance = 0;
+                var lastBalance = 0;
+                var annualProfits = {};
+                var lastYearEndBalance = 0;
+                var yesterdayYear = 0;
                 $.each(data, function (index, value) {
                     categories.push(value.Date);
                     contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction : 0);
                     balances.push(value.Balance);
+                    var delta = value.Balance - lastBalance;
+                    maxSingleDelta = Math.max(maxSingleDelta, delta);
+                    minSingleDelta = Math.min(minSingleDelta, delta);
+                    maxBalance = Math.max(maxBalance, value.Balance);
+                    minBalance = Math.min(minBalance, value.Balance);
+                    lastBalance = value.Balance;
+                    var date = new Date(value.Date);
+                    var year = date.getFullYear();
+                    if (year !== yesterdayYear) {
+                        if (yesterdayYear !== 0) {
+                            annualProfits[yesterdayYear] = data[index - 1].Balance - lastYearEndBalance;
+                            lastYearEndBalance = data[index - 1].Balance;
+                        }
+                        yesterdayYear = year;
+                    }
                 });
+
+                var endDate = new Date(data[data.length - 1].Date);
+                var endYear = endDate.getFullYear();
+                annualProfits[endYear] = data[data.length - 1].Balance - lastYearEndBalance;
+
+                var summaryText = '最大盈利：' + maxBalance + '，最小盈利：' + minBalance + '，最大单日盈利：' + maxSingleDelta + '，最大单日亏损：' + minSingleDelta;
+                summaryText += '<br/>';
+                $.each(annualProfits, function (key, value) {
+                    summaryText += key + '盈利：' + value + '&nbsp;&nbsp;&nbsp;';
+                });
+
+                $('#summary').html(summaryText);
+
                 $('#chart').highcharts({
                     chart: {
                         zoomType: 'x'
