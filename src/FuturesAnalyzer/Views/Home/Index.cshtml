@@ -189,5 +189,44 @@
                 });
             });
         });
+
+        var settings = {
+            '铝': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.1,
+                OpenCriteria: 0.01,
+                FollowTrend: false
+            },
+            '热轧卷板': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.16,
+                OpenCriteria: 0.01,
+                FollowTrend: true
+            },
+            '白银': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.12,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            }
+        };
+
+        $('#SelectedProductName').change(function() {
+            var selectedProductName = $('#SelectedProductName').val();
+            if (settings[selectedProductName]) {
+                $('#TransactionFeeRate').val(settings[selectedProductName].TransactionFeeRate);
+                $('#StopLossCriteria').val(settings[selectedProductName].StopLossCriteria);
+                $('#StopProfitCriteria').val(settings[selectedProductName].StopProfitCriteria);
+                $('#StartProfitCriteria').val(settings[selectedProductName].StartProfitCriteria);
+                $('#OpenCriteria').val(settings[selectedProductName].OpenCriteria);
+                $('#FollowTrend').prop('checked', settings[selectedProductName].FollowTrend);
+            }
+        });
     </script>
 }
