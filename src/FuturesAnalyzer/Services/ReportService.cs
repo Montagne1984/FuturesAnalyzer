@@ -35,10 +35,26 @@ namespace FuturesAnalyzer.Services
 
         public IEnumerable<DailyAccountData> GenerateReport(Account account, List<DailyPrice> dailyPrices)
         {
-            WarmUp(account, dailyPrices);
             var report = new List<DailyAccountData>();
-            foreach (var dailyPrice in dailyPrices)
+            if (dailyPrices.Count <= WarmUpLength)
             {
+                return report;
+            }
+            WarmUp(account, dailyPrices);
+            for (var i = 1; i < dailyPrices.Count; i++)
+            {
+                if (dailyPrices[i].Date > dailyPrices[i - 1].Date.AddDays(15) || dailyPrices[i].Date == dailyPrices[i - 1].Date)
+                {
+                    throw new ArgumentException("日期异常：" + dailyPrices[i - 1].Date + " - " + dailyPrices[i].Date);
+                }
+            }
+            for (var i = WarmUpLength; i < dailyPrices.Count; i++)
+            {
+                var dailyPrice = dailyPrices[i];
+                if (!CheckDailyPrice(dailyPrice))
+                {
+                    throw new ArgumentException("数据异常：" + dailyPrice.Date);
+                }
                 report.Add(new DailyAccountData
                 {
                     Date = dailyPrice.Date,
@@ -58,7 +74,7 @@ namespace FuturesAnalyzer.Services
         private static void WarmUp(Account account, List<DailyPrice> dailyPrices)
         {
             var direction = 0;
-            for (var i = 1; i < WarmUpLength; i++)
+            for (var i = 1; i < WarmUpLength && i < dailyPrices.Count; i++)
             {
                 direction += Math.Sign(dailyPrices[i].AveragePrice - dailyPrices[i - 1].AveragePrice);
             }
@@ -79,8 +95,14 @@ namespace FuturesAnalyzer.Services
             account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
             account.MarketState.Account = account;
             account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
-            var lastDailyPrice = dailyPrices[WarmUpLength - 1];
-            dailyPrices.RemoveRange(0, WarmUpLength);
+        }
+
+        private bool CheckDailyPrice(DailyPrice dailyPrice)
+        {
+            return dailyPrice.AveragePrice > 0 && dailyPrice.OpenPrice > 0 && dailyPrice.HighestPrice > 0 &&
+                   dailyPrice.LowesetPrice > 0 
+                   && dailyPrice.AveragePrice >= dailyPrice.LowesetPrice && dailyPrice.AveragePrice <= dailyPrice.HighestPrice
+                   && dailyPrice.OpenPrice >= dailyPrice.LowesetPrice && dailyPrice.OpenPrice <= dailyPrice.HighestPrice;
         }
     }
 }

@@ -9,19 +9,19 @@
     </div>
     <div class="form-group">
         <label asp-for="StopLossCriteria">止损点</label>
-        <input type="number" min="0" step="0.01" asp-for="StopLossCriteria" class="form-control" />
+        <input type="number" min="0" step="0.001" asp-for="StopLossCriteria" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label asp-for="StopProfitCriteria">止盈点</label>
-        <input type="number" min="0" step="0.1" asp-for="StopProfitCriteria" class="form-control" />
+        <input type="number" min="0" step="0.01" asp-for="StopProfitCriteria" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label asp-for="StartProfitCriteria">起盈点</label>
-        <input type="number" min="0" step="0.01" asp-for="StartProfitCriteria" class="form-control" />
+        <input type="number" min="0" step="0.001" asp-for="StartProfitCriteria" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label asp-for="OpenCriteria">开仓点</label>
-        <input type="number" min="0" step="0.01" asp-for="OpenCriteria" class="form-control" />
+        <input type="number" min="0" step="0.001" asp-for="OpenCriteria" class="form-control" />
     </div>
     <div class="checkbox">
         <label asp-for="FollowTrend">
@@ -32,11 +32,9 @@
         <option>热轧卷板</option>
         <option>铝</option>
         <option>黄金</option>
-        <option>橡胶</option>
         <option>锌</option>
         <option>铜</option>
         <option>螺纹钢</option>
-        <option>线材</option>
         <option>铅</option>
         <option>白银</option>
         <option>沥青</option>
@@ -52,6 +50,7 @@
         <input type="date" asp-for="EndDate" class="form-control" />
     </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
+    @*<button id="optimize" class="btn btn-default">优化</button>*@
 </form>
 <div id="chart"></div>
 <label id="summary"></label>
@@ -59,13 +58,17 @@
 {
     <script src="http://code.highcharts.com/highcharts.js"></script>
     <script>
-        $().ready(function () {
+        $().ready(function() {
             var d = new Date();
             d.setDate(d.getDate() - 1);
             $('#EndDate').val(toDateFormat(d));
             d.setDate(d.getDate() - 365);
-            $('#StartDate').val(toDateFormat(d));
+            //$('#StartDate').val(toDateFormat(d));
+            $('#StartDate').val('2000-01-01');
+
+            setDefaultSettings();
         });
+
         function toDateFormat(date) {
             var month = date.getMonth() + 1;
             var fullMonth = month >= 10 ? month : '0' + month;
@@ -74,16 +77,17 @@
             return date.getFullYear() + "-" + fullMonth + "-" + fullDay;
         }
 
-        $('#form').submit(function (event) {
+        $('#form').submit(function(event) {
             event.preventDefault();
             var $inputs = $('#form input');
             var values = {};
-            $inputs.each(function () {
+            $inputs.each(function() {
                 values[this.name] = $(this).val();
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
+                var report = data.Report;
                 var categories = [];
                 var contracts = [];
                 var balances = [];
@@ -95,39 +99,46 @@
                 var annualProfits = {};
                 var lastYearEndBalance = 0;
                 var yesterdayYear = 0;
-                $.each(data, function (index, value) {
-                    categories.push(value.Date);
-                    contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction : 0);
-                    balances.push(value.Balance);
-                    var delta = value.Balance - lastBalance;
-                    maxSingleDelta = Math.max(maxSingleDelta, delta);
-                    minSingleDelta = Math.min(minSingleDelta, delta);
-                    maxBalance = Math.max(maxBalance, value.Balance);
-                    minBalance = Math.min(minBalance, value.Balance);
-                    lastBalance = value.Balance;
-                    var date = new Date(value.Date);
-                    var year = date.getFullYear();
-                    if (year !== yesterdayYear) {
-                        if (yesterdayYear !== 0) {
-                            annualProfits[yesterdayYear] = data[index - 1].Balance - lastYearEndBalance;
-                            lastYearEndBalance = data[index - 1].Balance;
+                var endBalance = 0;
+                var averageBalance = 0;
+                if (report.length > 0) {
+                    $.each(report, function(index, value) {
+                        categories.push(value.Date);
+                        contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction : 0);
+                        balances.push(value.Balance);
+                        var delta = value.Balance - lastBalance;
+                        maxSingleDelta = Math.max(maxSingleDelta, delta);
+                        minSingleDelta = Math.min(minSingleDelta, delta);
+                        maxBalance = Math.max(maxBalance, value.Balance);
+                        minBalance = Math.min(minBalance, value.Balance);
+                        lastBalance = value.Balance;
+                        var date = new Date(value.Date);
+                        var year = date.getFullYear();
+                        if (year !== yesterdayYear) {
+                            if (yesterdayYear !== 0) {
+                                annualProfits[yesterdayYear] = report[index - 1].Balance - lastYearEndBalance;
+                                lastYearEndBalance = report[index - 1].Balance;
+                            }
+                            yesterdayYear = year;
                         }
-                        yesterdayYear = year;
-                    }
-                });
+                    });
 
-                var endDate = new Date(data[data.length - 1].Date);
-                var endYear = endDate.getFullYear();
-                annualProfits[endYear] = data[data.length - 1].Balance - lastYearEndBalance;
+                    var endDate = new Date(report[report.length - 1].Date);
+                    var endYear = endDate.getFullYear();
+                    annualProfits[endYear] = report[report.length - 1].Balance - lastYearEndBalance;
+                    endBalance = report[report.length - 1].Balance;
+                    averageBalance = endBalance / report.length;
+                }
 
-                var summaryText = '最大盈利：' + maxBalance + '，最小盈利：' + minBalance + '，最大单日盈利：' + maxSingleDelta + '，最大单日亏损：' + minSingleDelta;
+                var summaryText = '最终盈利：' + endBalance + '，日均盈利：' + averageBalance + '，最大盈利：' + maxBalance + '，最小盈利：' + minBalance + '，最大单日盈利：' + maxSingleDelta + '，最大单日亏损：' + minSingleDelta;
                 summaryText += '<br/>';
-                $.each(annualProfits, function (key, value) {
+                $.each(annualProfits, function(key, value) {
                     summaryText += key + '盈利：' + value + '&nbsp;&nbsp;&nbsp;';
                 });
 
                 $('#summary').html(summaryText);
 
+                $('#chart').show();
                 $('#chart').highcharts({
                     chart: {
                         zoomType: 'x'
@@ -135,58 +146,66 @@
                     title: {
                         text: values['SelectedProductName']
                     },
-                    xAxis: [{
-                        categories: categories,
-                        crosshair: true
-                    }],
-                    yAxis: [{ // Primary yAxis
-                        title: {
-                            text: '盈亏',
-                            style: {
-                                color: Highcharts.getOptions().colors[0]
-                            }
-                        },
-                        labels: {
-                            format: '{value}元',
-                            style: {
-                                color: Highcharts.getOptions().colors[0]
-                            }
+                    xAxis: [
+                        {
+                            categories: categories,
+                            crosshair: true
                         }
-                    }, { // Secondary yAxis
-                        labels: {
-                            format: '{value}元',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
+                    ],
+                    yAxis: [
+                        {
+                            // Primary yAxis
+                            title: {
+                                text: '盈亏',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
+                            },
+                            labels: {
+                                format: '{value}元',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
                             }
-                        },
-                        title: {
-                            text: '合约价格',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
-                            }
-                        },
-                        opposite: true
-                    }],
+                        }, {
+                            // Secondary yAxis
+                            labels: {
+                                format: '{value}元',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
+                            },
+                            title: {
+                                text: '合约价格',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
+                            },
+                            opposite: true
+                        }
+                    ],
                     tooltip: {
                         shared: true
                     },
-                    series: [{
-                        name: '合约价格',
-                        type: 'column',
-                        yAxis: 1,
-                        data: contracts,
-                        tooltip: {
-                            valueSuffix: '元'
-                        }
+                    series: [
+                        {
+                            name: '合约价格',
+                            type: 'column',
+                            yAxis: 1,
+                            data: contracts,
+                            tooltip: {
+                                valueSuffix: '元'
+                            }
 
-                    }, {
-                        name: '盈亏',
-                        type: 'spline',
-                        data: balances,
-                        tooltip: {
-                            valueSuffix: '元'
+                        }, {
+                            name: '盈亏',
+                            type: 'spline',
+                            data: balances,
+                            tooltip: {
+                                valueSuffix: '元'
+                            }
                         }
-                    }]
+                    ]
                 });
             });
         });
@@ -210,9 +229,9 @@
             },
             '白银': {
                 TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.12,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.03,
                 OpenCriteria: 0.02,
                 FollowTrend: false
             },
@@ -223,10 +242,70 @@
                 StartProfitCriteria: 0.06,
                 OpenCriteria: 0.01,
                 FollowTrend: true
+            },
+            '沥青': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.03,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.1,
+                OpenCriteria: 0.02,
+                FollowTrend: true
+            },
+            '铜': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.07,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            },
+            '镍': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.06,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            },
+            '铅': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.05,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            },
+            '螺纹钢': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.13,
+                OpenCriteria: 0.01,
+                FollowTrend: true
+            },
+            '锡': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.06,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            },
+            '锌': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.03,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.09,
+                OpenCriteria: 0.01,
+                FollowTrend: false
             }
         };
 
         $('#SelectedProductName').change(function() {
+            setDefaultSettings();
+        });
+
+        function setDefaultSettings() {
             var selectedProductName = $('#SelectedProductName').val();
             if (settings[selectedProductName]) {
                 $('#TransactionFeeRate').val(settings[selectedProductName].TransactionFeeRate);
@@ -236,6 +315,22 @@
                 $('#OpenCriteria').val(settings[selectedProductName].OpenCriteria);
                 $('#FollowTrend').prop('checked', settings[selectedProductName].FollowTrend);
             }
-        });
+        }
+
+        //$('#optimize').click(function (event) {
+        //    event.preventDefault();
+        //    var $inputs = $('#form input');
+        //    var values = {};
+        //    $inputs.each(function() {
+        //        values[this.name] = $(this).val();
+        //    });
+        //    values['SelectedProductName'] = $('#SelectedProductName').val();
+        //    values['FollowTrend'] = $('#FollowTrend')[0].checked;
+        //    $.post('home/optimize', values, function(data) {
+        //        $('#chart').hide();
+        //        var optimizationResult = '优化结果<br/>止损点：' + data.StopLossCriteria + '，止盈点：' + data.StopProfitCriteria + '，起盈点：' + data.StartProfitCriteria + '，开仓点：' + OpenCriteria + '，开仓顺势：' + data.FollowTrend;
+        //        $('#summary').html(optimizationResult);
+        //    });
+        //});
     </script>
 }

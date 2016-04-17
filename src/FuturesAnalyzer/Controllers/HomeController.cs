@@ -31,7 +31,49 @@ namespace FuturesAnalyzer.Controllers
             AmbiguousState.FollowTrend = model.FollowTrend;
             var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");
             var account = new Account {TransactionFeeRate = model.TransactionFeeRate};
-            return Json(_reportService.GenerateReport(account, dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList()));
+            var dateRange = dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList();
+            var report = _reportService.GenerateReport(account, dateRange).ToList();
+            //if (report.Any())
+            //{
+            //    var bestBalance = report.Last().Balance;
+            //    for (var stopLoss = 0.01m; stopLoss <= 0.04m; stopLoss += 0.001m)
+            //    {
+            //        for (var startProfit = 0.02m; startProfit <= 0.2m; startProfit += 0.001m)
+            //        {
+            //            for (var stopProfit = 0.1m; stopProfit <= 0.3m; stopProfit += 0.01m)
+            //            {
+            //                for (var openCriteria = 0.01m; openCriteria <= 0.03m; openCriteria += 0.001m)
+            //                {
+            //                    MarketState.StopLossCriteria = stopLoss;
+            //                    MarketState.StartProfitCriteria = startProfit;
+            //                    MarketState.StopProfitCriteria = stopProfit;
+            //                    AmbiguousState.OpenCriteria = openCriteria;
+            //                    AmbiguousState.FollowTrend = true;
+            //                    account = new Account { TransactionFeeRate = model.TransactionFeeRate };
+            //                    var result = _reportService.GenerateReport(account, dateRange).ToList();
+            //                    if (result.Last().Balance > bestBalance)
+            //                    {
+            //                        bestBalance = result.Last().Balance;
+            //                    }
+            //                    AmbiguousState.FollowTrend = false;
+            //                    account = new Account { TransactionFeeRate = model.TransactionFeeRate };
+            //                    result = _reportService.GenerateReport(account, dateRange).ToList();
+            //                    if (result.Last().Balance > bestBalance)
+            //                    {
+            //                        bestBalance = result.Last().Balance;
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+            return Json(
+                new
+                {
+                    Report = report
+
+                }
+                );
         }
 
         public IActionResult About()

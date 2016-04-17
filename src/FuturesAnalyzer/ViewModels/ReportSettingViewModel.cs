@@ -15,5 +15,6 @@ namespace FuturesAnalyzer.ViewModels
         public decimal TransactionFeeRate { get; set; } = 0.0008m;
         public DateTime StartDate { get; set; } = DateTime.Now.AddYears(-1);
         public DateTime EndDate { get; set; } = DateTime.Now.AddDays(-1);
+        public bool Optimize { get; set; }
     }
 }
