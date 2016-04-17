@@ -7,14 +7,14 @@ namespace FuturesAnalyzer.Models.States
         public static decimal OpenCriteria = 0.02m;
         public static bool FollowTrend = true;
 
-        public override Transaction TryOpen(DailyPrice dailyPrice, DailyPrice previousDailyPrice = null)
+        public override Transaction TryOpen(DailyPrice dailyPrice)
         {
-            if (Account.Contract != null || dailyPrice == null || previousDailyPrice == null)
+            if (Account.Contract != null || dailyPrice == null || !PreviousPrice.HasValue)
             {
                 return null;
             }
-            var ceilingOpenPrice = Math.Ceiling(previousDailyPrice.AveragePrice*(1 + OpenCriteria));
-            var floorOpenPrice = Math.Floor(previousDailyPrice.AveragePrice*(1 - OpenCriteria));
+            var ceilingOpenPrice = Math.Ceiling(PreviousPrice.Value*(1 + OpenCriteria));
+            var floorOpenPrice = Math.Floor(PreviousPrice.Value*(1 - OpenCriteria));
             MarketState newState = null;
             if (dailyPrice.HighestPrice >= ceilingOpenPrice)
             {
@@ -54,18 +54,23 @@ namespace FuturesAnalyzer.Models.States
             return transaction;
         }
 
+        public override Transaction TryClose(DailyPrice dailyPrice)
+        {
+            return null;
+        }
+
         protected override void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice)
         {
         }
 
-        protected override decimal GetFloorClosePrice()
+        protected override decimal GetStopLossPrice()
         {
-            return decimal.MinValue;
+            return 0;
         }
 
-        protected override decimal GetCeilingClosePrice()
+        protected override decimal GetStopProfitPrice()
         {
-            return decimal.MaxValue;
+            return 0;
         }
     }
 }

@@ -10,51 +10,15 @@
         public decimal HighestPrice { get; set; }
         public decimal LowestPrice { get; set; }
         public decimal StartPrice { get; set; }
+        public decimal? PreviousPrice { get; set; }
 
-        public Transaction TryClose(DailyPrice dailyPrice)
-        {
-            if (Account.Contract == null)
-            {
-                return null;
-            }
-
-            var floorClosePrice = GetFloorClosePrice();
-            var ceilingClosePrice = GetCeilingClosePrice();
-
-            var closePrice = 0m;
-            if (dailyPrice.OpenPrice <= floorClosePrice || dailyPrice.OpenPrice >= ceilingClosePrice)
-            {
-                closePrice = dailyPrice.OpenPrice;
-            }
-            else if (dailyPrice.LowesetPrice <= floorClosePrice)
-            {
-                closePrice = floorClosePrice;
-            }
-            else if (dailyPrice.HighestPrice >= ceilingClosePrice)
-            {
-                closePrice = ceilingClosePrice;
-            }
-            if (closePrice == 0)
-            {
-                return null;
-            }
-            var transaction = new Transaction
-            {
-                Behavior = Behavior.Close,
-                Date = dailyPrice.Date,
-                Contract = Account.Contract,
-                Price = closePrice,
-                TransactionFee = closePrice * Account.TransactionFeeRate
-            };
-            ActionAfterClose(closePrice, dailyPrice);
-            return transaction;
-        }
+        public abstract Transaction TryClose(DailyPrice dailyPrice);
 
         protected abstract void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice);
 
-        public abstract Transaction TryOpen(DailyPrice dailyPrice, DailyPrice previousDailyPrice = null);
+        public abstract Transaction TryOpen(DailyPrice dailyPrice);
 
-        protected abstract decimal GetFloorClosePrice();
-        protected abstract decimal GetCeilingClosePrice();
+        protected abstract decimal GetStopProfitPrice();
+        protected abstract decimal GetStopLossPrice();
     }
 }

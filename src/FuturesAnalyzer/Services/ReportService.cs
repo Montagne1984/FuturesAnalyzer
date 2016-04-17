@@ -35,7 +35,7 @@ namespace FuturesAnalyzer.Services
 
         public IEnumerable<DailyAccountData> GenerateReport(Account account, List<DailyPrice> dailyPrices)
         {
-            var lastDailyPrice = WarmUp(account, dailyPrices);
+            WarmUp(account, dailyPrices);
             var report = new List<DailyAccountData>();
             foreach (var dailyPrice in dailyPrices)
             {
@@ -43,19 +43,19 @@ namespace FuturesAnalyzer.Services
                 {
                     Date = dailyPrice.Date,
                     CloseTransaction = account.MarketState.TryClose(dailyPrice),
-                    OpenTransaction = account.MarketState.TryOpen(dailyPrice, lastDailyPrice),
+                    OpenTransaction = account.MarketState.TryOpen(dailyPrice),
                     Balance = account.Balance,
                     Contract = account.Contract
                 });
                 var currentState = account.MarketState;
-                currentState.HighestPrice = Math.Max(currentState.HighestPrice, dailyPrice.HighestPrice);
-                currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.LowesetPrice);
-                lastDailyPrice = dailyPrice;
+                currentState.HighestPrice = Math.Max(currentState.HighestPrice, dailyPrice.AveragePrice);
+                currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.AveragePrice);
+                currentState.PreviousPrice = dailyPrice.AveragePrice;
             }
             return report;
         }
 
-        private static DailyPrice WarmUp(Account account, List<DailyPrice> dailyPrices)
+        private static void WarmUp(Account account, List<DailyPrice> dailyPrices)
         {
             var direction = 0;
             for (var i = 1; i < WarmUpLength; i++)
@@ -78,9 +78,9 @@ namespace FuturesAnalyzer.Services
             account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
             account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
             account.MarketState.Account = account;
+            account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
             var lastDailyPrice = dailyPrices[WarmUpLength - 1];
             dailyPrices.RemoveRange(0, WarmUpLength);
-            return lastDailyPrice;
         }
     }
 }
