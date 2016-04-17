@@ -43,6 +43,7 @@
         <option>菜籽</option>
         <option>硅铁</option>
         <option>锰硅</option>
+        <option>强麦</option>
     </select>
     <div class="form-group form-inline">
         <label asp-for="OpenCriteria">起始日期</label>
@@ -323,6 +324,14 @@
                 StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.14,
+                OpenCriteria: 0.02,
+                FollowTrend: false
+            },
+            '强麦': {
+                TransactionFeeRate: 0.0008,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.17,
                 OpenCriteria: 0.02,
                 FollowTrend: false
             }
