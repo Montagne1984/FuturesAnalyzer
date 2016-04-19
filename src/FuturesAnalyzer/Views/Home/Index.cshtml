@@ -170,7 +170,7 @@
                                 maxSinglePercentageDeltaDate = value.DailyPrice.Date;
                             } else if (percentageDelta < minSinglePercentageDelta) {
                                 minSinglePercentageDelta = percentageDelta;
-                                minSingleDeltaDate = value.DailyPrice.Date;
+                                minSinglePercentageDeltaDate = value.DailyPrice.Date;
                             }
                         }
                         maxBalance = Math.max(maxBalance, value.Balance);
