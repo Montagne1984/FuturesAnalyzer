@@ -5,6 +5,9 @@
         public static decimal StopLossCriteria = 0.01m;
         public static decimal StartProfitCriteria = 0.02m;
         public static decimal StopProfitCriteria = 0.2m;
+        public static decimal StartProfitCriteriaForMultiUnits = 0.01m;
+        public static int StopLossUnit = 2;
+        public static bool NeverEnterAmbiguousState = false;
 
         public Account Account { get; set; }
         public decimal HighestPrice { get; set; }

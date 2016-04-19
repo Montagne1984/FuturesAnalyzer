@@ -15,7 +15,27 @@ namespace FuturesAnalyzer.Models.States
             var stopProfitPrice = GetStopProfitPrice();
 
             var closePrice = 0m;
-            if (dailyPrice.OpenPrice <= stopLossPrice || stopProfitPrice < decimal.MaxValue && dailyPrice.OpenPrice <= stopProfitPrice)
+            if (dailyPrice.OpenPrice <= stopLossPrice)
+            {
+                if (Account.Contract.Unit >= StopLossUnit)
+                {
+                    closePrice = dailyPrice.OpenPrice;
+                }
+                else
+                {
+                    Account.Contract.Add(dailyPrice.OpenPrice, 1);
+                    var transactionFee = Account.DeductTransactionFee(dailyPrice.OpenPrice, 1);
+                    return new Transaction
+                    {
+                        Behavior = Behavior.Open,
+                        Date = dailyPrice.Date,
+                        Contract = Account.Contract,
+                        Price = dailyPrice.OpenPrice,
+                        TransactionFee = transactionFee
+                    };
+                }
+            }
+            else if (Account.Contract.Unit == 1 && dailyPrice.OpenPrice <= stopProfitPrice || Account.Contract.Unit > 1 && dailyPrice.OpenPrice >= stopProfitPrice)
             {
                 closePrice = dailyPrice.OpenPrice;
             }
@@ -25,7 +45,23 @@ namespace FuturesAnalyzer.Models.States
             }
             else if (dailyPrice.LowesetPrice <= stopLossPrice)
             {
-                closePrice = stopLossPrice;
+                if (Account.Contract.Unit >= StopLossUnit)
+                {
+                    closePrice = stopLossPrice;
+                }
+                else
+                {
+                    Account.Contract.Add(stopLossPrice, 1);
+                    var transactionFee = Account.DeductTransactionFee(stopLossPrice, 1);
+                    return new Transaction
+                    {
+                        Behavior = Behavior.Open,
+                        Date = dailyPrice.Date,
+                        Contract = Account.Contract,
+                        Price = stopLossPrice,
+                        TransactionFee = transactionFee
+                    };
+                }
             }
             if (closePrice == 0)
             {
@@ -37,7 +73,8 @@ namespace FuturesAnalyzer.Models.States
                 Date = dailyPrice.Date,
                 Contract = Account.Contract,
                 Price = closePrice,
-                TransactionFee = closePrice * Account.TransactionFeeRate
+                TransactionFee = closePrice * Account.TransactionFeeRate * Account.Contract.Unit,
+                Unit = Account.Contract.Unit
             };
             ActionAfterClose(closePrice, dailyPrice);
             return transaction;
@@ -57,14 +94,14 @@ namespace FuturesAnalyzer.Models.States
                 Date = dailyPrice.Date,
                 Contract = contract,
                 Price = StartPrice,
-                TransactionFee = StartPrice*Account.TransactionFeeRate
+                TransactionFee = Account.DeductTransactionFee(StartPrice, 1)
             };
         }
 
         protected override void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice)
         {
             MarketState newState;
-            if (closePrice > Account.Contract.Price || !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)
+            if (NeverEnterAmbiguousState || closePrice > Account.Contract.Price || !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)
             {
                 newState = new DownState();
                 Account.IsLastTransactionLoss = closePrice < Account.Contract.Price;
@@ -78,7 +115,8 @@ namespace FuturesAnalyzer.Models.States
             newState.StartPrice = closePrice;
             newState.HighestPrice = dailyPrice.AveragePrice;
             newState.LowestPrice = dailyPrice.LowesetPrice;
-            Account.Balance += closePrice - Account.Contract.Price - closePrice * Account.TransactionFeeRate;
+            Account.Balance += (closePrice - Account.Contract.Price) * Account.Contract.Unit;
+            Account.DeductTransactionFee(closePrice, Account.Contract.Unit);
             Account.MarketState = newState;
             Account.Contract = null;
         }
@@ -90,8 +128,12 @@ namespace FuturesAnalyzer.Models.States
 
         protected override decimal GetStopProfitPrice()
         {
+            if (Account.Contract.Unit > 1)
+            {
+                return Account.Contract.Price*(1 + StartProfitCriteriaForMultiUnits);
+            }
             return HighestPrice <= Account.Contract.Price*(1 + StartProfitCriteria)
-                ? decimal.MaxValue
+                ? decimal.MinValue
                 : Math.Floor(HighestPrice - (HighestPrice - Account.Contract.Price)*StopProfitCriteria);
         }
     }

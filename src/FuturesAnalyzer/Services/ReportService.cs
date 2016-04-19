@@ -57,7 +57,7 @@ namespace FuturesAnalyzer.Services
                 }
                 report.Add(new DailyAccountData
                 {
-                    Date = dailyPrice.Date,
+                    DailyPrice = dailyPrice,
                     CloseTransaction = account.MarketState.TryClose(dailyPrice),
                     OpenTransaction = account.MarketState.TryOpen(dailyPrice),
                     Balance = account.Balance,
@@ -67,6 +67,12 @@ namespace FuturesAnalyzer.Services
                 currentState.HighestPrice = Math.Max(currentState.HighestPrice, dailyPrice.AveragePrice);
                 currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.AveragePrice);
                 currentState.PreviousPrice = dailyPrice.AveragePrice;
+            }
+            if (report.Count > 0 && account.Contract != null)
+            {
+                var finalPrice = dailyPrices.Last().AveragePrice;
+                report.Last().Balance += (finalPrice - account.Contract.Price)*
+                                        (int) account.Contract.Direction*account.Contract.Unit;
             }
             return report;
         }
