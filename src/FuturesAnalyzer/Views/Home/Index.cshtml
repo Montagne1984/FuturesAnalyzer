@@ -150,6 +150,8 @@
                 var maxUnit = 1;
                 var profitCount = 0;
                 var lossCount = 0;
+                var percentageBalance = 0;
+                var dailyPercentageBalance = [];
                 if (report.length > 0) {
                     lastYearStartPrice = report[0].DailyPrice.AveragePrice;
                     $.each(report, function(index, value) {
@@ -174,7 +176,9 @@
                                 minSinglePercentageDelta = percentageDelta;
                                 minSinglePercentageDeltaDate = value.DailyPrice.Date;
                             }
+                            percentageBalance += percentageDelta;
                         }
+                        dailyPercentageBalance.push(percentageBalance);
                         maxBalance = Math.max(maxBalance, value.Balance);
                         minBalance = Math.min(minBalance, value.Balance);
                         lastBalance = value.Balance;
@@ -182,10 +186,14 @@
                         var year = date.getFullYear();
                         if (year !== yesterdayYear) {
                             if (yesterdayYear !== 0) {
-                                annualProfits[yesterdayYear] = { profit: report[index - 1].Balance - lastYearEndBalance };
+                                var yearEndBalance = report[index - 1].Balance;
+                                if (report[index - 1].Contract) {
+                                    yearEndBalance += (report[index - 1].DailyPrice.AveragePrice - report[index - 1].Contract.Price) * report[index - 1].Contract.Unit * report[index - 1].Contract.Direction;
+                                }
+                                annualProfits[yesterdayYear] = { profit: yearEndBalance - lastYearEndBalance };
                                 annualProfits[yesterdayYear].profitPercentage = annualProfits[yesterdayYear].profit / lastYearStartPrice;
-                                lastYearEndBalance = report[index - 1].Balance;
-                                lastYearStartPrice = value.DailyPrice.AveragePrice;
+                                lastYearEndBalance = yearEndBalance;
+                                lastYearStartPrice = report[index - 1].DailyPrice.AveragePrice;
                             }
                             yesterdayYear = year;
                         }
@@ -210,8 +218,18 @@
                     averageBalance = endBalance / report.length;
                 }
 
+                var totalProfitPercentage = 0;
+                $.each(annualProfits, function (key, value) {
+                    totalProfitPercentage += value.profitPercentage;
+                });
+                var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
+
                 var summaryText =
-                    '最终盈利：' + endBalance +
+                    '最终盈利百分比（每笔交易本金相同）：' + percentageBalance * 100 + '%' +
+                    '，年化盈利百分比（每笔交易本金相同）：' + percentageBalance / report.length * 250 * 100 + '%' +
+                    '，最终盈利：' + endBalance +
+                    '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
+                    '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
                     '，日均盈利：' + averageBalance +
                     '，盈利次数：' + profitCount +
                     '，亏损次数：' + lossCount +
@@ -404,7 +422,7 @@
                 TransactionFeeRate: 0.0008,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.14,
+                StartProfitCriteria: 0.11,
                 OpenCriteria: 0.02,
                 FollowTrend: false
             },
