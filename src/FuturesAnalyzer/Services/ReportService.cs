@@ -26,7 +26,8 @@ namespace FuturesAnalyzer.Services
                     AveragePrice = csvReader.GetField<decimal>(1),
                     OpenPrice = csvReader.GetField<decimal>(2),
                     HighestPrice = csvReader.GetField<decimal>(3),
-                    LowesetPrice = csvReader.GetField<decimal>(4)
+                    LowesetPrice = csvReader.GetField<decimal>(4),
+                    Turnover = csvReader.GetField<int>(5)
                 };
                 dailyPrices.Add(dailyPrice);
             }
@@ -58,8 +59,8 @@ namespace FuturesAnalyzer.Services
                 report.Add(new DailyAccountData
                 {
                     DailyPrice = dailyPrice,
-                    CloseTransaction = account.MarketState.TryClose(dailyPrice),
-                    OpenTransaction = account.MarketState.TryOpen(dailyPrice),
+                    CloseTransaction = dailyPrice.Turnover > 0 ? account.MarketState.TryClose(dailyPrice) : null,
+                    OpenTransaction = dailyPrice.Turnover > 0 ? account.MarketState.TryOpen(dailyPrice) : null,
                     Balance = account.Balance,
                     Contract = account.Contract
                 });
