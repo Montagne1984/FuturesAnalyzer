@@ -143,6 +143,7 @@
                 var lastBalance = 0;
                 var annualProfits = {};
                 var lastYearEndBalance = 0;
+                var lastYearStartPrice = 0;
                 var yesterdayYear = 0;
                 var endBalance = 0;
                 var averageBalance = 0;
@@ -150,6 +151,7 @@
                 var profitCount = 0;
                 var lossCount = 0;
                 if (report.length > 0) {
+                    lastYearStartPrice = report[0].DailyPrice.AveragePrice;
                     $.each(report, function(index, value) {
                         categories.push(value.DailyPrice.Date);
                         prices.push(value.DailyPrice.AveragePrice);
@@ -180,8 +182,10 @@
                         var year = date.getFullYear();
                         if (year !== yesterdayYear) {
                             if (yesterdayYear !== 0) {
-                                annualProfits[yesterdayYear] = report[index - 1].Balance - lastYearEndBalance;
+                                annualProfits[yesterdayYear] = { profit: report[index - 1].Balance - lastYearEndBalance };
+                                annualProfits[yesterdayYear].profitPercentage = annualProfits[yesterdayYear].profit / lastYearStartPrice;
                                 lastYearEndBalance = report[index - 1].Balance;
+                                lastYearStartPrice = value.DailyPrice.AveragePrice;
                             }
                             yesterdayYear = year;
                         }
@@ -200,7 +204,8 @@
 
                     var endDate = new Date(report[report.length - 1].DailyPrice.Date);
                     var endYear = endDate.getFullYear();
-                    annualProfits[endYear] = report[report.length - 1].Balance - lastYearEndBalance;
+                    annualProfits[endYear] = { profit: report[report.length - 1].Balance - lastYearEndBalance }
+                    annualProfits[endYear].profitPercentage = annualProfits[endYear].profit / lastYearStartPrice;
                     endBalance = report[report.length - 1].Balance;
                     averageBalance = endBalance / report.length;
                 }
@@ -219,7 +224,7 @@
                     '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '%(' + minSinglePercentageDeltaDate + ')';
                 summaryText += '<br/>';
                 $.each(annualProfits, function(key, value) {
-                    summaryText += key + '盈利：' + value + '&nbsp;&nbsp;&nbsp;';
+                    summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
                 });
 
                 $('#summary').html(summaryText);
