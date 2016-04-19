@@ -134,6 +134,10 @@
                 var maxSingleDeltaDate = new Date();
                 var minSingleDelta = 0;
                 var minSingleDeltaDate = new Date();
+                var maxSinglePercentageDelta = 0;
+                var maxSinglePercentageDeltaDate = new Date();
+                var minSinglePercentageDelta = 0;
+                var minSinglePercentageDeltaDate = new Date();
                 var minBalance = 0;
                 var maxBalance = 0;
                 var lastBalance = 0;
@@ -158,6 +162,16 @@
                         } else if (delta < minSingleDelta) {
                             minSingleDelta = delta;
                             minSingleDeltaDate = value.DailyPrice.Date;
+                        }
+                        if (index > 0 && report[index - 1].Contract) {
+                            var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
+                            if (percentageDelta > maxSinglePercentageDelta) {
+                                maxSinglePercentageDelta = percentageDelta;
+                                maxSinglePercentageDeltaDate = value.DailyPrice.Date;
+                            } else if (percentageDelta < minSinglePercentageDelta) {
+                                minSinglePercentageDelta = percentageDelta;
+                                minSingleDeltaDate = value.DailyPrice.Date;
+                            }
                         }
                         maxBalance = Math.max(maxBalance, value.Balance);
                         minBalance = Math.min(minBalance, value.Balance);
@@ -200,7 +214,9 @@
                     '，最大盈利：' + maxBalance +
                     '，最小盈利：' + minBalance + 
                     '，最大单日盈利：' + maxSingleDelta + '(' + maxSingleDeltaDate + ')' +
-                    '，最大单日亏损：' + minSingleDelta + '(' + minSingleDeltaDate + ')';
+                    '，最大单日亏损：' + minSingleDelta + '(' + minSingleDeltaDate + ')' +
+                    '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + maxSinglePercentageDeltaDate + ')' +
+                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '%(' + minSinglePercentageDeltaDate + ')';
                 summaryText += '<br/>';
                 $.each(annualProfits, function(key, value) {
                     summaryText += key + '盈利：' + value + '&nbsp;&nbsp;&nbsp;';
