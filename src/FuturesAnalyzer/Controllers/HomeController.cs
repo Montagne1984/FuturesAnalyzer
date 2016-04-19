@@ -24,9 +24,12 @@ namespace FuturesAnalyzer.Controllers
 
         public JsonResult Report(ReportSettingViewModel model)
         {
+            MarketState.StopLossUnit = model.StopLossUnit;
             MarketState.StopLossCriteria = model.StopLossCriteria;
             MarketState.StartProfitCriteria = model.StartProfitCriteria;
             MarketState.StopProfitCriteria = model.StopProfitCriteria;
+            MarketState.StartProfitCriteriaForMultiUnits = model.StartProfitCriteriaForMultiUnits;
+            MarketState.NeverEnterAmbiguousState = model.NeverEnterAmbiguousState;
             AmbiguousState.OpenCriteria = model.OpenCriteria;
             AmbiguousState.FollowTrend = model.FollowTrend;
             var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");

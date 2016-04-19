@@ -9,6 +9,7 @@ namespace FuturesAnalyzer.Models
         public Contract Contract { get; set; }
         public Behavior Behavior { get; set; }
         public decimal TransactionFee { get; set; }
+        public int Unit { get; set; } = 1;
     }
 
     public enum Behavior

@@ -8,6 +8,10 @@
         <input type="number" min="0" step="0.0001" asp-for="TransactionFeeRate" class="form-control" />
     </div>
     <div class="form-group">
+        <label asp-for="StopLossUnit">止损份数</label>
+        <input type="number" min="0" step="1" asp-for="StopLossUnit" class="form-control" />
+    </div>
+    <div class="form-group">
         <label asp-for="StopLossCriteria">止损点</label>
         <input type="number" min="0" step="0.01" asp-for="StopLossCriteria" class="form-control" />
     </div>
@@ -18,6 +22,15 @@
     <div class="form-group form-inline">
         <label asp-for="StartProfitCriteria">起盈点</label>
         <input type="number" min="0" step="0.01" asp-for="StartProfitCriteria" class="form-control" />
+    </div>
+    <div class="form-group form-inline">
+        <label asp-for="StartProfitCriteriaForMultiUnits">起盈点（多份）</label>
+        <input type="number" min="0" step="0.01" asp-for="StartProfitCriteriaForMultiUnits" class="form-control" />
+    </div>
+    <div class="checkbox">
+        <label asp-for="NeverEnterAmbiguousState">
+            <input asp-for="NeverEnterAmbiguousState" type="checkbox"> 禁用观望期
+        </label>
     </div>
     <div class="form-group form-inline">
         <label asp-for="OpenCriteria">开仓点</label>
@@ -109,55 +122,109 @@
                 values[this.name] = $(this).val();
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
+            values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
                 var report = data.Report;
                 var categories = [];
                 var contracts = [];
                 var balances = [];
+                var prices = [];
                 var maxSingleDelta = 0;
+                var maxSingleDeltaDate = new Date();
                 var minSingleDelta = 0;
+                var minSingleDeltaDate = new Date();
+                var maxSinglePercentageDelta = 0;
+                var maxSinglePercentageDeltaDate = new Date();
+                var minSinglePercentageDelta = 0;
+                var minSinglePercentageDeltaDate = new Date();
                 var minBalance = 0;
                 var maxBalance = 0;
                 var lastBalance = 0;
                 var annualProfits = {};
                 var lastYearEndBalance = 0;
+                var lastYearStartPrice = 0;
                 var yesterdayYear = 0;
                 var endBalance = 0;
                 var averageBalance = 0;
+                var maxUnit = 1;
+                var profitCount = 0;
+                var lossCount = 0;
                 if (report.length > 0) {
+                    lastYearStartPrice = report[0].DailyPrice.AveragePrice;
                     $.each(report, function(index, value) {
-                        categories.push(value.Date);
-                        contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction : 0);
+                        categories.push(value.DailyPrice.Date);
+                        prices.push(value.DailyPrice.AveragePrice);
+                        contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
                         balances.push(value.Balance);
                         var delta = value.Balance - lastBalance;
-                        maxSingleDelta = Math.max(maxSingleDelta, delta);
-                        minSingleDelta = Math.min(minSingleDelta, delta);
+                        if (delta > maxSingleDelta) {
+                            maxSingleDelta = delta;
+                            maxSingleDeltaDate = value.DailyPrice.Date;
+                        } else if (delta < minSingleDelta) {
+                            minSingleDelta = delta;
+                            minSingleDeltaDate = value.DailyPrice.Date;
+                        }
+                        if (index > 0 && report[index - 1].Contract) {
+                            var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
+                            if (percentageDelta > maxSinglePercentageDelta) {
+                                maxSinglePercentageDelta = percentageDelta;
+                                maxSinglePercentageDeltaDate = value.DailyPrice.Date;
+                            } else if (percentageDelta < minSinglePercentageDelta) {
+                                minSinglePercentageDelta = percentageDelta;
+                                minSinglePercentageDeltaDate = value.DailyPrice.Date;
+                            }
+                        }
                         maxBalance = Math.max(maxBalance, value.Balance);
                         minBalance = Math.min(minBalance, value.Balance);
                         lastBalance = value.Balance;
-                        var date = new Date(value.Date);
+                        var date = new Date(value.DailyPrice.Date);
                         var year = date.getFullYear();
                         if (year !== yesterdayYear) {
                             if (yesterdayYear !== 0) {
-                                annualProfits[yesterdayYear] = report[index - 1].Balance - lastYearEndBalance;
+                                annualProfits[yesterdayYear] = { profit: report[index - 1].Balance - lastYearEndBalance };
+                                annualProfits[yesterdayYear].profitPercentage = annualProfits[yesterdayYear].profit / lastYearStartPrice;
                                 lastYearEndBalance = report[index - 1].Balance;
+                                lastYearStartPrice = value.DailyPrice.AveragePrice;
                             }
                             yesterdayYear = year;
                         }
+                        if (value.Contract && value.Contract.Unit > maxUnit) {
+                            maxUnit = value.Contract.Unit;
+                        }
+
+                        if (value.CloseTransaction && index > 0) {
+                            if (report[index].Balance > report[index - 1].Balance) {
+                                profitCount++;
+                            } else {
+                                lossCount++;
+                            }
+                        }
                     });
 
-                    var endDate = new Date(report[report.length - 1].Date);
+                    var endDate = new Date(report[report.length - 1].DailyPrice.Date);
                     var endYear = endDate.getFullYear();
-                    annualProfits[endYear] = report[report.length - 1].Balance - lastYearEndBalance;
+                    annualProfits[endYear] = { profit: report[report.length - 1].Balance - lastYearEndBalance }
+                    annualProfits[endYear].profitPercentage = annualProfits[endYear].profit / lastYearStartPrice;
                     endBalance = report[report.length - 1].Balance;
                     averageBalance = endBalance / report.length;
                 }
 
-                var summaryText = '最终盈利：' + endBalance + '，日均盈利：' + averageBalance + '，最大盈利：' + maxBalance + '，最小盈利：' + minBalance + '，最大单日盈利：' + maxSingleDelta + '，最大单日亏损：' + minSingleDelta;
+                var summaryText =
+                    '最终盈利：' + endBalance +
+                    '，日均盈利：' + averageBalance +
+                    '，盈利次数：' + profitCount +
+                    '，亏损次数：' + lossCount +
+                    '，最大份数：' + maxUnit +
+                    '，最大盈利：' + maxBalance +
+                    '，最小盈利：' + minBalance + 
+                    '，最大单日盈利：' + maxSingleDelta + '(' + maxSingleDeltaDate + ')' +
+                    '，最大单日亏损：' + minSingleDelta + '(' + minSingleDeltaDate + ')' +
+                    '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + maxSinglePercentageDeltaDate + ')' +
+                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '%(' + minSinglePercentageDeltaDate + ')';
                 summaryText += '<br/>';
                 $.each(annualProfits, function(key, value) {
-                    summaryText += key + '盈利：' + value + '&nbsp;&nbsp;&nbsp;';
+                    summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
                 });
 
                 $('#summary').html(summaryText);
@@ -200,7 +267,7 @@
                                 }
                             },
                             title: {
-                                text: '合约价格',
+                                text: '价格',
                                 style: {
                                     color: Highcharts.getOptions().colors[1]
                                 }
@@ -228,6 +295,16 @@
                             tooltip: {
                                 valueSuffix: '元'
                             }
+                        },
+                        {
+                            name: '结算价格',
+                            type: 'spline',
+                            yAxis: 1,
+                            data: prices,
+                            tooltip: {
+                                valueSuffix: '元'
+                            }
+
                         }
                     ]
                 });
