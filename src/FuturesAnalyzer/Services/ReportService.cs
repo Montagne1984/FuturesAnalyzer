@@ -17,13 +17,14 @@ namespace FuturesAnalyzer.Services
             var fileText = File.ReadAllText(fileName);
             var stringReader = new StringReader(fileText);
             var csvReader = new CsvReader(stringReader);
+            csvReader.Configuration.HasHeaderRecord = false;
             var dailyPrices = new List<DailyPrice>();
             while (csvReader.Read())
             {
                 var dailyPrice = new DailyPrice
                 {
                     Date = csvReader.GetField<DateTime>(0),
-                    AveragePrice = csvReader.GetField<decimal>(1),
+                    ClosePrice = csvReader.GetField<decimal>(1),
                     OpenPrice = csvReader.GetField<decimal>(2),
                     HighestPrice = csvReader.GetField<decimal>(3),
                     LowesetPrice = csvReader.GetField<decimal>(4),
@@ -65,13 +66,13 @@ namespace FuturesAnalyzer.Services
                     Contract = account.Contract
                 });
                 var currentState = account.MarketState;
-                currentState.HighestPrice = Math.Max(currentState.HighestPrice, dailyPrice.AveragePrice);
-                currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.AveragePrice);
-                currentState.PreviousPrice = dailyPrice.AveragePrice;
+                currentState.HighestPrice = Math.Max(currentState.HighestPrice, dailyPrice.ClosePrice);
+                currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.ClosePrice);
+                currentState.PreviousPrice = dailyPrice.ClosePrice;
             }
             if (report.Count > 0 && account.Contract != null)
             {
-                var finalPrice = dailyPrices.Last().AveragePrice;
+                var finalPrice = dailyPrices.Last().ClosePrice;
                 report.Last().Balance += (finalPrice - account.Contract.Price)*
                                         (int) account.Contract.Direction*account.Contract.Unit;
             }
@@ -83,7 +84,7 @@ namespace FuturesAnalyzer.Services
             var direction = 0;
             for (var i = 1; i < WarmUpLength && i < dailyPrices.Count; i++)
             {
-                direction += Math.Sign(dailyPrices[i].AveragePrice - dailyPrices[i - 1].AveragePrice);
+                direction += Math.Sign(dailyPrices[i].ClosePrice - dailyPrices[i - 1].ClosePrice);
             }
             if (direction > 1)
             {
@@ -97,18 +98,18 @@ namespace FuturesAnalyzer.Services
             {
                 account.MarketState = new AmbiguousState();
             }
-            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
-            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
-            account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
+            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
+            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
+            account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
             account.MarketState.Account = account;
-            account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].AveragePrice;
+            account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
         }
 
         private bool CheckDailyPrice(DailyPrice dailyPrice)
         {
-            return dailyPrice.AveragePrice > 0 && dailyPrice.OpenPrice > 0 && dailyPrice.HighestPrice > 0 &&
+            return dailyPrice.ClosePrice > 0 && dailyPrice.OpenPrice > 0 && dailyPrice.HighestPrice > 0 &&
                    dailyPrice.LowesetPrice > 0 
-                   && dailyPrice.AveragePrice >= dailyPrice.LowesetPrice && dailyPrice.AveragePrice <= dailyPrice.HighestPrice
+                   && dailyPrice.ClosePrice >= dailyPrice.LowesetPrice && dailyPrice.ClosePrice <= dailyPrice.HighestPrice
                    && dailyPrice.OpenPrice >= dailyPrice.LowesetPrice && dailyPrice.OpenPrice <= dailyPrice.HighestPrice;
         }
     }
