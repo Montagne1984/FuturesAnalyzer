@@ -11,6 +11,12 @@ namespace FuturesAnalyzer.Models.States
                 return null;
             }
 
+            if (Account.Contract.AppendUnitPrice < Account.Contract.Price
+                && dailyPrice.ClosePrice <= Account.Contract.Price * (1 + StartProfitCriteria))
+            {
+                Account.Contract.AppendUnitPrice = dailyPrice.ClosePrice;
+            }
+
             var stopProfitPrice = GetStopProfitPrice();
             var stopLossPrice = GetStopLossPrice();
 
@@ -117,7 +123,12 @@ namespace FuturesAnalyzer.Models.States
             newState.StartPrice = closePrice;
             newState.HighestPrice = dailyPrice.HighestPrice;
             newState.LowestPrice = dailyPrice.LowesetPrice;
-            Account.Balance += (Account.Contract.Price - closePrice) * Account.Contract.Unit;
+            var balanceDelta = (Account.Contract.Price - closePrice) * Account.Contract.Unit;
+            Account.Balance += balanceDelta;
+            if (balanceDelta > 0)
+            {
+                Account.Balance += (Account.Contract.AppendUnitPrice - closePrice) * AppendUnitCountAfterProfitStart;
+            }
             Account.DeductTransactionFee(closePrice, Account.Contract.Unit);
             Account.MarketState = newState;
             Account.Contract = null;

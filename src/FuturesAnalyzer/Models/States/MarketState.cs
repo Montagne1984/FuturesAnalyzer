@@ -8,6 +8,7 @@
         public static decimal StartProfitCriteriaForMultiUnits = 0.01m;
         public static int StopLossUnit = 1;
         public static bool NeverEnterAmbiguousState = false;
+        public static int AppendUnitCountAfterProfitStart = 0;
 
         public Account Account { get; set; }
         public decimal HighestPrice { get; set; }

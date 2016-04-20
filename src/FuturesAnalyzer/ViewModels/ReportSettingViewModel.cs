@@ -13,6 +13,7 @@ namespace FuturesAnalyzer.ViewModels
         public decimal StartProfitCriteriaForMultiUnits { get; set; } = MarketState.StartProfitCriteriaForMultiUnits;
         public bool NeverEnterAmbiguousState { get; set; } = MarketState.NeverEnterAmbiguousState;
         public bool FollowTrend { get; set; } = AmbiguousState.FollowTrend;
+        public int AppendUnitCountAfterProfitStart { get; set; } = MarketState.AppendUnitCountAfterProfitStart;
         public string ProductNames { get; set; }
         public string SelectedProductName { get; set; }
         public decimal TransactionFeeRate { get; set; } = 0.0008m;
