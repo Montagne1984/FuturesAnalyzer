@@ -158,10 +158,10 @@
                 var percentageBalance = 0;
                 var dailyPercentageBalance = [];
                 if (report.length > 0) {
-                    lastYearStartPrice = report[0].DailyPrice.AveragePrice;
+                    lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                     $.each(report, function(index, value) {
                         categories.push(value.DailyPrice.Date);
-                        prices.push(value.DailyPrice.AveragePrice);
+                        prices.push(value.DailyPrice.ClosePrice);
                         contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
                         balances.push(value.Balance);
                         var delta = value.Balance - lastBalance;
@@ -193,12 +193,12 @@
                             if (yesterdayYear !== 0) {
                                 var yearEndBalance = report[index - 1].Balance;
                                 if (report[index - 1].Contract) {
-                                    yearEndBalance += (report[index - 1].DailyPrice.AveragePrice - report[index - 1].Contract.Price) * report[index - 1].Contract.Unit * report[index - 1].Contract.Direction;
+                                    yearEndBalance += (report[index - 1].DailyPrice.ClosePrice - report[index - 1].Contract.Price) * report[index - 1].Contract.Unit * report[index - 1].Contract.Direction;
                                 }
                                 annualProfits[yesterdayYear] = { profit: yearEndBalance - lastYearEndBalance };
                                 annualProfits[yesterdayYear].profitPercentage = annualProfits[yesterdayYear].profit / lastYearStartPrice;
                                 lastYearEndBalance = yearEndBalance;
-                                lastYearStartPrice = report[index - 1].DailyPrice.AveragePrice;
+                                lastYearStartPrice = report[index - 1].DailyPrice.ClosePrice;
                             }
                             yesterdayYear = year;
                         }
@@ -639,13 +639,13 @@
                 StopLossCriteria: 0.019,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.068,
-                OpenCriteria: 0.021,
+                OpenCriteria: 0.022,
                 FollowTrend: false
             },
             '焦煤': {
                 TransactionFeeRate: 0.0008,
                 StopLossCriteria: 0.029,
-                StopProfitCriteria: 0.2,
+                StopProfitCriteria: 0.19,
                 StartProfitCriteria: 0.12,
                 OpenCriteria: 0.03,
                 FollowTrend: false

@@ -98,8 +98,8 @@ namespace FuturesAnalyzer.Services
             {
                 account.MarketState = new AmbiguousState();
             }
-            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
-            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
+            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].HighestPrice;
+            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].LowesetPrice;
             account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
             account.MarketState.Account = account;
             account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].ClosePrice;

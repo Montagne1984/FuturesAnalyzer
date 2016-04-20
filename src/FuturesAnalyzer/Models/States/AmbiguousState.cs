@@ -47,8 +47,8 @@ namespace FuturesAnalyzer.Models.States
                 return null;
             }
 
-            newState.HighestPrice = dailyPrice.ClosePrice;
-            newState.LowestPrice = dailyPrice.ClosePrice;
+            newState.HighestPrice = dailyPrice.HighestPrice;
+            newState.LowestPrice = dailyPrice.LowesetPrice;
             newState.Account = Account;
             var transaction = newState.TryOpen(dailyPrice);
             Account.MarketState = newState;

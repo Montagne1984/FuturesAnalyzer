@@ -115,8 +115,8 @@ namespace FuturesAnalyzer.Models.States
             }
             newState.Account = Account;
             newState.StartPrice = closePrice;
-            newState.HighestPrice = dailyPrice.ClosePrice;
-            newState.LowestPrice = dailyPrice.ClosePrice;
+            newState.HighestPrice = dailyPrice.HighestPrice;
+            newState.LowestPrice = dailyPrice.LowesetPrice;
             Account.Balance += (Account.Contract.Price - closePrice) * Account.Contract.Unit;
             Account.DeductTransactionFee(closePrice, Account.Contract.Unit);
             Account.MarketState = newState;
