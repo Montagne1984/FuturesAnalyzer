@@ -100,6 +100,7 @@
 </form>
 <div id="chart"></div>
 <label id="summary"></label>
+<div id="percentageChart"></div>
 @section scripts
 {
     <script src="http://code.highcharts.com/highcharts.js"></script>
@@ -162,6 +163,7 @@
                 var percentageBalance = 0;
                 var lastYearPercentageBalance = 0;
                 var dailyPercentageBalance = [];
+                var budgetFactor = 1;
                 if (report.length > 0) {
                     lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                     $.each(report, function(index, value) {
@@ -179,6 +181,13 @@
                         }
                         if (index > 0 && report[index - 1].Contract) {
                             var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
+                            if (percentageDelta > 0.1) {
+                                percentageDelta *= budgetFactor;
+                                budgetFactor *= 1.5;
+                            }
+                            else {
+                                percentageDelta *= budgetFactor;
+                            }
                             if (percentageDelta > maxSinglePercentageDelta) {
                                 maxSinglePercentageDelta = percentageDelta;
                                 maxSinglePercentageDeltaDate = value.DailyPrice.Date;
@@ -264,7 +273,6 @@
 
                 $('#summary').html(summaryText);
 
-                $('#chart').show();
                 $('#chart').highcharts({
                     chart: {
                         zoomType: 'x'
@@ -340,6 +348,38 @@
                                 valueSuffix: '元'
                             }
 
+                        }
+                    ]
+                });
+                $('#percentageChart').highcharts({
+                    chart: {
+                        zoomType: 'x'
+                    },
+                    title: {
+                        text: values['SelectedProductName']
+                    },
+                    xAxis: [
+                        {
+                            categories: categories,
+                            crosshair: true
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            // Primary yAxis
+                            title: {
+                                text: '盈亏',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
+                            }
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '盈亏',
+                            type: 'spline',
+                            data: dailyPercentageBalance
                         }
                     ]
                 });
