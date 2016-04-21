@@ -18,7 +18,7 @@ namespace FuturesAnalyzer.Models.States
                 if (Account.Contract.AppendUnitPrice <= Math.Floor(dailyPrice.ClosePrice - (dailyPrice.ClosePrice - Account.Contract.Price) * StopProfitCriteria))
                 {
                     Account.Contract.AppendUnitPrice = decimal.MaxValue;
-                }
+            }
             }
 
             var stopLossPrice = GetStopLossPrice();

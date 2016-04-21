@@ -5,7 +5,7 @@
 <form id="form" asp-action="Report" method="post" class="form-inline" style="margin-top: 20px;">
     <div class="form-group form-inline">
         <label asp-for="TransactionFeeRate">交易手续费率</label>
-        <input type="number" min="0" step="0.0001" asp-for="TransactionFeeRate" class="form-control" />
+        <input type="number" min="0" step="0.000001" asp-for="TransactionFeeRate" class="form-control" />
     </div>
     <div class="form-group">
         <label asp-for="StopLossUnit">止损份数</label>
@@ -631,7 +631,7 @@
 
         var settings = {
             '热轧卷板': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00004,
                 StopLossCriteria: 0.006,
                 StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.157,
@@ -639,7 +639,7 @@
                 FollowTrend: true
             },
             '螺纹钢': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000045,
                 StopLossCriteria: 0.007,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.128,
@@ -647,7 +647,7 @@
                 FollowTrend: true
             },
             '焦炭': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.019,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.068,
@@ -655,7 +655,7 @@
                 FollowTrend: false
             },
             '焦煤': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.029,
                 StopProfitCriteria: 0.19,
                 StartProfitCriteria: 0.12,
@@ -663,7 +663,7 @@
                 FollowTrend: false
             },
             '热轧卷板1610': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00004,
                 StopLossCriteria: 0.006,
                 StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.157,
@@ -671,7 +671,7 @@
                 FollowTrend: true
             },
             '热轧卷板1605': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000045,
                 StopLossCriteria: 0.006,
                 StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.157,
@@ -679,7 +679,7 @@
                 FollowTrend: true
             },
             '螺纹钢1605': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.007,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.128,
@@ -687,7 +687,7 @@
                 FollowTrend: true
             },
             '焦炭1605': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.019,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.068,
@@ -695,7 +695,7 @@
                 FollowTrend: false
             },
             '焦煤1605': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.029,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.12,
