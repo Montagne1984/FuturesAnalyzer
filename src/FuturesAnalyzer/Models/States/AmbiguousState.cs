@@ -30,7 +30,7 @@ namespace FuturesAnalyzer.Models.States
                 }
                 newState.StartPrice = Math.Max(dailyPrice.OpenPrice, ceilingOpenPrice);
             }
-            else if (dailyPrice.LowesetPrice <= floorOpenPrice)
+            else if (dailyPrice.LowestPrice <= floorOpenPrice)
             {
                 if (FollowTrend)
                 {
@@ -47,8 +47,8 @@ namespace FuturesAnalyzer.Models.States
                 return null;
             }
 
-            newState.HighestPrice = dailyPrice.HighestPrice;
-            newState.LowestPrice = dailyPrice.LowesetPrice;
+            newState.HighestPrice = dailyPrice.ClosePrice;
+            newState.LowestPrice = dailyPrice.ClosePrice;
             newState.Account = Account;
             var transaction = newState.TryOpen(dailyPrice);
             Account.MarketState = newState;

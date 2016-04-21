@@ -27,7 +27,7 @@ namespace FuturesAnalyzer.Services
                     ClosePrice = csvReader.GetField<decimal>(1),
                     OpenPrice = csvReader.GetField<decimal>(2),
                     HighestPrice = csvReader.GetField<decimal>(3),
-                    LowesetPrice = csvReader.GetField<decimal>(4),
+                    LowestPrice = csvReader.GetField<decimal>(4),
                     Turnover = csvReader.GetField<int>(5)
                 };
                 dailyPrices.Add(dailyPrice);
@@ -98,8 +98,8 @@ namespace FuturesAnalyzer.Services
             {
                 account.MarketState = new AmbiguousState();
             }
-            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].HighestPrice;
-            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].LowesetPrice;
+            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
+            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
             account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
             account.MarketState.Account = account;
             account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
@@ -108,9 +108,9 @@ namespace FuturesAnalyzer.Services
         private bool CheckDailyPrice(DailyPrice dailyPrice)
         {
             return dailyPrice.ClosePrice > 0 && dailyPrice.OpenPrice > 0 && dailyPrice.HighestPrice > 0 &&
-                   dailyPrice.LowesetPrice > 0 
-                   && dailyPrice.ClosePrice >= dailyPrice.LowesetPrice && dailyPrice.ClosePrice <= dailyPrice.HighestPrice
-                   && dailyPrice.OpenPrice >= dailyPrice.LowesetPrice && dailyPrice.OpenPrice <= dailyPrice.HighestPrice;
+                   dailyPrice.LowestPrice > 0 
+                   && dailyPrice.ClosePrice >= dailyPrice.LowestPrice && dailyPrice.ClosePrice <= dailyPrice.HighestPrice
+                   && dailyPrice.OpenPrice >= dailyPrice.LowestPrice && dailyPrice.OpenPrice <= dailyPrice.HighestPrice;
         }
     }
 }

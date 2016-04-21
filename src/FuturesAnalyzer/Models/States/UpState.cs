@@ -14,7 +14,11 @@ namespace FuturesAnalyzer.Models.States
             if (Account.Contract.AppendUnitPrice < Account.Contract.Price 
                 && dailyPrice.ClosePrice >= Account.Contract.Price * (1 + StartProfitCriteria))
             {
-                Account.Contract.AppendUnitPrice = dailyPrice.ClosePrice;
+                Account.Contract.AppendUnitPrice = Account.Contract.Price * (1 + StartProfitCriteria);
+                if (Account.Contract.AppendUnitPrice <= Math.Floor(dailyPrice.ClosePrice - (dailyPrice.ClosePrice - Account.Contract.Price) * StopProfitCriteria))
+                {
+                    Account.Contract.AppendUnitPrice = decimal.MaxValue;
+                }
             }
 
             var stopLossPrice = GetStopLossPrice();
@@ -45,11 +49,11 @@ namespace FuturesAnalyzer.Models.States
             {
                 closePrice = dailyPrice.OpenPrice;
             }
-            else if (dailyPrice.LowesetPrice <= stopProfitPrice && dailyPrice.HighestPrice >= stopProfitPrice)
+            else if (dailyPrice.LowestPrice <= stopProfitPrice && dailyPrice.HighestPrice >= stopProfitPrice)
             {
                 closePrice = stopProfitPrice;
             }
-            else if (dailyPrice.LowesetPrice <= stopLossPrice)
+            else if (dailyPrice.LowestPrice <= stopLossPrice)
             {
                 if (Account.Contract.Unit >= StopLossUnit)
                 {
@@ -119,11 +123,11 @@ namespace FuturesAnalyzer.Models.States
             }
             newState.Account = Account;
             newState.StartPrice = closePrice;
-            newState.HighestPrice = dailyPrice.HighestPrice;
-            newState.LowestPrice = dailyPrice.LowesetPrice;
+            newState.HighestPrice = dailyPrice.ClosePrice;
+            newState.LowestPrice = dailyPrice.ClosePrice;
             var balanceDelta = (closePrice - Account.Contract.Price) * Account.Contract.Unit;
             Account.Balance += balanceDelta;
-            if (balanceDelta > 0)
+            if (balanceDelta > 0 && Account.Contract.AppendUnitPrice != decimal.MaxValue)
             {
                 Account.Balance += (closePrice - Account.Contract.AppendUnitPrice) * AppendUnitCountAfterProfitStart;
             }

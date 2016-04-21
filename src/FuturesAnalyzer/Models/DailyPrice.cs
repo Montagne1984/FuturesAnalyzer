@@ -8,7 +8,7 @@ namespace FuturesAnalyzer.Models
         public decimal ClosePrice { get; set; }
         public decimal OpenPrice { get; set; }
         public decimal HighestPrice { get; set; }
-        public decimal LowesetPrice { get; set; }
+        public decimal LowestPrice { get; set; }
         public int Turnover { get; set; }
     }
 }

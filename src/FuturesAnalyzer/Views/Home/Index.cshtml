@@ -160,6 +160,7 @@
                 var profitCount = 0;
                 var lossCount = 0;
                 var percentageBalance = 0;
+                var lastYearPercentageBalance = 0;
                 var dailyPercentageBalance = [];
                 if (report.length > 0) {
                     lastYearStartPrice = report[0].DailyPrice.ClosePrice;
@@ -201,6 +202,8 @@
                                 }
                                 annualProfits[yesterdayYear] = { profit: yearEndBalance - lastYearEndBalance };
                                 annualProfits[yesterdayYear].profitPercentage = annualProfits[yesterdayYear].profit / lastYearStartPrice;
+                                annualProfits[yesterdayYear].profitPercentageWithSameBudget = percentageBalance - lastYearPercentageBalance;
+                                lastYearPercentageBalance = percentageBalance;
                                 lastYearEndBalance = yearEndBalance;
                                 lastYearStartPrice = report[index - 1].DailyPrice.ClosePrice;
                             }
@@ -223,6 +226,7 @@
                     var endYear = endDate.getFullYear();
                     annualProfits[endYear] = { profit: report[report.length - 1].Balance - lastYearEndBalance }
                     annualProfits[endYear].profitPercentage = annualProfits[endYear].profit / lastYearStartPrice;
+                    annualProfits[endYear].profitPercentageWithSameBudget = percentageBalance - lastYearPercentageBalance;
                     endBalance = report[report.length - 1].Balance;
                     averageBalance = endBalance / report.length;
                 }
@@ -235,7 +239,7 @@
 
                 var summaryText =
                     '最终盈利百分比（每笔交易本金相同）：' + percentageBalance * 100 + '%' +
-                    '，年化盈利百分比（每笔交易本金相同）：' + percentageBalance / report.length * 250 * 100 + '%' +
+                    '，年化盈利百分比（每笔交易本金相同）：' + percentageBalance / report.length * 245 * 100 + '%' +
                     '，最终盈利：' + endBalance +
                     '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                     '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
@@ -248,7 +252,11 @@
                     '，最大单日盈利：' + maxSingleDelta + '(' + maxSingleDeltaDate + ')' +
                     '，最大单日亏损：' + minSingleDelta + '(' + minSingleDeltaDate + ')' +
                     '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + maxSinglePercentageDeltaDate + ')' +
-                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '%(' + minSinglePercentageDeltaDate + ')';
+                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + minSinglePercentageDeltaDate + ')';
+                summaryText += '<br/>每笔交易本金相同时各年盈利百分比<br/>';
+                $.each(annualProfits, function (key, value) {
+                    summaryText += key + '盈利：' + value.profitPercentageWithSameBudget * 100 + '%' + '&nbsp;&nbsp;&nbsp;';
+                });
                 summaryText += '<br/>';
                 $.each(annualProfits, function(key, value) {
                     summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
