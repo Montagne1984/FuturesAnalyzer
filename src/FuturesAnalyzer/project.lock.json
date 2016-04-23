@@ -3,13 +3,19 @@
   "version": 2,
   "targets": {
     "DNX,Version=v4.6": {
-      "CsvHelper/2.13.5": {
+      "CsvHelper/2.14.1": {
         "type": "package",
+        "frameworkAssemblies": [
+          "Microsoft.CSharp",
+          "mscorlib",
+          "System",
+          "System.Core"
+        ],
         "compile": {
-          "lib/net20/CsvHelper.dll": {}
+          "lib/net40/CsvHelper.dll": {}
         },
         "runtime": {
-          "lib/net20/CsvHelper.dll": {}
+          "lib/net40/CsvHelper.dll": {}
         }
       },
       "Microsoft.ApplicationInsights/1.1.1-beta": {
@@ -1734,13 +1740,19 @@
       }
     },
     "DNX,Version=v4.6/win7-x86": {
-      "CsvHelper/2.13.5": {
+      "CsvHelper/2.14.1": {
         "type": "package",
+        "frameworkAssemblies": [
+          "Microsoft.CSharp",
+          "mscorlib",
+          "System",
+          "System.Core"
+        ],
         "compile": {
-          "lib/net20/CsvHelper.dll": {}
+          "lib/net40/CsvHelper.dll": {}
         },
         "runtime": {
-          "lib/net20/CsvHelper.dll": {}
+          "lib/net40/CsvHelper.dll": {}
         }
       },
       "Microsoft.ApplicationInsights/1.1.1-beta": {
@@ -3468,13 +3480,19 @@
       }
     },
     "DNX,Version=v4.6/win7-x64": {
-      "CsvHelper/2.13.5": {
+      "CsvHelper/2.14.1": {
         "type": "package",
+        "frameworkAssemblies": [
+          "Microsoft.CSharp",
+          "mscorlib",
+          "System",
+          "System.Core"
+        ],
         "compile": {
-          "lib/net20/CsvHelper.dll": {}
+          "lib/net40/CsvHelper.dll": {}
         },
         "runtime": {
-          "lib/net20/CsvHelper.dll": {}
+          "lib/net40/CsvHelper.dll": {}
         }
       },
       "Microsoft.ApplicationInsights/1.1.1-beta": {
@@ -5203,25 +5221,23 @@
     }
   },
   "libraries": {
-    "CsvHelper/2.13.5": {
+    "CsvHelper/2.14.1": {
       "type": "package",
-      "sha512": "fC8DPi/YTcZ8uXFiAeuT9EpsR2TE5cSJ2jg/4tht/Oen6az/djebpYoCQEtI33RfNrSZ533SedOknlWtUTX3fw==",
+      "sha512": "aLnm2LGWgHU7SQrj0BiPVDtOtt39ikmHN6KqxseDj3P+2p59LXSrR5xyosq5POQw7OwOwg9WLDOTe8e6Xfns9Q==",
       "files": [
-        "CsvHelper.2.13.5.nupkg",
-        "CsvHelper.2.13.5.nupkg.sha512",
+        "CsvHelper.2.14.1.nupkg",
+        "CsvHelper.2.14.1.nupkg.sha512",
         "CsvHelper.nuspec",
+        "lib/dotnet5.4/CsvHelper.dll",
+        "lib/dotnet5.4/CsvHelper.xml",
         "lib/net20/CsvHelper.dll",
-        "lib/net20/CsvHelper.pdb",
         "lib/net20/CsvHelper.xml",
-        "lib/net35-client/CsvHelper.dll",
-        "lib/net35-client/CsvHelper.pdb",
-        "lib/net35-client/CsvHelper.xml",
-        "lib/net40-client/CsvHelper.dll",
-        "lib/net40-client/CsvHelper.pdb",
-        "lib/net40-client/CsvHelper.xml",
-        "lib/portable-net40+sl5+win8+wpa+wp8/CsvHelper.dll",
-        "lib/portable-net40+sl5+win8+wpa+wp8/CsvHelper.pdb",
-        "lib/portable-net40+sl5+win8+wpa+wp8/CsvHelper.xml"
+        "lib/net35/CsvHelper.dll",
+        "lib/net35/CsvHelper.xml",
+        "lib/net40/CsvHelper.dll",
+        "lib/net40/CsvHelper.xml",
+        "lib/portable-net40+sl50+win+wpa81+wp80+MonoAndroid10+Xamarin.iOS10+MonoTouch10/CsvHelper.dll",
+        "lib/portable-net40+sl50+win+wpa81+wp80+MonoAndroid10+Xamarin.iOS10+MonoTouch10/CsvHelper.xml"
       ]
     },
     "Microsoft.ApplicationInsights/1.1.1-beta": {
@@ -7187,6 +7203,7 @@
   },
   "projectFileDependencyGroups": {
     "": [
+      "CsvHelper >= 2.14.1",
       "Microsoft.ApplicationInsights.AspNet >= 1.0.0-rc1",
       "Microsoft.AspNet.Diagnostics >= 1.0.0-rc1-final",
       "Microsoft.AspNet.IISPlatformHandler >= 1.0.0-rc1-final",
@@ -7203,8 +7220,6 @@
       "Microsoft.Extensions.Logging.Debug >= 1.0.0-rc1-final",
       "Microsoft.VisualStudio.Web.BrowserLink.Loader >= 14.0.0-rc1-final"
     ],
-    "DNX,Version=v4.6": [
-      "CsvHelper >= 2.13.5"
-    ]
+    "DNX,Version=v4.6": []
   }
 }

@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.ApplicationInsights.AspNet</id>
+    <version>1.0.0-rc1</version>
+    <title>Application Insights for ASP.NET 5 Web Applications</title>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <licenseUrl>http://go.microsoft.com/fwlink/?LinkID=510709</licenseUrl>
+    <projectUrl>https://github.com/Microsoft/ApplicationInsights-aspnet5</projectUrl>
+    <iconUrl>http://appanacdn.blob.core.windows.net/cdn/icons/aic.png</iconUrl>
+    <description>Application Insights for ASP.NET 5 web applications. See http://go.microsoft.com/fwlink/?LinkID=510752 for more information.</description>
+    <copyright>Copyright © Microsoft. All Rights Reserved.</copyright>
+    <tags>Analytics ApplicationInsights Telemetry AppInsights ASP.NET 5</tags>
+    <dependencies>
+      <group targetFramework="DNX4.5.1">
+        <dependency id="Microsoft.ApplicationInsights" version="1.1.1-beta" />
+        <dependency id="Microsoft.AspNet.Hosting.Abstractions" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.AspNet.Http.Abstractions" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.AspNet.Http.Features" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.AspNet.Mvc" version="6.0.0-rc1-final" />
+        <dependency id="Microsoft.Extensions.Logging.Abstractions" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.Extensions.Configuration" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.Extensions.DiagnosticAdapter" version="1.0.0-rc1-final" />
+      </group>
+      <group targetFramework="DNXCore5.0">
+        <dependency id="Microsoft.ApplicationInsights" version="1.1.1-beta" />
+        <dependency id="Microsoft.AspNet.Hosting.Abstractions" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.AspNet.Http.Abstractions" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.AspNet.Http.Features" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.AspNet.Mvc" version="6.0.0-rc1-final" />
+        <dependency id="Microsoft.Extensions.Logging.Abstractions" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.Extensions.Configuration" version="1.0.0-rc1-final" />
+        <dependency id="Microsoft.Extensions.DiagnosticAdapter" version="1.0.0-rc1-final" />
+        <dependency id="System.Net.NameResolution" version="4.0.0-beta-23302" />
+        <dependency id="System.Reflection" version="4.0.10-beta-23109" />
+      </group>
+    </dependencies>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="mscorlib" targetFramework="DNX4.5.1" />
+      <frameworkAssembly assemblyName="System" targetFramework="DNX4.5.1" />
+      <frameworkAssembly assemblyName="System.Core" targetFramework="DNX4.5.1" />
+      <frameworkAssembly assemblyName="Microsoft.CSharp" targetFramework="DNX4.5.1" />
+    </frameworkAssemblies>
+  </metadata>
+</package>
