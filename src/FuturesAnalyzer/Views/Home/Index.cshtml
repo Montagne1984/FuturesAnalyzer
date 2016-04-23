@@ -164,6 +164,7 @@
                 var lastYearPercentageBalance = 0;
                 var dailyPercentageBalance = [];
                 var budgetFactor = 1;
+                var budgetChangeFactor = 1;
                 if (report.length > 0) {
                     lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                     $.each(report, function(index, value) {
@@ -183,7 +184,7 @@
                             var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
                             if (percentageDelta > 0.1) {
                                 percentageDelta *= budgetFactor;
-                                budgetFactor *= 1.5;
+                                budgetFactor *= budgetChangeFactor;
                             }
                             else {
                                 percentageDelta *= budgetFactor;
@@ -689,7 +690,7 @@
             '焦炭': {
                 TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.019,
-                StopProfitCriteria: 0.2,
+                StopProfitCriteria: 0.18,
                 StartProfitCriteria: 0.068,
                 OpenCriteria: 0.022,
                 FollowTrend: false
