@@ -18,6 +18,10 @@ namespace FuturesAnalyzer.Models.States
             //var ceilingOpenPrice = Math.Ceiling(LowestPrice * (1 + OpenCriteria));
             //var floorOpenPrice = Math.Floor(HighestPrice * (1 - OpenCriteria));
             MarketState newState = null;
+            if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
+            {
+                Account.HitBothCriteriaInAmbiguousStateCount++;
+            }
             if (dailyPrice.HighestPrice >= ceilingOpenPrice)
             {
                 if (FollowTrend)
