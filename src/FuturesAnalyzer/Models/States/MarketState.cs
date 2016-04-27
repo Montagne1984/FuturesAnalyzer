@@ -1,4 +1,6 @@
-﻿namespace FuturesAnalyzer.Models.States
+﻿using System;
+
+namespace FuturesAnalyzer.Models.States
 {
     public abstract class MarketState
     {
@@ -9,6 +11,7 @@
         public static int StopLossUnit = 1;
         public static bool NeverEnterAmbiguousState = false;
         public static int AppendUnitCountAfterProfitStart = 0;
+        public static decimal MinimumPriceUnit = 1;
 
         public Account Account { get; set; }
         public decimal HighestPrice { get; set; }
@@ -24,5 +27,15 @@
 
         protected abstract decimal GetStopProfitPrice();
         protected abstract decimal GetStopLossPrice();
+
+        protected virtual decimal Ceiling(decimal price)
+        {
+            return Math.Ceiling(price/MinimumPriceUnit)*MinimumPriceUnit;
+        }
+
+        protected virtual decimal Floor(decimal price)
+        {
+            return Math.Floor(price/MinimumPriceUnit)*MinimumPriceUnit;
+        }
     }
 }

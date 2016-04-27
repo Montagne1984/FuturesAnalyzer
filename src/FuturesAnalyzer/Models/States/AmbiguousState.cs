@@ -13,10 +13,8 @@ namespace FuturesAnalyzer.Models.States
             {
                 return null;
             }
-            var ceilingOpenPrice = Math.Ceiling(PreviousPrice.Value * (1 + OpenCriteria));
-            var floorOpenPrice = Math.Floor(PreviousPrice.Value * (1 - OpenCriteria));
-            //var ceilingOpenPrice = Math.Ceiling(LowestPrice * (1 + OpenCriteria));
-            //var floorOpenPrice = Math.Floor(HighestPrice * (1 - OpenCriteria));
+            var ceilingOpenPrice = Ceiling(PreviousPrice.Value * (1 + OpenCriteria));
+            var floorOpenPrice = Floor(PreviousPrice.Value * (1 - OpenCriteria));
             MarketState newState = null;
             if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
             {

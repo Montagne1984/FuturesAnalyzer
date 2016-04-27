@@ -7,6 +7,10 @@
         <label asp-for="TransactionFeeRate">交易手续费率</label>
         <input type="number" min="0" step="0.000001" asp-for="TransactionFeeRate" class="form-control" />
     </div>
+    <div class="form-group form-inline">
+        <label asp-for="TransactionFeeRate">最小价格单位</label>
+        <input type="number" min="0" step="0.5" asp-for="MinimumPriceUnit" class="form-control" />
+    </div>
     <div class="form-group">
         <label asp-for="StopLossUnit">止损份数</label>
         <input type="number" min="0" step="1" asp-for="StopLossUnit" class="form-control" />
@@ -673,6 +677,7 @@
         var settings = {
             '热轧卷板': {
                 TransactionFeeRate: 0.00004,
+                MinimumPriceUnit: 1,
                 StopLossCriteria: 0.006,
                 StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.157,
@@ -681,6 +686,7 @@
             },
             '螺纹钢': {
                 TransactionFeeRate: 0.000045,
+                MinimumPriceUnit: 1,
                 StopLossCriteria: 0.007,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.128,
@@ -689,7 +695,8 @@
             },
             '焦炭': {
                 TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.018,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.014,
                 StopProfitCriteria: 0.18,
                 StartProfitCriteria: 0.164,
                 OpenCriteria: 0.02,
@@ -697,6 +704,7 @@
             },
             '焦煤': {
                 TransactionFeeRate: 0.00006,
+                MinimumPriceUnit: 0.5,
                 StopLossCriteria: 0.029,
                 StopProfitCriteria: 0.19,
                 StartProfitCriteria: 0.12,
@@ -1001,6 +1009,7 @@
             var selectedProductName = $('#SelectedProductName').val();
             if (settings[selectedProductName]) {
                 $('#TransactionFeeRate').val(settings[selectedProductName].TransactionFeeRate);
+                $('#MinimumPriceUnit').val(settings[selectedProductName].MinimumPriceUnit);
                 $('#StopLossCriteria').val(settings[selectedProductName].StopLossCriteria);
                 $('#StopProfitCriteria').val(settings[selectedProductName].StopProfitCriteria);
                 $('#StartProfitCriteria').val(settings[selectedProductName].StartProfitCriteria);
