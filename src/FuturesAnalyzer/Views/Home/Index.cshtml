@@ -166,15 +166,15 @@
                 var lossCount = 0;
                 var percentageBalance = 0;
                 var lastYearPercentageBalance = 0;
-                var profitFactor = 100 / 12;
+                var profitFactor = 100 / 13;
                 var dailyPercentageBalance = [];
                 var dailyBudgetFactor = [];
                 var budgetFactor = 1;
-                var budgetChangeFactor = 1.5;
+                var budgetChangeFactor = 1.4;
                 if (report.length > 0) {
                     lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                     $.each(report, function(index, value) {
-                        categories.push(value.DailyPrice.Date);
+                        categories.push((new Date(value.DailyPrice.Date)).toLocaleDateString());
                         prices.push(value.DailyPrice.ClosePrice);
                         contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
                         balances.push(value.Balance);
@@ -188,7 +188,6 @@
                         }
                         if (index > 0 && report[index - 1].Contract) {
                             var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
-                            percentageDelta *= budgetFactor;
                             //if (percentageDelta > 0.1) {
                             //    percentageDelta *= budgetFactor;
                             //    budgetFactor *= budgetChangeFactor;
@@ -203,6 +202,7 @@
                                 minSinglePercentageDelta = percentageDelta;
                                 minSinglePercentageDeltaDate = value.DailyPrice.Date;
                             }
+                            percentageDelta *= budgetFactor;
                             percentageBalance += percentageDelta * profitFactor;
                             if (percentageDelta > 0 && percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
                                 budgetFactor *= budgetChangeFactor;
