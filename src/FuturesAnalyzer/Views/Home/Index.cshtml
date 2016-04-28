@@ -388,6 +388,12 @@
                                 style: {
                                     color: Highcharts.getOptions().colors[0]
                                 }
+                            },
+                            labels: {
+                                format: '{value}',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
                             }
                         },
                         {
@@ -397,9 +403,18 @@
                                 style: {
                                     color: Highcharts.getOptions().colors[1]
                                 }
+                            },
+                            labels: {
+                                format: '{value}',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
                             }
                         }
                     ],
+                    tooltip: {
+                        shared: true
+                    },
                     series: [
                         {
                             name: '盈亏',
