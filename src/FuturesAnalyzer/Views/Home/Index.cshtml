@@ -256,8 +256,8 @@
                 var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
 
                 var summaryText =
-                    '最终盈利（每笔交易本金相同）：' + percentageBalance +
-                    '，年化盈利（每笔交易本金相同）：' + percentageBalance / report.length * 245 +
+                    '最终盈利倍数（每笔交易本金相同）：' + percentageBalance +
+                    '，年化盈利倍数（每笔交易本金相同）：' + percentageBalance / report.length * 245 +
                     '，最终盈利：' + endBalance +
                     '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                     '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
@@ -273,7 +273,7 @@
                     '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + minSinglePercentageDeltaDate + ')';
                 summaryText += '<br/>每笔交易本金相同时各年盈利<br/>';
                 $.each(annualProfits, function (key, value) {
-                    summaryText += key + '盈利：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
+                    summaryText += key + '盈利倍数：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
                 });
                 summaryText += '<br/>';
                 $.each(annualProfits, function(key, value) {
