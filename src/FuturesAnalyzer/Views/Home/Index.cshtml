@@ -166,9 +166,11 @@
                 var lossCount = 0;
                 var percentageBalance = 0;
                 var lastYearPercentageBalance = 0;
+                var profitFactor = 100 / 12;
                 var dailyPercentageBalance = [];
+                var dailyBudgetFactor = [];
                 var budgetFactor = 1;
-                var budgetChangeFactor = 1;
+                var budgetChangeFactor = 1.5;
                 if (report.length > 0) {
                     lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                     $.each(report, function(index, value) {
@@ -186,13 +188,14 @@
                         }
                         if (index > 0 && report[index - 1].Contract) {
                             var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
-                            if (percentageDelta > 0.1) {
-                                percentageDelta *= budgetFactor;
-                                budgetFactor *= budgetChangeFactor;
-                            }
-                            else {
-                                percentageDelta *= budgetFactor;
-                            }
+                            percentageDelta *= budgetFactor;
+                            //if (percentageDelta > 0.1) {
+                            //    percentageDelta *= budgetFactor;
+                            //    budgetFactor *= budgetChangeFactor;
+                            //}
+                            //else {
+                            //    percentageDelta *= budgetFactor;
+                            //}
                             if (percentageDelta > maxSinglePercentageDelta) {
                                 maxSinglePercentageDelta = percentageDelta;
                                 maxSinglePercentageDeltaDate = value.DailyPrice.Date;
@@ -200,9 +203,17 @@
                                 minSinglePercentageDelta = percentageDelta;
                                 minSinglePercentageDeltaDate = value.DailyPrice.Date;
                             }
-                            percentageBalance += percentageDelta;
+                            percentageBalance += percentageDelta * profitFactor;
+                            if (percentageDelta > 0 && percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
+                                budgetFactor *= budgetChangeFactor;
+                            } else {
+                                while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
+                                    budgetFactor /= budgetChangeFactor;
+                                }
+                            }
                         }
                         dailyPercentageBalance.push(percentageBalance);
+                        dailyBudgetFactor.push(budgetFactor);
                         maxBalance = Math.max(maxBalance, value.Balance);
                         minBalance = Math.min(minBalance, value.Balance);
                         lastBalance = value.Balance;
@@ -252,8 +263,8 @@
                 var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
 
                 var summaryText =
-                    '最终盈利百分比（每笔交易本金相同）：' + percentageBalance * 100 + '%' +
-                    '，年化盈利百分比（每笔交易本金相同）：' + percentageBalance / report.length * 245 * 100 + '%' +
+                    '最终盈利（每笔交易本金相同）：' + percentageBalance +
+                    '，年化盈利（每笔交易本金相同）：' + percentageBalance / report.length * 245 +
                     '，最终盈利：' + endBalance +
                     '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                     '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
@@ -267,9 +278,9 @@
                     '，最大单日亏损：' + minSingleDelta + '(' + minSingleDeltaDate + ')' +
                     '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + maxSinglePercentageDeltaDate + ')' +
                     '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + minSinglePercentageDeltaDate + ')';
-                summaryText += '<br/>每笔交易本金相同时各年盈利百分比<br/>';
+                summaryText += '<br/>每笔交易本金相同时各年盈利<br/>';
                 $.each(annualProfits, function (key, value) {
-                    summaryText += key + '盈利：' + value.profitPercentageWithSameBudget * 100 + '%' + '&nbsp;&nbsp;&nbsp;';
+                    summaryText += key + '盈利：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
                 });
                 summaryText += '<br/>';
                 $.each(annualProfits, function(key, value) {
@@ -378,6 +389,15 @@
                                     color: Highcharts.getOptions().colors[0]
                                 }
                             }
+                        },
+                        {
+                            // Secondary yAxis
+                            title: {
+                                text: '成本系数',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
+                            }
                         }
                     ],
                     series: [
@@ -385,6 +405,11 @@
                             name: '盈亏',
                             type: 'spline',
                             data: dailyPercentageBalance
+                        },
+                        {
+                            name: '成本系数',
+                            type: 'spline',
+                            data: dailyBudgetFactor
                         }
                     ]
                 });
