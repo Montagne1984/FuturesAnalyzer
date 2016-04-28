@@ -188,13 +188,6 @@
                         }
                         if (index > 0 && report[index - 1].Contract) {
                             var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
-                            //if (percentageDelta > 0.1) {
-                            //    percentageDelta *= budgetFactor;
-                            //    budgetFactor *= budgetChangeFactor;
-                            //}
-                            //else {
-                            //    percentageDelta *= budgetFactor;
-                            //}
                             if (percentageDelta > maxSinglePercentageDelta) {
                                 maxSinglePercentageDelta = percentageDelta;
                                 maxSinglePercentageDeltaDate = value.DailyPrice.Date;
