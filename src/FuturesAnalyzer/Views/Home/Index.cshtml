@@ -124,7 +124,7 @@
     <script>
         $().ready(function() {
             var d = new Date();
-            d.setDate(d.getDate() - 1);
+            d.setDate(d.getDate());
             $('#EndDate').val(toDateFormat(d));
             d.setDate(d.getDate() - 365);
             $('#StartDate').val('2000-01-01');
@@ -752,7 +752,7 @@
                 StartProfitCriteria: 0.157,
                 OpenCriteria: 0.012,
                 FollowTrend: true,
-                BudgetFactor: 2.08,
+                BudgetFactor: 1.71,
                 BondPercentage: 13
             },
             '螺纹钢': {
@@ -774,7 +774,7 @@
                 StartProfitCriteria: 0.164,
                 OpenCriteria: 0.02,
                 FollowTrend: false,
-                BudgetFactor: 1.93,
+                BudgetFactor: 1.89,
                 BondPercentage: 13
             },
             '焦煤': {
@@ -785,7 +785,7 @@
                 StartProfitCriteria: 0.12,
                 OpenCriteria: 0.054,
                 FollowTrend: false,
-                BudgetFactor: 1.93,
+                BudgetFactor: 1.64,
                 BondPercentage: 13
             },
             '热轧卷板1610': {
