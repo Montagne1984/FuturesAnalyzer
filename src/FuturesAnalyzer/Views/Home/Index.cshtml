@@ -830,11 +830,14 @@
             },
             '铝': {
                 TransactionFeeRate: 0.0008,
+                MinimumPriceUnit: 5,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.19,
-                StartProfitCriteria: 0.096,
+                StartProfitCriteria: 0.095,
                 OpenCriteria: 0.01,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.93,
+                BondPercentage: 9
             },
             '黄金': {
                 TransactionFeeRate: 0.0008,
@@ -1091,6 +1094,7 @@
                 $('#StopProfitCriteria').val(settings[selectedProductName].StopProfitCriteria);
                 $('#StartProfitCriteria').val(settings[selectedProductName].StartProfitCriteria);
                 $('#OpenCriteria').val(settings[selectedProductName].OpenCriteria);
+                $('#BondPercentage').val(settings[selectedProductName].BondPercentage);
                 $('#FollowTrend').prop('checked', settings[selectedProductName].FollowTrend);
                 if (settings[selectedProductName].BudgetFactor) {
                     $('#BudgetFactor').val(settings[selectedProductName].BudgetFactor);
