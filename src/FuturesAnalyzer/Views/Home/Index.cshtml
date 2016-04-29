@@ -8,8 +8,21 @@
         <input type="number" min="0" step="0.000001" asp-for="TransactionFeeRate" class="form-control" />
     </div>
     <div class="form-group form-inline">
-        <label asp-for="TransactionFeeRate">最小价格单位</label>
+        <label asp-for="MinimumPriceUnit">最小价格单位</label>
         <input type="number" min="0" step="0.5" asp-for="MinimumPriceUnit" class="form-control" />
+    </div>
+    <div class="form-group form-inline">
+        <label for="BudgetFactor">成本扩大系数</label>
+        <input type="number" min="0" step="0.01" id="BudgetFactor" class="form-control" value="1" required />
+    </div>
+    <div class="checkbox">
+        <label for="UseBudgetFactor">
+            <input id="UseBudgetFactor" type="checkbox" checked> 使用成本扩大系数
+        </label>
+    </div>
+    <div class="form-group form-inline">
+        <label for="BondPercentage">最低保证金比例</label>
+        <input type="number" min="0" step="1" id="BondPercentage" class="form-control" value="13" required />
     </div>
     <div class="form-group">
         <label asp-for="StopLossUnit">止损份数</label>
@@ -114,7 +127,6 @@
             d.setDate(d.getDate() - 1);
             $('#EndDate').val(toDateFormat(d));
             d.setDate(d.getDate() - 365);
-            //$('#StartDate').val(toDateFormat(d));
             $('#StartDate').val('2000-01-01');
 
             setDefaultSettings();
@@ -166,15 +178,24 @@
                 var lossCount = 0;
                 var percentageBalance = 0;
                 var lastYearPercentageBalance = 0;
-                var profitFactor = 100 / 13;
+                var profitFactor = 100 / $("#BondPercentage").val();
                 var dailyPercentageBalance = [];
                 var dailyBudgetFactor = [];
                 var budgetFactor = 1;
-                var budgetChangeFactor = 1.4;
+                var budgetChangeFactor = $("#UseBudgetFactor").prop("checked") ? $("#BudgetFactor").val() : 1;
+                var maxLossRangeStartPoint = 0;
+                var maxLossRange = 0;
+                var maxLossRangeStartDate = new Date();
+                var maxLossRangeEndDate = new Date();
                 if (report.length > 0) {
                     lastYearStartPrice = report[0].DailyPrice.ClosePrice;
+                    var currentLossRangeStartPoint = 0;
+                    var currentLossRange = 0;
+                    var currentLossRangeStartDate = report[0].DailyPrice.Date;
+                    maxLossRangeStartDate = report[0].DailyPrice.Date;
+                    maxLossRangeEndDate = report[0].DailyPrice.Date;
                     $.each(report, function(index, value) {
-                        categories.push((new Date(value.DailyPrice.Date)).toLocaleDateString());
+                        categories.push(formatDate(value.DailyPrice.Date));
                         prices.push(value.DailyPrice.ClosePrice);
                         contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
                         balances.push(value.Balance);
@@ -203,6 +224,19 @@
                                 while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
                                     budgetFactor /= budgetChangeFactor;
                                 }
+                            }
+
+                            if (percentageBalance > currentLossRangeStartPoint) {
+                                currentLossRangeStartPoint = percentageBalance;
+                                currentLossRangeStartDate = value.DailyPrice.Date;
+                                currentLossRange = 0;
+                            }
+                            currentLossRange = Math.max(currentLossRange, currentLossRangeStartPoint - percentageBalance);
+                            if (currentLossRange >= maxLossRange) {
+                                maxLossRange = currentLossRange;
+                                maxLossRangeStartPoint = currentLossRangeStartPoint;
+                                maxLossRangeStartDate = currentLossRangeStartDate;
+                                maxLossRangeEndDate = value.DailyPrice.Date;
                             }
                         }
                         dailyPercentageBalance.push(percentageBalance);
@@ -256,9 +290,11 @@
                 var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
 
                 var summaryText =
-                    '最终盈利倍数（每笔交易本金相同）：' + percentageBalance +
-                    '，年化盈利倍数（每笔交易本金相同）：' + percentageBalance / report.length * 245 +
-                    '，最终盈利：' + endBalance +
+                    '每笔交易本金相同：' + 
+                    '最终盈利倍数：' + percentageBalance +
+                    '，年化盈利倍数：' + percentageBalance / report.length * 245 +
+                    '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
+                    '<br/><br/>最终盈利：' + endBalance +
                     '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                     '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
                     '，日均盈利：' + averageBalance +
@@ -267,15 +303,15 @@
                     '，最大份数：' + maxUnit +
                     '，最大盈利：' + maxBalance +
                     '，最小盈利：' + minBalance + 
-                    '，最大单日盈利：' + maxSingleDelta + '(' + maxSingleDeltaDate + ')' +
-                    '，最大单日亏损：' + minSingleDelta + '(' + minSingleDeltaDate + ')' +
-                    '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + maxSinglePercentageDeltaDate + ')' +
-                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + minSinglePercentageDeltaDate + ')';
-                summaryText += '<br/>每笔交易本金相同时各年盈利<br/>';
+                    '，最大单日盈利：' + maxSingleDelta + '(' + formatDate(maxSingleDeltaDate) + ')' +
+                    '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
+                    '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
+                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
+                summaryText += '<br/><br/>每笔交易本金相同时各年盈利<br/>';
                 $.each(annualProfits, function (key, value) {
                     summaryText += key + '盈利倍数：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
                 });
-                summaryText += '<br/>';
+                summaryText += '<br/><br/>';
                 $.each(annualProfits, function(key, value) {
                     summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
                 });
@@ -709,40 +745,48 @@
 
         var settings = {
             '热轧卷板': {
-                TransactionFeeRate: 0.00004,
+                TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
                 StopLossCriteria: 0.006,
                 StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.157,
                 OpenCriteria: 0.012,
-                FollowTrend: true
+                FollowTrend: true,
+                BudgetFactor: 1.72,
+                BondPercentage: 13
             },
             '螺纹钢': {
-                TransactionFeeRate: 0.000045,
+                TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
                 StopLossCriteria: 0.007,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.128,
                 OpenCriteria: 0.01,
-                FollowTrend: true
+                FollowTrend: true,
+                BudgetFactor: 1.71,
+                BondPercentage: 13
             },
             '焦炭': {
-                TransactionFeeRate: 0.00006,
+                TransactionFeeRate: 0.000864,
                 MinimumPriceUnit: 0.5,
                 StopLossCriteria: 0.014,
                 StopProfitCriteria: 0.18,
                 StartProfitCriteria: 0.164,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.92,
+                BondPercentage: 13
             },
             '焦煤': {
-                TransactionFeeRate: 0.00006,
+                TransactionFeeRate: 0.000864,
                 MinimumPriceUnit: 0.5,
                 StopLossCriteria: 0.029,
                 StopProfitCriteria: 0.19,
                 StartProfitCriteria: 0.12,
                 OpenCriteria: 0.054,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.93,
+                BondPercentage: 13
             },
             '热轧卷板1610': {
                 TransactionFeeRate: 0.00004,
@@ -1048,7 +1092,14 @@
                 $('#StartProfitCriteria').val(settings[selectedProductName].StartProfitCriteria);
                 $('#OpenCriteria').val(settings[selectedProductName].OpenCriteria);
                 $('#FollowTrend').prop('checked', settings[selectedProductName].FollowTrend);
+                if (settings[selectedProductName].BudgetFactor) {
+                    $('#BudgetFactor').val(settings[selectedProductName].BudgetFactor);
+                }
             }
+        }
+
+        function formatDate(date) {
+            return (new Date(date)).toLocaleDateString();
         }
 
         //$('#optimize').click(function (event) {
