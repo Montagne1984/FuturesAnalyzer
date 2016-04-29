@@ -20,5 +20,6 @@ namespace FuturesAnalyzer.ViewModels
         public DateTime StartDate { get; set; } = DateTime.Now.AddYears(-1);
         public DateTime EndDate { get; set; } = DateTime.Now.AddDays(-1);
         public bool Optimize { get; set; }
+        public decimal MinimumPriceUnit { get; set; } = MarketState.MinimumPriceUnit;
     }
 }

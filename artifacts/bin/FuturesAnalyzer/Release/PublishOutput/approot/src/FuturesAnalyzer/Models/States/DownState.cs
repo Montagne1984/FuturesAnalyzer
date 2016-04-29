@@ -15,7 +15,7 @@ namespace FuturesAnalyzer.Models.States
                 && dailyPrice.ClosePrice <= Account.Contract.Price * (1 - StartProfitCriteria))
             {
                 Account.Contract.AppendUnitPrice = Account.Contract.Price * (1 - StartProfitCriteria);
-                if (Account.Contract.AppendUnitPrice >= Math.Ceiling(dailyPrice.ClosePrice + (Account.Contract.Price - dailyPrice.ClosePrice) * StopProfitCriteria))
+                if (Account.Contract.AppendUnitPrice >= Ceiling(dailyPrice.ClosePrice + (Account.Contract.Price - dailyPrice.ClosePrice) * StopProfitCriteria))
                 {
                     Account.Contract.AppendUnitPrice = decimal.MaxValue;
                 }
@@ -146,12 +146,12 @@ namespace FuturesAnalyzer.Models.States
             }
             return LowestPrice >= Account.Contract.Price * (1 - StartProfitCriteria)
                 ? decimal.MaxValue
-                : Math.Ceiling(LowestPrice + (Account.Contract.Price - LowestPrice) * StopProfitCriteria);
+                : Ceiling(LowestPrice + (Account.Contract.Price - LowestPrice) * StopProfitCriteria);
         }
 
         protected override decimal GetStopLossPrice()
         {
-            return Math.Ceiling(Account.Contract.Price * (1 + StopLossCriteria));
+            return Ceiling(Account.Contract.Price * (1 + StopLossCriteria));
         }
     }
 }

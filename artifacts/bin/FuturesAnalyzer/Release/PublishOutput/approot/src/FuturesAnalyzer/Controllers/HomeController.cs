@@ -31,6 +31,7 @@ namespace FuturesAnalyzer.Controllers
             MarketState.StartProfitCriteriaForMultiUnits = model.StartProfitCriteriaForMultiUnits;
             MarketState.NeverEnterAmbiguousState = model.NeverEnterAmbiguousState;
             MarketState.AppendUnitCountAfterProfitStart = model.AppendUnitCountAfterProfitStart;
+            MarketState.MinimumPriceUnit = model.MinimumPriceUnit;
             AmbiguousState.OpenCriteria = model.OpenCriteria;
             AmbiguousState.FollowTrend = model.FollowTrend;
             var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");

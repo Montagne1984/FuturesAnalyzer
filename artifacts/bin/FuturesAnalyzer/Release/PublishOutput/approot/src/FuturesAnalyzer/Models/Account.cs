@@ -13,6 +13,7 @@ namespace FuturesAnalyzer.Models
         public MarketState MarketState { get; set; }
         public bool? IsLastTransactionLoss { get; set; }
         public decimal TransactionFeeRate { get; set; }
+        public int HitBothCriteriaInAmbiguousStateCount { get; set; } = 0;
 
         public decimal DeductTransactionFee(decimal price, int unit)
         {
