@@ -292,7 +292,7 @@
                 var summaryText =
                     '每笔交易本金相同：' + 
                     '最终盈利倍数：' + percentageBalance +
-                    '，年化盈利倍数：' + percentageBalance / report.length * 245 +
+                    '，年化盈利倍数：' + Math.pow(percentageBalance, 1 / (report.length / 245.0)) +
                     '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
                     '<br/><br/>最终盈利：' + endBalance +
                     '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
@@ -840,7 +840,7 @@
                 FollowTrend: false
             },
             '铝': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000236,
                 MinimumPriceUnit: 5,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.19,
@@ -899,20 +899,26 @@
                 FollowTrend: true
             },
             '锡': {
-                TransactionFeeRate: 0.0008,
+                MinimumPriceUnit: 10,
+                TransactionFeeRate: 0.000032,
                 StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.09,
-                StartProfitCriteria: 0.065,
-                OpenCriteria: 0.02,
-                FollowTrend: false
+                StopProfitCriteria: 0.12,
+                StartProfitCriteria: 0.064,
+                OpenCriteria: 0.031,
+                FollowTrend: false,
+                BudgetFactor: 1.88,
+                BondPercentage: 10
             },
             '镍': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.06,
-                OpenCriteria: 0.021,
-                FollowTrend: false
+                MinimumPriceUnit: 10,
+                TransactionFeeRate: 0.0001,
+                StopLossCriteria: 0.019,
+                StopProfitCriteria: 0.12,
+                StartProfitCriteria: 0.061,
+                OpenCriteria: 0.032,
+                FollowTrend: false,
+                BudgetFactor: 2.07,
+                BondPercentage: 13
             },
             '菜籽': {
                 TransactionFeeRate: 0.0008,
