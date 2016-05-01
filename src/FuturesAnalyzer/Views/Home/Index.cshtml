@@ -218,8 +218,10 @@
                             }
                             percentageDelta *= budgetFactor;
                             percentageBalance += percentageDelta * profitFactor;
-                            if (percentageDelta > 0 && percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
-                                budgetFactor *= budgetChangeFactor;
+                            if (percentageDelta > 0) {
+                                if (percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
+                                    budgetFactor *= budgetChangeFactor;
+                                }
                             } else {
                                 while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
                                     budgetFactor /= budgetChangeFactor;
@@ -842,12 +844,12 @@
             '铝': {
                 TransactionFeeRate: 0.000236,
                 MinimumPriceUnit: 5,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.19,
-                StartProfitCriteria: 0.095,
-                OpenCriteria: 0.01,
-                FollowTrend: false,
-                BudgetFactor: 1.93,
+                StopLossCriteria: 0.019,
+                StopProfitCriteria: 0.16,
+                StartProfitCriteria: 0.127,
+                OpenCriteria: 0.012,
+                FollowTrend: true,
+                BudgetFactor: 1.94,
                 BondPercentage: 9
             },
             '黄金': {
