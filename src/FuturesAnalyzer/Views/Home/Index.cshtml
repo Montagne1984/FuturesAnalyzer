@@ -218,8 +218,10 @@
                             }
                             percentageDelta *= budgetFactor;
                             percentageBalance += percentageDelta * profitFactor;
-                            if (percentageDelta > 0 && percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
-                                budgetFactor *= budgetChangeFactor;
+                            if (percentageDelta > 0) {
+                                if (percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
+                                    budgetFactor *= budgetChangeFactor;
+                                }
                             } else {
                                 while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
                                     budgetFactor /= budgetChangeFactor;
@@ -749,12 +751,11 @@
                 MinimumPriceUnit: 1,
                 StopLossCriteria: 0.006,
                 StopProfitCriteria: 0.09,
-                StartProfitCriteria: 0.154,
+                StartProfitCriteria: 0.157,
                 OpenCriteria: 0.012,
                 FollowTrend: true,
-                BudgetFactor: 1.82,
-                BondPercentage: 13,
-                NeverEnterAmbiguousState: true
+                BudgetFactor: 1.71,
+                BondPercentage: 13
             },
             '螺纹钢': {
                 TransactionFeeRate: 0.00012,
@@ -765,8 +766,7 @@
                 OpenCriteria: 0.01,
                 FollowTrend: true,
                 BudgetFactor: 1.71,
-                BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                BondPercentage: 13
             },
             //'焦炭': {
             //    TransactionFeeRate: 0.000864,
@@ -788,8 +788,7 @@
                 OpenCriteria: 0.052,
                 FollowTrend: false,
                 BudgetFactor: 1.91,
-                BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                BondPercentage: 13
             },
             '焦煤': {
                 TransactionFeeRate: 0.000864,
@@ -800,8 +799,7 @@
                 OpenCriteria: 0.054,
                 FollowTrend: false,
                 BudgetFactor: 1.64,
-                BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                BondPercentage: 13
             },
             '热轧卷板1610': {
                 TransactionFeeRate: 0.00004,
@@ -846,14 +844,13 @@
             '铝': {
                 TransactionFeeRate: 0.000236,
                 MinimumPriceUnit: 5,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.19,
-                StartProfitCriteria: 0.095,
-                OpenCriteria: 0.01,
-                FollowTrend: false,
-                BudgetFactor: 1.93,
-                BondPercentage: 9,
-                NeverEnterAmbiguousState: false
+                StopLossCriteria: 0.019,
+                StopProfitCriteria: 0.16,
+                StartProfitCriteria: 0.127,
+                OpenCriteria: 0.012,
+                FollowTrend: true,
+                BudgetFactor: 1.94,
+                BondPercentage: 9
             },
             '黄金': {
                 TransactionFeeRate: 0.0008,
@@ -909,11 +906,10 @@
                 StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.12,
                 StartProfitCriteria: 0.064,
-                OpenCriteria: 0.029,
+                OpenCriteria: 0.031,
                 FollowTrend: false,
-                BudgetFactor: 1.87,
-                BondPercentage: 10,
-                NeverEnterAmbiguousState: false
+                BudgetFactor: 1.88,
+                BondPercentage: 10
             },
             '镍': {
                 MinimumPriceUnit: 10,
@@ -1119,7 +1115,6 @@
                 $('#OpenCriteria').val(settings[selectedProductName].OpenCriteria);
                 $('#BondPercentage').val(settings[selectedProductName].BondPercentage);
                 $('#FollowTrend').prop('checked', settings[selectedProductName].FollowTrend);
-                $('#NeverEnterAmbiguousState').prop('checked', settings[selectedProductName].NeverEnterAmbiguousState);
                 if (settings[selectedProductName].BudgetFactor) {
                     $('#BudgetFactor').val(settings[selectedProductName].BudgetFactor);
                 }
