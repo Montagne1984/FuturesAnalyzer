@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FuturesAnalyzer.Models.States
+﻿namespace FuturesAnalyzer.Models.States
 {
     public class UpState : MarketState
     {
@@ -12,10 +10,10 @@ namespace FuturesAnalyzer.Models.States
             }
 
             if (Account.Contract.AppendUnitPrice < Account.Contract.Price 
-                && dailyPrice.ClosePrice >= Account.Contract.Price * (1 + StartProfitCriteria))
+                && dailyPrice.ClosePrice >= Account.Contract.Price * (1 + Account.StartProfitCriteria))
             {
-                Account.Contract.AppendUnitPrice = Account.Contract.Price * (1 + StartProfitCriteria);
-                if (Account.Contract.AppendUnitPrice <= Floor(dailyPrice.ClosePrice - (dailyPrice.ClosePrice - Account.Contract.Price) * StopProfitCriteria))
+                Account.Contract.AppendUnitPrice = Account.Contract.Price * (1 + Account.StartProfitCriteria);
+                if (Account.Contract.AppendUnitPrice <= Floor(dailyPrice.ClosePrice - (dailyPrice.ClosePrice - Account.Contract.Price) * Account.StopProfitCriteria))
                 {
                     Account.Contract.AppendUnitPrice = decimal.MaxValue;
             }
@@ -27,7 +25,7 @@ namespace FuturesAnalyzer.Models.States
             var closePrice = 0m;
             if (dailyPrice.OpenPrice <= stopLossPrice)
             {
-                if (Account.Contract.Unit >= StopLossUnit)
+                if (Account.Contract.Unit >= Account.StopLossUnit)
                 {
                     closePrice = dailyPrice.OpenPrice;
                 }
@@ -55,7 +53,7 @@ namespace FuturesAnalyzer.Models.States
             }
             else if (dailyPrice.LowestPrice <= stopLossPrice)
             {
-                if (Account.Contract.Unit >= StopLossUnit)
+                if (Account.Contract.Unit >= Account.StopLossUnit)
                 {
                     closePrice = stopLossPrice;
                 }
@@ -111,7 +109,7 @@ namespace FuturesAnalyzer.Models.States
         protected override void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice)
         {
             MarketState newState;
-            if (NeverEnterAmbiguousState || closePrice > Account.Contract.Price || !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)
+            if (Account.NeverEnterAmbiguousState || closePrice > Account.Contract.Price || !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)
             {
                 newState = new DownState();
                 Account.IsLastTransactionLoss = closePrice < Account.Contract.Price;
@@ -129,7 +127,7 @@ namespace FuturesAnalyzer.Models.States
             Account.Balance += balanceDelta;
             if (balanceDelta > 0 && Account.Contract.AppendUnitPrice != decimal.MaxValue)
             {
-                Account.Balance += (closePrice - Account.Contract.AppendUnitPrice) * AppendUnitCountAfterProfitStart;
+                Account.Balance += (closePrice - Account.Contract.AppendUnitPrice) * Account.AppendUnitCountAfterProfitStart;
             }
             Account.DeductTransactionFee(closePrice, Account.Contract.Unit);
             Account.MarketState = newState;
@@ -138,18 +136,18 @@ namespace FuturesAnalyzer.Models.States
 
         protected override decimal GetStopLossPrice()
         {
-            return Floor(Account.Contract.Price*(1 - StopLossCriteria));
+            return Floor(Account.Contract.Price*(1 - Account.StopLossCriteria));
         }
 
         protected override decimal GetStopProfitPrice()
         {
             if (Account.Contract.Unit > 1)
             {
-                return Account.Contract.Price*(1 + StartProfitCriteriaForMultiUnits);
+                return Account.Contract.Price*(1 + Account.StartProfitCriteriaForMultiUnits);
             }
-            return HighestPrice <= Account.Contract.Price*(1 + StartProfitCriteria)
+            return HighestPrice <= Account.Contract.Price*(1 + Account.StartProfitCriteria)
                 ? decimal.MinValue
-                : Floor(HighestPrice - (HighestPrice - Account.Contract.Price)*StopProfitCriteria);
+                : Floor(HighestPrice - (HighestPrice - Account.Contract.Price)* Account.StopProfitCriteria);
         }
     }
 }

@@ -4,14 +4,6 @@ namespace FuturesAnalyzer.Models.States
 {
     public abstract class MarketState
     {
-        public static decimal StopLossCriteria = 0.01m;
-        public static decimal StartProfitCriteria = 0.02m;
-        public static decimal StopProfitCriteria = 0.2m;
-        public static decimal StartProfitCriteriaForMultiUnits = 0.01m;
-        public static int StopLossUnit = 1;
-        public static bool NeverEnterAmbiguousState = false;
-        public static int AppendUnitCountAfterProfitStart = 0;
-        public static decimal MinimumPriceUnit = 1;
 
         public Account Account { get; set; }
         public decimal HighestPrice { get; set; }
@@ -30,12 +22,12 @@ namespace FuturesAnalyzer.Models.States
 
         protected virtual decimal Ceiling(decimal price)
         {
-            return Math.Ceiling(price/MinimumPriceUnit)*MinimumPriceUnit;
+            return Math.Ceiling(price/ Account.MinimumPriceUnit)* Account.MinimumPriceUnit;
         }
 
         protected virtual decimal Floor(decimal price)
         {
-            return Math.Floor(price/MinimumPriceUnit)*MinimumPriceUnit;
+            return Math.Floor(price/ Account.MinimumPriceUnit)* Account.MinimumPriceUnit;
         }
     }
 }

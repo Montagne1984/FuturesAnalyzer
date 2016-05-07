@@ -1,22 +1,18 @@
-﻿using System.Linq;
-using FuturesAnalyzer.Models;
-using FuturesAnalyzer.Models.States;
+﻿using FuturesAnalyzer.Models;
 using FuturesAnalyzer.Services;
 using FuturesAnalyzer.ViewModels;
 using Microsoft.AspNet.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FuturesAnalyzer.Controllers
 {
     public class HomeController : Controller
     {
         private readonly IReportService _reportService;
-
-        public HomeController(IReportService reportService)
-        {
-            _reportService = reportService;
-        }
+        private object lockObject = new object();
 
         public IActionResult Index()
         {
@@ -61,7 +57,8 @@ namespace FuturesAnalyzer.Controllers
             //        }
             //    }
             //}
-            var report = GetReport(model);
+            var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");
+            var report = GetReport(model, dailyPrices);
             return Json(
                 new
                 {
@@ -74,52 +71,87 @@ namespace FuturesAnalyzer.Controllers
         {
             ReportSettingViewModel bestSettings = model.Clone();
             var bestPercentageBalance = 0m;
-            var settings = bestSettings;
 
             var followTrends = new bool[] { true, false };
-            
-            for (var stopLoss = 0.01m; stopLoss <= 0.04m; stopLoss += 0.01m)
+
+            var startTime = DateTime.Now;
+
+            var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");
+
+            //var range = ranges.ContainsKey(model.SelectedProductName) ? ranges[model.SelectedProductName] : ranges["big"];
+            var range = ranges["big"];
+
+            for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
             {
-                for (var startProfit = 0.02m; startProfit <= 0.2m; startProfit += 0.01m)
+                for (var startProfit = range.BottomStartProfit; startProfit <= range.TopStartProfit; startProfit += range.StartProfitStep)
                 {
-                    for (var stopProfit = 0.1m; stopProfit <= 0.3m; stopProfit += 0.1m)
+                    var taskList = new List<Task>();
+                    for (var stopProfit = range.BottomStopProfit; stopProfit <= range.TopStopProfit; stopProfit += range.StopProfitStep)
                     {
+                        var settings = model.Clone();
                         settings.StopLossCriteria = stopLoss;
                         settings.StartProfitCriteria = startProfit;
                         settings.StopProfitCriteria = stopProfit;
-
                         settings.NeverEnterAmbiguousState = true;
-                        var result = GetReport(settings);
-                        if (result.Last().PercentageBalance > bestPercentageBalance)
+
+                        taskList.Add(new Task(() =>
                         {
-                            bestPercentageBalance = result.Last().PercentageBalance;
-                            bestSettings = settings.Clone();
+                            var result = GetReport(settings, dailyPrices);
+                            var percentageBalance = result.Last().PercentageBalance;
+                            if (percentageBalance > bestPercentageBalance)
+                            {
+                                bestPercentageBalance = percentageBalance;
+                                bestSettings = settings;
+                            }
+                        }
+                        ));
+
+                        if (range.NeverEnterAmbiguousState)
+                        {
+                            continue;
                         }
 
-                        settings.NeverEnterAmbiguousState = false;
-                        for (var openCriteria = 0.01m; openCriteria <= 0.06m; openCriteria += 0.01m)
+                        for (var openCriteria = range.BottomOpenCriteria; openCriteria <= range.TopOpenCriteria; openCriteria += range.OpenCriteriaStep)
                         {
-                            settings.OpenCriteria = openCriteria;
-
-                            foreach(var followTrend in followTrends)
+                            foreach (var followTrend in followTrends)
                             {
-                                settings.FollowTrend = followTrend;
-                                result = GetReport(settings);
-                                if (result.Last().PercentageBalance > bestPercentageBalance)
+                                var currentSettings = model.Clone();
+                                currentSettings.StopLossCriteria = stopLoss;
+                                currentSettings.StartProfitCriteria = startProfit;
+                                currentSettings.StopProfitCriteria = stopProfit;
+                                currentSettings.NeverEnterAmbiguousState = false;
+                                currentSettings.OpenCriteria = openCriteria;
+                                currentSettings.FollowTrend = followTrend;
+
+                                taskList.Add(new Task(() =>
                                 {
-                                    bestPercentageBalance = result.Last().PercentageBalance;
-                                    bestSettings = settings.Clone();
+                                    var result = GetReport(currentSettings, dailyPrices);
+                                    var percentageBalance = result.Last().PercentageBalance;
+                                    if (percentageBalance > bestPercentageBalance)
+                                    {
+                                        bestPercentageBalance = percentageBalance;
+                                        bestSettings = currentSettings;
+                                    }
                                 }
+                                ));
                             }
                         }
                     }
+                    Parallel.For(0, taskList.Count, (i) =>
+                    {
+                        taskList[i].Start();
+                    });
+                    Task.WaitAll(taskList.ToArray());
                 }
             }
+
+            var timeSpan = DateTime.Now.Subtract(startTime);
+
             return Json(
                 new
                 {
                     BestSettings = bestSettings,
-                    Report = GetReport(bestSettings)
+                    Report = GetReport(bestSettings, dailyPrices)
                 });
         }
 
@@ -142,22 +174,117 @@ namespace FuturesAnalyzer.Controllers
             return View();
         }
 
-        private IEnumerable<DailyAccountData> GetReport(ReportSettingViewModel model)
+        private IEnumerable<DailyAccountData> GetReport(ReportSettingViewModel model, List<DailyPrice> dailyPrices)
         {
-            MarketState.StopLossUnit = model.StopLossUnit;
-            MarketState.StopLossCriteria = model.StopLossCriteria;
-            MarketState.StartProfitCriteria = model.StartProfitCriteria;
-            MarketState.StopProfitCriteria = model.StopProfitCriteria;
-            MarketState.StartProfitCriteriaForMultiUnits = model.StartProfitCriteriaForMultiUnits;
-            MarketState.NeverEnterAmbiguousState = model.NeverEnterAmbiguousState;
-            MarketState.AppendUnitCountAfterProfitStart = model.AppendUnitCountAfterProfitStart;
-            MarketState.MinimumPriceUnit = model.MinimumPriceUnit;
-            AmbiguousState.OpenCriteria = model.OpenCriteria;
-            AmbiguousState.FollowTrend = model.FollowTrend;
-            var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");
-            var account = new Account { TransactionFeeRate = model.TransactionFeeRate };
+            var account = new Account
+            {
+                TransactionFeeRate = model.TransactionFeeRate,
+                StopLossUnit = model.StopLossUnit,
+                StopLossCriteria = model.StopLossCriteria,
+                StartProfitCriteria = model.StartProfitCriteria,
+                StopProfitCriteria = model.StopProfitCriteria,
+                StartProfitCriteriaForMultiUnits = model.StartProfitCriteriaForMultiUnits,
+                NeverEnterAmbiguousState = model.NeverEnterAmbiguousState,
+                AppendUnitCountAfterProfitStart = model.AppendUnitCountAfterProfitStart,
+                MinimumPriceUnit = model.MinimumPriceUnit,
+                OpenCriteria = model.OpenCriteria,
+                FollowTrend = model.FollowTrend
+            };
             var dateRange = dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList();
             return _reportService.GenerateReport(account, dateRange).ToList();
         }
+
+        private Dictionary<string, OptimizeRange> ranges;
+        
+        public HomeController(IReportService reportService)
+        {
+            _reportService = reportService;
+            ranges = new Dictionary<string, OptimizeRange>();
+            ranges.Add("big",
+                new OptimizeRange
+                {
+                    BottomStopLoss = 0.005m,
+                    TopStopLoss = 0.04m,
+                    StopLossStep = 0.005m,
+                    BottomStartProfit = 0.02m,
+                    TopStartProfit = 0.16m,
+                    StartProfitStep = 0.01m,
+                    BottomStopProfit = 0.1m,
+                    TopStopProfit = 0.3m,
+                    StopProfitStep = 0.1m,
+                    BottomOpenCriteria = 0.01m,
+                    TopOpenCriteria = 0.05m,
+                    OpenCriteriaStep = 0.01m,
+                    NeverEnterAmbiguousState = false
+                });
+            ranges.Add("small",
+                new OptimizeRange
+                {
+                    BottomStopLoss = 0.001m,
+                    TopStopLoss = 0.04m,
+                    StopLossStep = 0.001m,
+                    BottomStartProfit = 0.02m,
+                    TopStartProfit = 0.2m,
+                    StartProfitStep = 0.001m,
+                    BottomStopProfit = 0.01m,
+                    TopStopProfit = 0.3m,
+                    StopProfitStep = 0.01m,
+                    BottomOpenCriteria = 0.001m,
+                    TopOpenCriteria = 0.06m,
+                    OpenCriteriaStep = 0.001m,
+                    NeverEnterAmbiguousState = true
+                });
+            //ranges.Add("热轧卷板",
+            //    new OptimizeRange
+            //    {
+            //        BottomStopLoss = 0.005m,
+            //        TopStopLoss = 0.02m,
+            //        StopLossStep = 0.001m,
+            //        BottomStartProfit = 0.09m,
+            //        TopStartProfit = 0.2m,
+            //        StartProfitStep = 0.001m,
+            //        BottomStopProfit = 0.07m,
+            //        TopStopProfit = 0.3m,
+            //        StopProfitStep = 0.01m,
+            //        BottomOpenCriteria = 0.001m,
+            //        TopOpenCriteria = 0.06m,
+            //        OpenCriteriaStep = 0.001m,
+            //        NeverEnterAmbiguousState = true
+            //    });
+            //ranges.Add("螺纹钢",
+            //    new OptimizeRange
+            //    {
+            //        BottomStopLoss = 0.005m,
+            //        TopStopLoss = 0.025m,
+            //        StopLossStep = 0.001m,
+            //        BottomStartProfit = 0.11m,
+            //        TopStartProfit = 0.17m,
+            //        StartProfitStep = 0.001m,
+            //        BottomStopProfit = 0.08m,
+            //        TopStopProfit = 0.12m,
+            //        StopProfitStep = 0.01m,
+            //        BottomOpenCriteria = 0.008m,
+            //        TopOpenCriteria = 0.02m,
+            //        OpenCriteriaStep = 0.001m,
+            //        NeverEnterAmbiguousState = false
+            //    });
+        }
+    }
+
+    class OptimizeRange
+    {
+        public decimal BottomStopLoss { get; set; }
+        public decimal TopStopLoss { get; set; }
+        public decimal StopLossStep { get; set; }
+        public decimal BottomStartProfit { get; set; }
+        public decimal TopStartProfit { get; set; }
+        public decimal StartProfitStep { get; set; }
+        public decimal BottomStopProfit { get; set; }
+        public decimal TopStopProfit { get; set; }
+        public decimal StopProfitStep { get; set; }
+        public decimal BottomOpenCriteria { get; set; }
+        public decimal TopOpenCriteria { get; set; }
+        public decimal OpenCriteriaStep { get; set; }
+        public bool NeverEnterAmbiguousState { get; set; }
     }
 }

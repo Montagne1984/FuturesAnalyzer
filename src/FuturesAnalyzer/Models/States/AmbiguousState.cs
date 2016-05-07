@@ -4,8 +4,6 @@ namespace FuturesAnalyzer.Models.States
 {
     public class AmbiguousState : MarketState
     {
-        public static decimal OpenCriteria = 0.02m;
-        public static bool FollowTrend = true;
 
         public override Transaction TryOpen(DailyPrice dailyPrice)
         {
@@ -13,8 +11,8 @@ namespace FuturesAnalyzer.Models.States
             {
                 return null;
             }
-            var ceilingOpenPrice = Ceiling(PreviousPrice.Value * (1 + OpenCriteria));
-            var floorOpenPrice = Floor(PreviousPrice.Value * (1 - OpenCriteria));
+            var ceilingOpenPrice = Ceiling(PreviousPrice.Value * (1 + Account.OpenCriteria));
+            var floorOpenPrice = Floor(PreviousPrice.Value * (1 - Account.OpenCriteria));
             MarketState newState = null;
             if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
             {
@@ -22,7 +20,7 @@ namespace FuturesAnalyzer.Models.States
             }
             if (dailyPrice.HighestPrice >= ceilingOpenPrice)
             {
-                if (FollowTrend)
+                if (Account.FollowTrend)
                 {
                     newState = new UpState();
                 }
@@ -34,7 +32,7 @@ namespace FuturesAnalyzer.Models.States
             }
             else if (dailyPrice.LowestPrice <= floorOpenPrice)
             {
-                if (FollowTrend)
+                if (Account.FollowTrend)
                 {
                     newState = new DownState();
                 }

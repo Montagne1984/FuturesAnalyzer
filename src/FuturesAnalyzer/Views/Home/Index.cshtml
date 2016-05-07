@@ -9,7 +9,7 @@
     </div>
     <div class="form-group form-inline">
         <label asp-for="MinimumPriceUnit">最小价格单位</label>
-        <input type="number" min="0" step="0.5" asp-for="MinimumPriceUnit" class="form-control" />
+        <input type="number" min="0" step="0.01" asp-for="MinimumPriceUnit" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label for="BudgetFactor">成本扩大系数</label>
@@ -17,7 +17,7 @@
     </div>
     <div class="checkbox">
         <label for="UseBudgetFactor">
-            <input id="UseBudgetFactor" type="checkbox" checked> 使用成本扩大系数
+            <input id="UseBudgetFactor" type="checkbox"> 使用成本扩大系数
         </label>
     </div>
     <div class="form-group form-inline">
@@ -818,24 +818,24 @@
             '焦炭': {
                 TransactionFeeRate: 0.000864,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.019,
-                StopProfitCriteria: 0.13,
-                StartProfitCriteria: 0.148,
+                StopLossCriteria: 0.014,
+                StopProfitCriteria: 0.09,
+                StartProfitCriteria: 0.197,
                 OpenCriteria: 0.021,
-                FollowTrend: false,
-                BudgetFactor: 1.96,
+                FollowTrend: true,
+                BudgetFactor: 2.17,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
             '焦煤': {
                 TransactionFeeRate: 0.000864,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.029,
-                StopProfitCriteria: 0.19,
-                StartProfitCriteria: 0.12,
-                OpenCriteria: 0.054,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.137,
+                OpenCriteria: 0.029,
                 FollowTrend: false,
-                BudgetFactor: 1.64,
+                BudgetFactor: 1.97,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
@@ -892,52 +892,72 @@
                 NeverEnterAmbiguousState: false
             },
             '黄金': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.09,
+                TransactionFeeRate: 0.000047,
+                StopLossCriteria: 0.01,
+                StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.06,
                 OpenCriteria: 0.01,
-                FollowTrend: true
+                FollowTrend: false,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 0.01
             },
             '锌': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.035,
-                StopProfitCriteria: 0.19,
-                StartProfitCriteria: 0.09,
-                OpenCriteria: 0.012,
-                FollowTrend: false
+                TransactionFeeRate: 0.000048,
+                StopLossCriteria: 0.03,
+                StopProfitCriteria: 0.2,
+                StartProfitCriteria: 0.07,
+                OpenCriteria: 0.02,
+                FollowTrend: false,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 5
             },
             '铜': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.076,
                 OpenCriteria: 0.018,
-                FollowTrend: false
+                FollowTrend: false,
+                BondPercentage: 12,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 10
             },
             '铅': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.011,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.052,
+                TransactionFeeRate: 0.000048,
+                StopLossCriteria: 0.015,
+                StopProfitCriteria: 0.11,
+                StartProfitCriteria: 0.078,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BondPercentage: 10,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 5
             },
             '白银': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00006,
                 StopLossCriteria: 0.017,
                 StopProfitCriteria: 0.17,
                 StartProfitCriteria: 0.03,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BondPercentage: 12,
+                BudgetFactor: 1.24,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '沥青': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.026,
-                StopProfitCriteria: 0.18,
-                StartProfitCriteria: 0.101,
-                OpenCriteria: 0.02,
-                FollowTrend: true
+                TransactionFeeRate: 0.00012,
+                StopLossCriteria: 0.039,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.115,
+                OpenCriteria: 0.018,
+                FollowTrend: true,
+                BondPercentage: 13,
+                BudgetFactor: 2,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 2
             },
             '锡': {
                 MinimumPriceUnit: 10,
@@ -953,190 +973,279 @@
             },
             '镍': {
                 MinimumPriceUnit: 10,
-                TransactionFeeRate: 0.0001,
-                StopLossCriteria: 0.019,
-                StopProfitCriteria: 0.12,
-                StartProfitCriteria: 0.061,
-                OpenCriteria: 0.032,
-                FollowTrend: false,
-                BudgetFactor: 2.07,
-                BondPercentage: 13
+                TransactionFeeRate: 0.00006,
+                StopLossCriteria: 0.029,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.037,
+                OpenCriteria: 0.014,
+                FollowTrend: true,
+                BudgetFactor: 1.41,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false
             },
             '菜籽': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.2,
+                TransactionFeeRate: 0.000061,
+                StopLossCriteria: 0.03,
+                StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.11,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 10,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '硅铁': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
+                TransactionFeeRate: 0.00017,
+                StopLossCriteria: 0.005,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.09,
-                OpenCriteria: 0.03,
-                FollowTrend: false
+                OpenCriteria: 0.01,
+                FollowTrend: false,
+                BudgetFactor: 1.8,
+                BondPercentage: 9,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 2
             },
             '锰硅': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
+                TransactionFeeRate: 0.000135,
+                StopLossCriteria: 0.005,
                 StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.14,
-                OpenCriteria: 0.02,
-                FollowTrend: false
+                StartProfitCriteria: 0.39,
+                OpenCriteria: 0.03,
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 9,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 2
             },
             '强麦': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000056,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.17,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 9,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '橡胶': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000054,
                 StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.07,
                 OpenCriteria: 0.01,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 5
             },
             '玻璃': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.3,
-                StartProfitCriteria: 0.14,
+                TransactionFeeRate: 0.00018,
+                StopLossCriteria: 0.005,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.19,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 9,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '醇': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
+                TransactionFeeRate: 0.000086,
+                StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.05,
-                OpenCriteria: 0.02,
-                FollowTrend: false
+                StartProfitCriteria: 0.2,
+                OpenCriteria: 0.03,
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '菜油': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00005,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.09,
                 OpenCriteria: 0.05,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 10,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 2
             },
             '菜粕': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000087,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.05,
-                OpenCriteria: 0.03,
-                FollowTrend: false
+                StartProfitCriteria: 0.06,
+                OpenCriteria: 0.04,
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 12,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '白糖': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
+                TransactionFeeRate: 0.000064,
+                StopLossCriteria: 0.025,
                 StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.09,
-                OpenCriteria: 0.01,
-                FollowTrend: false
+                StartProfitCriteria: 0.08,
+                OpenCriteria: 0.02,
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 10,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             'PTA': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.07,
-                OpenCriteria: 0.01,
-                FollowTrend: false
+                TransactionFeeRate: 0.000015,
+                StopLossCriteria: 0.04,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.2,
+                OpenCriteria: 0.02,
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 12,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '动力煤': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00013,
                 StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.2,
                 StartProfitCriteria: 0.06,
                 OpenCriteria: 0.01,
-                FollowTrend: true
+                FollowTrend: true,
+                BudgetFactor: 1.41,
+                BondPercentage: 12,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 0.2
             },
             '豆一': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00007,
                 StopLossCriteria: 0.02,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.08,
                 OpenCriteria: 0.05,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.87,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '玉米': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000095,
                 StopLossCriteria: 0.03,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.1,
                 OpenCriteria: 0.05,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.41,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '玉米淀粉': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
+                TransactionFeeRate: 0.000091,
+                StopLossCriteria: 0.005,
                 StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.1,
-                OpenCriteria: 0.02,
-                FollowTrend: false
+                StartProfitCriteria: 0.17,
+                OpenCriteria: 0.06,
+                FollowTrend: false,
+                BudgetFactor: 1.87,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '铁矿石': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.13,
-                OpenCriteria: 0.02,
-                FollowTrend: false
+                TransactionFeeRate: 0.00036,
+                StopLossCriteria: 0.005,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.08,
+                OpenCriteria: 0.03,
+                FollowTrend: false,
+                BudgetFactor: 1.87,
+                BondPercentage: 12,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 0.5
             },
             '鸡蛋': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.3,
-                StartProfitCriteria: 0.04,
-                OpenCriteria: 0.03,
-                FollowTrend: false
+                TransactionFeeRate: 0.00018,
+                StopLossCriteria: 0.015,
+                StopProfitCriteria: 0.07,
+                StartProfitCriteria: 0.028,
+                OpenCriteria: 0.046,
+                FollowTrend: false,
+                BudgetFactor: 1.21,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '豆粕': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000073,
                 StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.03,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.87,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             '棕榈': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
+                TransactionFeeRate: 0.000054,
+                StopLossCriteria: 0.015,
                 StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.09,
+                StartProfitCriteria: 0.21,
                 OpenCriteria: 0.03,
-                FollowTrend: false
+                FollowTrend: true,
+                BudgetFactor: 1.87,
+                BondPercentage: 9,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 2
             },
             'PP': {
-                TransactionFeeRate: 0.0008,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.04,
-                OpenCriteria: 0.03,
-                FollowTrend: false
+                TransactionFeeRate: 0.000288,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.12,
+                StartProfitCriteria: 0.128,
+                OpenCriteria: 0.054,
+                FollowTrend: false,
+                BudgetFactor: 2.28,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1
             },
             'PVC': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.00008,
                 StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.07,
                 OpenCriteria: 0.02,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.87,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 5
             },
             '豆油': {
-                TransactionFeeRate: 0.0008,
+                TransactionFeeRate: 0.000033,
                 StopLossCriteria: 0.01,
                 StopProfitCriteria: 0.1,
                 StartProfitCriteria: 0.08,
                 OpenCriteria: 0.03,
-                FollowTrend: false
+                FollowTrend: false,
+                BudgetFactor: 1.87,
+                BondPercentage: 9,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 2
             }
         };
 
