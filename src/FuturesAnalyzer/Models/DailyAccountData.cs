@@ -6,6 +6,7 @@ namespace FuturesAnalyzer.Models
     {
         public DailyPrice DailyPrice { get; set; }
         public decimal Balance { get; set; }
+        public decimal PercentageBalance { get; set; }
         public Contract Contract { get; set; }
         public Transaction CloseTransaction { get; set; }
         public Transaction OpenTransaction { get; set; }

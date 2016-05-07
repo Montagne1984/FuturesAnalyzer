@@ -70,11 +70,24 @@ namespace FuturesAnalyzer.Services
                 currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.ClosePrice);
                 currentState.PreviousPrice = dailyPrice.ClosePrice;
             }
+            if(report.Count > 1)
+            {
+                for(var i = 1; i < report.Count; i++)
+                {
+                    report[i].PercentageBalance = report[i - 1].PercentageBalance;
+                    if (report[i - 1].Contract != null && report[i - 1].Contract != report[i].Contract)
+                    {
+                        report[i].PercentageBalance += (report[i].Balance - report[i - 1].Balance) / report[i - 1].Contract.Price;
+                    }
+                }
+            }
             if (report.Count > 0 && account.Contract != null)
             {
                 var finalPrice = dailyPrices.Last().ClosePrice;
-                report.Last().Balance += (finalPrice - account.Contract.Price)*
-                                        (int) account.Contract.Direction*account.Contract.Unit;
+                report.Last().Balance += (finalPrice - account.Contract.Price) *
+                                        (int)account.Contract.Direction * account.Contract.Unit;
+                report.Last().PercentageBalance += (finalPrice - account.Contract.Price) *
+                                        (int)account.Contract.Direction / account.Contract.Price;
             }
             return report;
         }

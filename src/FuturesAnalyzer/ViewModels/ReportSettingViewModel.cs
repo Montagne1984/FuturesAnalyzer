@@ -19,7 +19,28 @@ namespace FuturesAnalyzer.ViewModels
         public decimal TransactionFeeRate { get; set; } = 0.0008m;
         public DateTime StartDate { get; set; } = DateTime.Now.AddYears(-1);
         public DateTime EndDate { get; set; } = DateTime.Now.AddDays(-1);
-        public bool Optimize { get; set; }
         public decimal MinimumPriceUnit { get; set; } = MarketState.MinimumPriceUnit;
+
+        public ReportSettingViewModel Clone()
+        {
+            return new ReportSettingViewModel
+            {
+                StopLossUnit = StopLossUnit,
+                StopLossCriteria = StopLossCriteria,
+                OpenCriteria = OpenCriteria,
+                StartProfitCriteria = StartProfitCriteria,
+                StopProfitCriteria = StopProfitCriteria,
+                StartProfitCriteriaForMultiUnits = StartProfitCriteriaForMultiUnits,
+                NeverEnterAmbiguousState = NeverEnterAmbiguousState,
+                FollowTrend = FollowTrend,
+                AppendUnitCountAfterProfitStart = AppendUnitCountAfterProfitStart,
+                ProductNames = ProductNames,
+                SelectedProductName = SelectedProductName,
+                TransactionFeeRate = TransactionFeeRate,
+                StartDate = StartDate,
+                EndDate = EndDate,
+                MinimumPriceUnit = MinimumPriceUnit,
+            };
+        }
     }
 }

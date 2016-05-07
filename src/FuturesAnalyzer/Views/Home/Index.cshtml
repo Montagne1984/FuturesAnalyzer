@@ -24,10 +24,10 @@
         <label for="BondPercentage">最低保证金比例</label>
         <input type="number" min="0" step="1" id="BondPercentage" class="form-control" value="13" required />
     </div>
-    <div class="form-group">
+    @*<div class="form-group">
         <label asp-for="StopLossUnit">止损份数</label>
         <input type="number" min="0" step="1" asp-for="StopLossUnit" class="form-control" />
-    </div>
+    </div>*@
     <div class="form-group">
         <label asp-for="StopLossCriteria">止损点</label>
         <input type="number" min="0" step="0.001" asp-for="StopLossCriteria" class="form-control" />
@@ -40,14 +40,14 @@
         <label asp-for="StartProfitCriteria">起盈点</label>
         <input type="number" min="0" step="0.001" asp-for="StartProfitCriteria" class="form-control" />
     </div>
-    <div class="form-group form-inline">
+    @*<div class="form-group form-inline">
         <label asp-for="StartProfitCriteriaForMultiUnits">起盈点（多份）</label>
         <input type="number" min="0" step="0.01" asp-for="StartProfitCriteriaForMultiUnits" class="form-control" />
     </div>
     <div class="form-group form-inline">
         <label asp-for="AppendUnitCountAfterProfitStart">起盈点后加仓份数</label>
         <input type="number" min="0" step="1" asp-for="AppendUnitCountAfterProfitStart" class="form-control" />
-    </div>
+    </div>*@
     <div class="checkbox">
         <label asp-for="NeverEnterAmbiguousState">
             <input asp-for="NeverEnterAmbiguousState" type="checkbox"> 禁用观望期
@@ -105,19 +105,21 @@
         <option>豆油</option>
     </select>
     <div class="form-group form-inline">
-        <label asp-for="OpenCriteria">起始日期</label>
+        <label asp-for="StartDate">起始日期</label>
         <input type="date" asp-for="StartDate" class="form-control" />
     </div>
     <div class="form-group form-inline">
-        <label asp-for="OpenCriteria">结束日期</label>
+        <label asp-for="EndDate">结束日期</label>
         <input type="date" asp-for="EndDate" class="form-control" />
     </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
-    @*<button id="optimize" class="btn btn-default">优化</button>*@
+    <button id="optimize" class="btn btn-default">优化</button>
 </form>
-<div id="chart"></div>
-<label id="summary"></label>
-<div id="percentageChart"></div>
+<div id="results">
+    <div id="chart"></div>
+    <label id="summary"></label>
+    <div id="percentageChart"></div>
+</div>
 @section scripts
 {
     <script src="http://code.highcharts.com/highcharts.js"></script>
@@ -140,8 +142,35 @@
             return date.getFullYear() + "-" + fullMonth + "-" + fullDay;
         }
 
+        $('#optimize').click(function (event) {
+            event.preventDefault();
+            $("#results").hide();
+            var $inputs = $('#form input');
+            var values = {};
+            $inputs.each(function () {
+                values[this.name] = $(this).val();
+            });
+            values['SelectedProductName'] = $('#SelectedProductName').val();
+            values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
+            values['FollowTrend'] = $('#FollowTrend')[0].checked;
+            $.post("home/optimize", 
+                values,
+                function (data) {
+                    var bestSettings = data.BestSettings;
+                    $("#StopLossCriteria").val(bestSettings.StopLossCriteria);
+                    $("#StartProfitCriteria").val(bestSettings.StartProfitCriteria);
+                    $("#StopProfitCriteria").val(bestSettings.StopProfitCriteria);
+                    $("#OpenCriteria").val(bestSettings.OpenCriteria);
+                    $('#FollowTrend').prop('checked', bestSettings.FollowTrend);
+                    $('#NeverEnterAmbiguousState').prop('checked', bestSettings.NeverEnterAmbiguousState);
+                    $("#results").show();
+                    showResult(data);
+            });
+        })
+
         $('#form').submit(function(event) {
             event.preventDefault();
+            $("#results").hide();
             var $inputs = $('#form input');
             var values = {};
             $inputs.each(function() {
@@ -151,316 +180,321 @@
             values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
-                var report = data.Report;
-                var categories = [];
-                var contracts = [];
-                var balances = [];
-                var prices = [];
-                var maxSingleDelta = 0;
-                var maxSingleDeltaDate = new Date();
-                var minSingleDelta = 0;
-                var minSingleDeltaDate = new Date();
-                var maxSinglePercentageDelta = 0;
-                var maxSinglePercentageDeltaDate = new Date();
-                var minSinglePercentageDelta = 0;
-                var minSinglePercentageDeltaDate = new Date();
-                var minBalance = 0;
-                var maxBalance = 0;
-                var lastBalance = 0;
-                var annualProfits = {};
-                var lastYearEndBalance = 0;
-                var lastYearStartPrice = 0;
-                var yesterdayYear = 0;
-                var endBalance = 0;
-                var averageBalance = 0;
-                var maxUnit = 1;
-                var profitCount = 0;
-                var lossCount = 0;
-                var percentageBalance = 0;
-                var lastYearPercentageBalance = 0;
-                var profitFactor = 100 / $("#BondPercentage").val();
-                var dailyPercentageBalance = [];
-                var dailyBudgetFactor = [];
-                var budgetFactor = 1;
-                var budgetChangeFactor = $("#UseBudgetFactor").prop("checked") ? $("#BudgetFactor").val() : 1;
-                var maxLossRangeStartPoint = 0;
-                var maxLossRange = 0;
-                var maxLossRangeStartDate = new Date();
-                var maxLossRangeEndDate = new Date();
-                if (report.length > 0) {
-                    lastYearStartPrice = report[0].DailyPrice.ClosePrice;
-                    var currentLossRangeStartPoint = 0;
-                    var currentLossRange = 0;
-                    var currentLossRangeStartDate = report[0].DailyPrice.Date;
-                    maxLossRangeStartDate = report[0].DailyPrice.Date;
-                    maxLossRangeEndDate = report[0].DailyPrice.Date;
-                    $.each(report, function(index, value) {
-                        categories.push(formatDate(value.DailyPrice.Date));
-                        prices.push(value.DailyPrice.ClosePrice);
-                        contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
-                        balances.push(value.Balance);
-                        var delta = value.Balance - lastBalance;
-                        if (delta > maxSingleDelta) {
-                            maxSingleDelta = delta;
-                            maxSingleDeltaDate = value.DailyPrice.Date;
-                        } else if (delta < minSingleDelta) {
-                            minSingleDelta = delta;
-                            minSingleDeltaDate = value.DailyPrice.Date;
-                        }
-                        if (index > 0 && report[index - 1].Contract) {
-                            var percentageDelta = delta / (Math.abs(report[index - 1].Contract.Price) * report[index - 1].Contract.Unit);
-                            if (percentageDelta > maxSinglePercentageDelta) {
-                                maxSinglePercentageDelta = percentageDelta;
-                                maxSinglePercentageDeltaDate = value.DailyPrice.Date;
-                            } else if (percentageDelta < minSinglePercentageDelta) {
-                                minSinglePercentageDelta = percentageDelta;
-                                minSinglePercentageDeltaDate = value.DailyPrice.Date;
-                            }
-                            percentageDelta *= budgetFactor;
-                            percentageBalance += percentageDelta * profitFactor;
-                            if (percentageDelta > 0) {
-                                if (percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
-                                    budgetFactor *= budgetChangeFactor;
-                                }
-                            } else {
-                                while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
-                                    budgetFactor /= budgetChangeFactor;
-                                }
-                            }
-
-                            if (percentageBalance > currentLossRangeStartPoint) {
-                                currentLossRangeStartPoint = percentageBalance;
-                                currentLossRangeStartDate = value.DailyPrice.Date;
-                                currentLossRange = 0;
-                            }
-                            currentLossRange = Math.max(currentLossRange, currentLossRangeStartPoint - percentageBalance);
-                            if (currentLossRange >= maxLossRange) {
-                                maxLossRange = currentLossRange;
-                                maxLossRangeStartPoint = currentLossRangeStartPoint;
-                                maxLossRangeStartDate = currentLossRangeStartDate;
-                                maxLossRangeEndDate = value.DailyPrice.Date;
-                            }
-                        }
-                        dailyPercentageBalance.push(percentageBalance);
-                        dailyBudgetFactor.push(budgetFactor);
-                        maxBalance = Math.max(maxBalance, value.Balance);
-                        minBalance = Math.min(minBalance, value.Balance);
-                        lastBalance = value.Balance;
-                        var date = new Date(value.DailyPrice.Date);
-                        var year = date.getFullYear();
-                        if (year !== yesterdayYear) {
-                            if (yesterdayYear !== 0) {
-                                var yearEndBalance = report[index - 1].Balance;
-                                if (report[index - 1].Contract) {
-                                    yearEndBalance += (report[index - 1].DailyPrice.ClosePrice - report[index - 1].Contract.Price) * report[index - 1].Contract.Unit * report[index - 1].Contract.Direction;
-                                }
-                                annualProfits[yesterdayYear] = { profit: yearEndBalance - lastYearEndBalance };
-                                annualProfits[yesterdayYear].profitPercentage = annualProfits[yesterdayYear].profit / lastYearStartPrice;
-                                annualProfits[yesterdayYear].profitPercentageWithSameBudget = percentageBalance - lastYearPercentageBalance;
-                                lastYearPercentageBalance = percentageBalance;
-                                lastYearEndBalance = yearEndBalance;
-                                lastYearStartPrice = report[index - 1].DailyPrice.ClosePrice;
-                            }
-                            yesterdayYear = year;
-                        }
-                        if (value.Contract && value.Contract.Unit > maxUnit) {
-                            maxUnit = value.Contract.Unit;
-                        }
-
-                        if (value.CloseTransaction && index > 0) {
-                            if (report[index].Balance > report[index - 1].Balance) {
-                                profitCount++;
-                            } else {
-                                lossCount++;
-                            }
-                        }
-                    });
-
-                    var endDate = new Date(report[report.length - 1].DailyPrice.Date);
-                    var endYear = endDate.getFullYear();
-                    annualProfits[endYear] = { profit: report[report.length - 1].Balance - lastYearEndBalance }
-                    annualProfits[endYear].profitPercentage = annualProfits[endYear].profit / lastYearStartPrice;
-                    annualProfits[endYear].profitPercentageWithSameBudget = percentageBalance - lastYearPercentageBalance;
-                    endBalance = report[report.length - 1].Balance;
-                    averageBalance = endBalance / report.length;
-                }
-
-                var totalProfitPercentage = 0;
-                $.each(annualProfits, function (key, value) {
-                    totalProfitPercentage += value.profitPercentage;
-                });
-                var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
-
-                var summaryText =
-                    '每笔交易本金相同：' + 
-                    '最终盈利倍数：' + percentageBalance +
-                    '，年化盈利倍数：' + Math.pow(percentageBalance, 1 / (report.length / 245.0)) +
-                    '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
-                    '<br/><br/>最终盈利：' + endBalance +
-                    '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
-                    '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
-                    '，日均盈利：' + averageBalance +
-                    '，盈利次数：' + profitCount +
-                    '，亏损次数：' + lossCount +
-                    '，最大份数：' + maxUnit +
-                    '，最大盈利：' + maxBalance +
-                    '，最小盈利：' + minBalance + 
-                    '，最大单日盈利：' + maxSingleDelta + '(' + formatDate(maxSingleDeltaDate) + ')' +
-                    '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
-                    '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
-                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
-                summaryText += '<br/><br/>每笔交易本金相同时各年盈利<br/>';
-                $.each(annualProfits, function (key, value) {
-                    summaryText += key + '盈利倍数：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
-                });
-                summaryText += '<br/><br/>';
-                $.each(annualProfits, function(key, value) {
-                    summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
-                });
-
-                $('#summary').html(summaryText);
-
-                $('#chart').highcharts({
-                    chart: {
-                        zoomType: 'x'
-                    },
-                    title: {
-                        text: values['SelectedProductName']
-                    },
-                    xAxis: [
-                        {
-                            categories: categories,
-                            crosshair: true
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            // Primary yAxis
-                            title: {
-                                text: '盈亏',
-                                style: {
-                                    color: Highcharts.getOptions().colors[0]
-                                }
-                            },
-                            labels: {
-                                format: '{value}元',
-                                style: {
-                                    color: Highcharts.getOptions().colors[0]
-                                }
-                            }
-                        }, {
-                            // Secondary yAxis
-                            labels: {
-                                format: '{value}元',
-                                style: {
-                                    color: Highcharts.getOptions().colors[1]
-                                }
-                            },
-                            title: {
-                                text: '价格',
-                                style: {
-                                    color: Highcharts.getOptions().colors[1]
-                                }
-                            },
-                            opposite: true
-                        }
-                    ],
-                    tooltip: {
-                        shared: true
-                    },
-                    series: [
-                        {
-                            name: '合约价格',
-                            type: 'column',
-                            yAxis: 1,
-                            data: contracts,
-                            tooltip: {
-                                valueSuffix: '元'
-                            }
-
-                        }, {
-                            name: '盈亏',
-                            type: 'spline',
-                            data: balances,
-                            tooltip: {
-                                valueSuffix: '元'
-                            }
-                        },
-                        {
-                            name: '收盘价',
-                            type: 'spline',
-                            yAxis: 1,
-                            data: prices,
-                            tooltip: {
-                                valueSuffix: '元'
-                            }
-
-                        }
-                    ]
-                });
-                $('#percentageChart').highcharts({
-                    chart: {
-                        zoomType: 'x'
-                    },
-                    title: {
-                        text: values['SelectedProductName']
-                    },
-                    xAxis: [
-                        {
-                            categories: categories,
-                            crosshair: true
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            // Primary yAxis
-                            title: {
-                                text: '盈亏',
-                                style: {
-                                    color: Highcharts.getOptions().colors[0]
-                                }
-                            },
-                            labels: {
-                                format: '{value}',
-                                style: {
-                                    color: Highcharts.getOptions().colors[0]
-                                }
-                            }
-                        },
-                        {
-                            // Secondary yAxis
-                            title: {
-                                text: '成本系数',
-                                style: {
-                                    color: Highcharts.getOptions().colors[1]
-                                }
-                            },
-                            labels: {
-                                format: '{value}',
-                                style: {
-                                    color: Highcharts.getOptions().colors[1]
-                                }
-                            }
-                        }
-                    ],
-                    tooltip: {
-                        shared: true
-                    },
-                    series: [
-                        {
-                            name: '盈亏',
-                            type: 'spline',
-                            data: dailyPercentageBalance
-                        },
-                        {
-                            name: '成本系数',
-                            type: 'spline',
-                            data: dailyBudgetFactor
-                        }
-                    ]
-                });
+                $("#results").show();
+                showResult(data);
             });
         });
+
+        function showResult(data) {
+            var report = data.Report;
+            var categories = [];
+            var contracts = [];
+            var balances = [];
+            var prices = [];
+            var maxSingleDelta = 0;
+            var maxSingleDeltaDate = new Date();
+            var minSingleDelta = 0;
+            var minSingleDeltaDate = new Date();
+            var maxSinglePercentageDelta = 0;
+            var maxSinglePercentageDeltaDate = new Date();
+            var minSinglePercentageDelta = 0;
+            var minSinglePercentageDeltaDate = new Date();
+            var minBalance = 0;
+            var maxBalance = 0;
+            var lastBalance = 0;
+            var annualProfits = {};
+            var lastYearEndBalance = 0;
+            var lastYearStartPrice = 0;
+            var yesterdayYear = 0;
+            var endBalance = 0;
+            var averageBalance = 0;
+            var maxUnit = 1;
+            var profitCount = 0;
+            var lossCount = 0;
+            var percentageBalance = 0;
+            var lastYearPercentageBalance = 0;
+            var profitFactor = 100 / $("#BondPercentage").val();
+            var dailyPercentageBalance = [];
+            var dailyBudgetFactor = [];
+            var budgetFactor = 1;
+            var budgetChangeFactor = $("#UseBudgetFactor").prop("checked") ? $("#BudgetFactor").val() : 1;
+            var maxLossRangeStartPoint = 0;
+            var maxLossRange = 0;
+            var maxLossRangeStartDate = new Date();
+            var maxLossRangeEndDate = new Date();
+            if (report.length > 0) {
+                lastYearStartPrice = report[0].DailyPrice.ClosePrice;
+                var currentLossRangeStartPoint = 0;
+                var currentLossRange = 0;
+                var currentLossRangeStartDate = report[0].DailyPrice.Date;
+                maxLossRangeStartDate = report[0].DailyPrice.Date;
+                maxLossRangeEndDate = report[0].DailyPrice.Date;
+                $.each(report, function (index, value) {
+                    categories.push(formatDate(value.DailyPrice.Date));
+                    prices.push(value.DailyPrice.ClosePrice);
+                    contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
+                    balances.push(value.Balance);
+                    var delta = value.Balance - lastBalance;
+                    if (delta > maxSingleDelta) {
+                        maxSingleDelta = delta;
+                        maxSingleDeltaDate = value.DailyPrice.Date;
+                    } else if (delta < minSingleDelta) {
+                        minSingleDelta = delta;
+                        minSingleDeltaDate = value.DailyPrice.Date;
+                    }
+                    if (index > 0 && report[index - 1].Contract) {
+                        var percentageDelta = report[index].PercentageBalance - report[index - 1].PercentageBalance;
+                        if (percentageDelta > maxSinglePercentageDelta) {
+                            maxSinglePercentageDelta = percentageDelta;
+                            maxSinglePercentageDeltaDate = value.DailyPrice.Date;
+                        } else if (percentageDelta < minSinglePercentageDelta) {
+                            minSinglePercentageDelta = percentageDelta;
+                            minSinglePercentageDeltaDate = value.DailyPrice.Date;
+                        }
+                        percentageDelta *= budgetFactor;
+                        percentageBalance += percentageDelta * profitFactor;
+                        if (percentageDelta > 0) {
+                            if (percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
+                                budgetFactor *= budgetChangeFactor;
+                            }
+                        } else {
+                            while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
+                                budgetFactor /= budgetChangeFactor;
+                            }
+                        }
+
+                        if (percentageBalance > currentLossRangeStartPoint) {
+                            currentLossRangeStartPoint = percentageBalance;
+                            currentLossRangeStartDate = value.DailyPrice.Date;
+                            currentLossRange = 0;
+                        }
+                        currentLossRange = Math.max(currentLossRange, currentLossRangeStartPoint - percentageBalance);
+                        if (currentLossRange >= maxLossRange) {
+                            maxLossRange = currentLossRange;
+                            maxLossRangeStartPoint = currentLossRangeStartPoint;
+                            maxLossRangeStartDate = currentLossRangeStartDate;
+                            maxLossRangeEndDate = value.DailyPrice.Date;
+                        }
+                    }
+                    dailyPercentageBalance.push(percentageBalance);
+                    dailyBudgetFactor.push(budgetFactor);
+                    maxBalance = Math.max(maxBalance, value.Balance);
+                    minBalance = Math.min(minBalance, value.Balance);
+                    lastBalance = value.Balance;
+                    var date = new Date(value.DailyPrice.Date);
+                    var year = date.getFullYear();
+                    if (year !== yesterdayYear) {
+                        if (yesterdayYear !== 0) {
+                            var yearEndBalance = report[index - 1].Balance;
+                            if (report[index - 1].Contract) {
+                                yearEndBalance += (report[index - 1].DailyPrice.ClosePrice - report[index - 1].Contract.Price) * report[index - 1].Contract.Unit * report[index - 1].Contract.Direction;
+                            }
+                            annualProfits[yesterdayYear] = { profit: yearEndBalance - lastYearEndBalance };
+                            annualProfits[yesterdayYear].profitPercentage = annualProfits[yesterdayYear].profit / lastYearStartPrice;
+                            annualProfits[yesterdayYear].profitPercentageWithSameBudget = percentageBalance - lastYearPercentageBalance;
+                            lastYearPercentageBalance = percentageBalance;
+                            lastYearEndBalance = yearEndBalance;
+                            lastYearStartPrice = report[index - 1].DailyPrice.ClosePrice;
+                        }
+                        yesterdayYear = year;
+                    }
+                    if (value.Contract && value.Contract.Unit > maxUnit) {
+                        maxUnit = value.Contract.Unit;
+                    }
+
+                    if (value.CloseTransaction && index > 0) {
+                        if (report[index].Balance > report[index - 1].Balance) {
+                            profitCount++;
+                        } else {
+                            lossCount++;
+                        }
+                    }
+                });
+
+                var endDate = new Date(report[report.length - 1].DailyPrice.Date);
+                var endYear = endDate.getFullYear();
+                annualProfits[endYear] = { profit: report[report.length - 1].Balance - lastYearEndBalance }
+                annualProfits[endYear].profitPercentage = annualProfits[endYear].profit / lastYearStartPrice;
+                annualProfits[endYear].profitPercentageWithSameBudget = percentageBalance - lastYearPercentageBalance;
+                endBalance = report[report.length - 1].Balance;
+                averageBalance = endBalance / report.length;
+            }
+
+            var totalProfitPercentage = 0;
+            $.each(annualProfits, function (key, value) {
+                totalProfitPercentage += value.profitPercentage;
+            });
+            var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
+
+            var summaryText =
+                '每笔交易本金相同：' +
+                '最终盈利倍数：' + percentageBalance +
+                '，年化盈利倍数：' + Math.pow(percentageBalance, 1 / (report.length / 245.0)) +
+                '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
+                '<br/><br/>最终盈利：' + endBalance +
+                '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
+                '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
+                '，日均盈利：' + averageBalance +
+                '，盈利次数：' + profitCount +
+                '，亏损次数：' + lossCount +
+                '，最大份数：' + maxUnit +
+                '，最大盈利：' + maxBalance +
+                '，最小盈利：' + minBalance +
+                '，最大单日盈利：' + maxSingleDelta + '(' + formatDate(maxSingleDeltaDate) + ')' +
+                '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
+                '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
+                '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
+            summaryText += '<br/><br/>每笔交易本金相同时各年盈利<br/>';
+            $.each(annualProfits, function (key, value) {
+                summaryText += key + '盈利倍数：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
+            });
+            summaryText += '<br/><br/>';
+            $.each(annualProfits, function (key, value) {
+                summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
+            });
+
+            $('#summary').html(summaryText);
+
+            $('#chart').highcharts({
+                chart: {
+                    zoomType: 'x'
+                },
+                title: {
+                    text: $("#SelectedProductName").val()
+                },
+                xAxis: [
+                    {
+                        categories: categories,
+                        crosshair: true
+                    }
+                ],
+                yAxis: [
+                    {
+                        // Primary yAxis
+                        title: {
+                            text: '盈亏',
+                            style: {
+                                color: Highcharts.getOptions().colors[0]
+                            }
+                        },
+                        labels: {
+                            format: '{value}元',
+                            style: {
+                                color: Highcharts.getOptions().colors[0]
+                            }
+                        }
+                    }, {
+                        // Secondary yAxis
+                        labels: {
+                            format: '{value}元',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        },
+                        title: {
+                            text: '价格',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        },
+                        opposite: true
+                    }
+                ],
+                tooltip: {
+                    shared: true
+                },
+                series: [
+                    {
+                        name: '合约价格',
+                        type: 'column',
+                        yAxis: 1,
+                        data: contracts,
+                        tooltip: {
+                            valueSuffix: '元'
+                        }
+
+                    }, {
+                        name: '盈亏',
+                        type: 'spline',
+                        data: balances,
+                        tooltip: {
+                            valueSuffix: '元'
+                        }
+                    },
+                    {
+                        name: '收盘价',
+                        type: 'spline',
+                        yAxis: 1,
+                        data: prices,
+                        tooltip: {
+                            valueSuffix: '元'
+                        }
+
+                    }
+                ]
+            });
+            $('#percentageChart').highcharts({
+                chart: {
+                    zoomType: 'x'
+                },
+                title: {
+                    text: $("#SelectedProductName").val()
+                },
+                xAxis: [
+                    {
+                        categories: categories,
+                        crosshair: true
+                    }
+                ],
+                yAxis: [
+                    {
+                        // Primary yAxis
+                        title: {
+                            text: '盈亏',
+                            style: {
+                                color: Highcharts.getOptions().colors[0]
+                            }
+                        },
+                        labels: {
+                            format: '{value}',
+                            style: {
+                                color: Highcharts.getOptions().colors[0]
+                            }
+                        }
+                    },
+                    {
+                        // Secondary yAxis
+                        title: {
+                            text: '成本系数',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        },
+                        labels: {
+                            format: '{value}',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        }
+                    }
+                ],
+                tooltip: {
+                    shared: true
+                },
+                series: [
+                    {
+                        name: '盈亏',
+                        type: 'spline',
+                        data: dailyPercentageBalance
+                    },
+                    {
+                        name: '成本系数',
+                        type: 'spline',
+                        data: dailyBudgetFactor
+                    }
+                ]
+            });
+        }
 
         //var settings = {
         //    '热轧卷板': {
@@ -784,12 +818,12 @@
             '焦炭': {
                 TransactionFeeRate: 0.000864,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.018,
+                StopLossCriteria: 0.019,
                 StopProfitCriteria: 0.13,
                 StartProfitCriteria: 0.148,
-                OpenCriteria: 0.022,
+                OpenCriteria: 0.021,
                 FollowTrend: false,
-                BudgetFactor: 1.92,
+                BudgetFactor: 1.96,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
