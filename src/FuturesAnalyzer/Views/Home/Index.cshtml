@@ -268,7 +268,7 @@
                             currentLossRangeStartDate = value.DailyPrice.Date;
                             currentLossRange = 0;
                         }
-                        currentLossRange = Math.max(currentLossRange, currentLossRangeStartPoint - percentageBalance);
+                        currentLossRange = currentLossRangeStartPoint - percentageBalance;
                         if (currentLossRange >= maxLossRange) {
                             maxLossRange = currentLossRange;
                             maxLossRangeStartPoint = currentLossRangeStartPoint;

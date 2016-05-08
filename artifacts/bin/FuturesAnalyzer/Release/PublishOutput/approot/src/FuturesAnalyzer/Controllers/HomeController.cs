@@ -212,9 +212,9 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopProfit = 0.1m,
                     TopStopProfit = 0.3m,
                     StopProfitStep = 0.1m,
-                    BottomOpenCriteria = 0.01m,
+                    BottomOpenCriteria = 0.005m,
                     TopOpenCriteria = 0.05m,
-                    OpenCriteriaStep = 0.01m,
+                    OpenCriteriaStep = 0.005m,
                     NeverEnterAmbiguousState = false
                 });
             ranges.Add("small",
