@@ -254,11 +254,11 @@
                         percentageDelta *= budgetFactor;
                         percentageBalance += percentageDelta * profitFactor;
                         if (percentageDelta > 0) {
-                            if (percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
+                            if ((percentageBalance + 1) * 0.8 >= budgetFactor * budgetChangeFactor) {
                                 budgetFactor *= budgetChangeFactor;
                             }
                         } else {
-                            while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
+                            while ((percentageBalance + 1) * 0.8 < budgetFactor && budgetFactor > 1) {
                                 budgetFactor /= budgetChangeFactor;
                             }
                         }
@@ -788,7 +788,7 @@
                 StartProfitCriteria: 0.057,
                 OpenCriteria: 0.012,
                 FollowTrend: true,
-                BudgetFactor: 1.52,
+                BudgetFactor: 1.29,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
@@ -800,7 +800,7 @@
                 StartProfitCriteria: 0.128,
                 OpenCriteria: 0.01,
                 FollowTrend: true,
-                BudgetFactor: 1.71,
+                BudgetFactor: 1.59,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
@@ -818,12 +818,12 @@
             '焦炭': {
                 TransactionFeeRate: 0.000864,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.014,
-                StopProfitCriteria: 0.09,
-                StartProfitCriteria: 0.197,
-                OpenCriteria: 0.021,
-                FollowTrend: true,
-                BudgetFactor: 2.17,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.14,
+                StartProfitCriteria: 0.051,
+                OpenCriteria: 0.018,
+                FollowTrend: false,
+                BudgetFactor: 1.41,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
@@ -974,12 +974,12 @@
             '镍': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.029,
-                StopProfitCriteria: 0.11,
-                StartProfitCriteria: 0.036,
-                OpenCriteria: 0.007,
-                FollowTrend: true,
-                BudgetFactor: 1.47,
+                StopLossCriteria: 0.03,
+                StopProfitCriteria: 0.07,
+                StartProfitCriteria: 0.033,
+                OpenCriteria: 0.028,
+                FollowTrend: false,
+                BudgetFactor: 1.23,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
