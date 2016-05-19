@@ -67,6 +67,9 @@
         <option>螺纹钢</option>
         <option>焦炭</option>
         <option>焦煤</option>
+        <option>镍</option>
+        <option>菜粕</option>
+        <option>PP</option>
         <option>热轧卷板1610</option>
         <option>热轧卷板1605</option>
         <option>螺纹钢1605</option>
@@ -80,7 +83,6 @@
         <option>白银</option>
         <option>沥青</option>
         <option>锡</option>
-        <option>镍</option>
         <option>菜籽</option>
         <option>硅铁</option>
         <option>锰硅</option>
@@ -89,7 +91,6 @@
         <option>玻璃</option>
         <option>醇</option>
         <option>菜油</option>
-        <option>菜粕</option>
         <option>白糖</option>
         <option>PTA</option>
         <option>动力煤</option>
@@ -100,7 +101,6 @@
         <option>鸡蛋</option>
         <option>豆粕</option>
         <option>棕榈</option>
-        <option>PP</option>
         <option>PVC</option>
         <option>豆油</option>
     </select>
@@ -222,17 +222,27 @@
             var maxLossRange = 0;
             var maxLossRangeStartDate = new Date();
             var maxLossRangeEndDate = new Date();
+            var longestContractDays = 0;
             if (report.length > 0) {
                 lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                 var currentLossRangeStartPoint = 0;
                 var currentLossRange = 0;
                 var currentLossRangeStartDate = report[0].DailyPrice.Date;
+                var currentContractDays = 0;
                 maxLossRangeStartDate = report[0].DailyPrice.Date;
                 maxLossRangeEndDate = report[0].DailyPrice.Date;
                 $.each(report, function (index, value) {
                     categories.push(formatDate(value.DailyPrice.Date));
                     prices.push(value.DailyPrice.ClosePrice);
                     contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
+                    if (value.Contract && (index === 0 || report[index - 1].Contract && report[index - 1].Contract.Price === report[index].Contract.Price)) {
+                        currentContractDays++;
+                    } else {
+                        currentContractDays = value.Contract ? 1 : 0;
+                    }
+                    if (currentContractDays > longestContractDays) {
+                        longestContractDays = currentContractDays;
+                    }
                     balances.push(value.Balance);
                     var delta = value.Balance - lastBalance;
                     if (delta > maxSingleDelta) {
@@ -331,6 +341,7 @@
                 '最终盈利倍数：' + percentageBalance +
                 '，年化盈利倍数：' + Math.pow(percentageBalance, 1 / (report.length / 245.0)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
+                '，最长持仓日：' + longestContractDays +
                 '<br/><br/>最终盈利：' + endBalance +
                 '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                 '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
