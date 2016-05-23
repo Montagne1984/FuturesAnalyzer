@@ -204,7 +204,7 @@ namespace FuturesAnalyzer.Controllers
                 new OptimizeRange
                 {
                     BottomStopLoss = 0.005m,
-                    TopStopLoss = 0.03m,
+                    TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
                     BottomStartProfit = 0.02m,
                     TopStartProfit = 0.08m,
@@ -213,7 +213,7 @@ namespace FuturesAnalyzer.Controllers
                     TopStopProfit = 0.4m,
                     StopProfitStep = 0.01m,
                     BottomOpenCriteria = 0.005m,
-                    TopOpenCriteria = 0.03m,
+                    TopOpenCriteria = 0.04m,
                     OpenCriteriaStep = 0.001m,
                     NeverEnterAmbiguousState = false
                 });
