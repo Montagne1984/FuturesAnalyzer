@@ -285,6 +285,17 @@
                             maxLossRangeStartDate = currentLossRangeStartDate;
                             maxLossRangeEndDate = value.DailyPrice.Date;
                         }
+                    } else if (index === report.length - 1 && report[index].Contract) {
+                        var percentageDelta = report[index].PercentageBalance - report[index - 1].PercentageBalance;
+                        percentageDelta *= budgetFactor;
+                        percentageBalance += percentageDelta * profitFactor;
+                        currentLossRange = currentLossRangeStartPoint - percentageBalance;
+                        if (currentLossRange >= maxLossRange) {
+                            maxLossRange = currentLossRange;
+                            maxLossRangeStartPoint = currentLossRangeStartPoint;
+                            maxLossRangeStartDate = currentLossRangeStartDate;
+                            maxLossRangeEndDate = value.DailyPrice.Date;
+                        }
                     }
                     dailyPercentageBalance.push(percentageBalance);
                     dailyBudgetFactor.push(budgetFactor);
