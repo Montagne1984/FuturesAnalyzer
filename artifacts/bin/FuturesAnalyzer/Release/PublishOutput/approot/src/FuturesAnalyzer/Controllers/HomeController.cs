@@ -204,17 +204,17 @@ namespace FuturesAnalyzer.Controllers
                 new OptimizeRange
                 {
                     BottomStopLoss = 0.005m,
-                    TopStopLoss = 0.04m,
-                    StopLossStep = 0.005m,
+                    TopStopLoss = 0.03m,
+                    StopLossStep = 0.001m,
                     BottomStartProfit = 0.02m,
-                    TopStartProfit = 0.16m,
-                    StartProfitStep = 0.01m,
-                    BottomStopProfit = 0.1m,
+                    TopStartProfit = 0.08m,
+                    StartProfitStep = 0.001m,
+                    BottomStopProfit = 0.05m,
                     TopStopProfit = 0.3m,
-                    StopProfitStep = 0.1m,
+                    StopProfitStep = 0.01m,
                     BottomOpenCriteria = 0.005m,
-                    TopOpenCriteria = 0.05m,
-                    OpenCriteriaStep = 0.005m,
+                    TopOpenCriteria = 0.04m,
+                    OpenCriteriaStep = 0.001m,
                     NeverEnterAmbiguousState = false
                 });
             ranges.Add("small",

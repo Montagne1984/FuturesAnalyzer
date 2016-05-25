@@ -67,6 +67,9 @@
         <option>螺纹钢</option>
         <option>焦炭</option>
         <option>焦煤</option>
+        <option>镍</option>
+        <option>菜粕</option>
+        <option>PP</option>
         <option>热轧卷板1610</option>
         <option>热轧卷板1605</option>
         <option>螺纹钢1605</option>
@@ -80,7 +83,6 @@
         <option>白银</option>
         <option>沥青</option>
         <option>锡</option>
-        <option>镍</option>
         <option>菜籽</option>
         <option>硅铁</option>
         <option>锰硅</option>
@@ -89,7 +91,6 @@
         <option>玻璃</option>
         <option>醇</option>
         <option>菜油</option>
-        <option>菜粕</option>
         <option>白糖</option>
         <option>PTA</option>
         <option>动力煤</option>
@@ -100,7 +101,6 @@
         <option>鸡蛋</option>
         <option>豆粕</option>
         <option>棕榈</option>
-        <option>PP</option>
         <option>PVC</option>
         <option>豆油</option>
     </select>
@@ -222,17 +222,27 @@
             var maxLossRange = 0;
             var maxLossRangeStartDate = new Date();
             var maxLossRangeEndDate = new Date();
+            var longestContractDays = 0;
             if (report.length > 0) {
                 lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                 var currentLossRangeStartPoint = 0;
                 var currentLossRange = 0;
                 var currentLossRangeStartDate = report[0].DailyPrice.Date;
+                var currentContractDays = 0;
                 maxLossRangeStartDate = report[0].DailyPrice.Date;
                 maxLossRangeEndDate = report[0].DailyPrice.Date;
                 $.each(report, function (index, value) {
                     categories.push(formatDate(value.DailyPrice.Date));
                     prices.push(value.DailyPrice.ClosePrice);
                     contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
+                    if (value.Contract && (index === 0 || report[index - 1].Contract && report[index - 1].Contract.Price === report[index].Contract.Price)) {
+                        currentContractDays++;
+                    } else {
+                        currentContractDays = value.Contract ? 1 : 0;
+                    }
+                    if (currentContractDays > longestContractDays) {
+                        longestContractDays = currentContractDays;
+                    }
                     balances.push(value.Balance);
                     var delta = value.Balance - lastBalance;
                     if (delta > maxSingleDelta) {
@@ -254,11 +264,11 @@
                         percentageDelta *= budgetFactor;
                         percentageBalance += percentageDelta * profitFactor;
                         if (percentageDelta > 0) {
-                            if (percentageBalance + 1 >= budgetFactor * budgetChangeFactor) {
+                            if ((percentageBalance + 1) * 0.8 >= budgetFactor * budgetChangeFactor) {
                                 budgetFactor *= budgetChangeFactor;
                             }
                         } else {
-                            while (percentageBalance + 1 < budgetFactor && budgetFactor > 1) {
+                            while ((percentageBalance + 1) * 0.8 < budgetFactor && budgetFactor > 1) {
                                 budgetFactor /= budgetChangeFactor;
                             }
                         }
@@ -268,6 +278,17 @@
                             currentLossRangeStartDate = value.DailyPrice.Date;
                             currentLossRange = 0;
                         }
+                        currentLossRange = currentLossRangeStartPoint - percentageBalance;
+                        if (currentLossRange >= maxLossRange) {
+                            maxLossRange = currentLossRange;
+                            maxLossRangeStartPoint = currentLossRangeStartPoint;
+                            maxLossRangeStartDate = currentLossRangeStartDate;
+                            maxLossRangeEndDate = value.DailyPrice.Date;
+                        }
+                    } else if (index === report.length - 1 && report[index].Contract) {
+                        var percentageDelta = report[index].PercentageBalance - report[index - 1].PercentageBalance;
+                        percentageDelta *= budgetFactor;
+                        percentageBalance += percentageDelta * profitFactor;
                         currentLossRange = currentLossRangeStartPoint - percentageBalance;
                         if (currentLossRange >= maxLossRange) {
                             maxLossRange = currentLossRange;
@@ -331,6 +352,7 @@
                 '最终盈利倍数：' + percentageBalance +
                 '，年化盈利倍数：' + Math.pow(percentageBalance, 1 / (report.length / 245.0)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
+                '，最长持仓日：' + longestContractDays +
                 '<br/><br/>最终盈利：' + endBalance +
                 '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                 '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
@@ -783,24 +805,24 @@
             '热轧卷板': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.006,
-                StopProfitCriteria: 0.09,
-                StartProfitCriteria: 0.154,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.07,
+                StartProfitCriteria: 0.057,
                 OpenCriteria: 0.012,
                 FollowTrend: true,
-                BudgetFactor: 1.82,
+                BudgetFactor: 1.29,
                 BondPercentage: 13,
-                NeverEnterAmbiguousState: true
+                NeverEnterAmbiguousState: false
             },
             '螺纹钢': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.007,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.128,
-                OpenCriteria: 0.01,
+                StopLossCriteria: 0.022,
+                StopProfitCriteria: 0.05,
+                StartProfitCriteria: 0.106,
+                OpenCriteria: 0.013,
                 FollowTrend: true,
-                BudgetFactor: 1.71,
+                BudgetFactor: 1.68,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
@@ -816,26 +838,26 @@
             //    BondPercentage: 13
             //},
             '焦炭': {
-                TransactionFeeRate: 0.000864,
+                TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.014,
-                StopProfitCriteria: 0.09,
-                StartProfitCriteria: 0.197,
-                OpenCriteria: 0.021,
-                FollowTrend: true,
-                BudgetFactor: 2.17,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.16,
+                OpenCriteria: 0.02,
+                FollowTrend: false,
+                BudgetFactor: 1.94,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
             '焦煤': {
-                TransactionFeeRate: 0.000864,
+                TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.137,
-                OpenCriteria: 0.029,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.08,
+                StartProfitCriteria: 0.153,
+                OpenCriteria: 0.019,
                 FollowTrend: false,
-                BudgetFactor: 1.97,
+                BudgetFactor: 1.93,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
@@ -949,37 +971,37 @@
             },
             '沥青': {
                 TransactionFeeRate: 0.00012,
-                StopLossCriteria: 0.039,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.115,
-                OpenCriteria: 0.018,
-                FollowTrend: true,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.24,
+                StartProfitCriteria: 0.068,
+                OpenCriteria: 0.017,
+                FollowTrend: false,
                 BondPercentage: 13,
-                BudgetFactor: 2,
+                BudgetFactor: 1.46,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 2
             },
             '锡': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.000032,
-                StopLossCriteria: 0.01,
-                StopProfitCriteria: 0.12,
-                StartProfitCriteria: 0.064,
-                OpenCriteria: 0.029,
+                StopLossCriteria: 0.02,
+                StopProfitCriteria: 0.13,
+                StartProfitCriteria: 0.054,
+                OpenCriteria: 0.017,
                 FollowTrend: false,
-                BudgetFactor: 1.87,
+                BudgetFactor: 1.53,
                 BondPercentage: 10,
                 NeverEnterAmbiguousState: false
             },
             '镍': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.029,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.037,
-                OpenCriteria: 0.014,
-                FollowTrend: true,
-                BudgetFactor: 1.41,
+                StopLossCriteria: 0.03,
+                StopProfitCriteria: 0.07,
+                StartProfitCriteria: 0.033,
+                OpenCriteria: 0.028,
+                FollowTrend: false,
+                BudgetFactor: 1.23,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false
             },
@@ -1080,13 +1102,13 @@
                 MinimumPriceUnit: 2
             },
             '菜粕': {
-                TransactionFeeRate: 0.000087,
-                StopLossCriteria: 0.02,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.06,
-                OpenCriteria: 0.04,
+                TransactionFeeRate: 0.00009,
+                StopLossCriteria: 0.028,
+                StopProfitCriteria: 0.15,
+                StartProfitCriteria: 0.045,
+                OpenCriteria: 0.027,
                 FollowTrend: false,
-                BudgetFactor: 1.41,
+                BudgetFactor: 1.35,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1
@@ -1177,10 +1199,10 @@
             },
             '鸡蛋': {
                 TransactionFeeRate: 0.00018,
-                StopLossCriteria: 0.015,
-                StopProfitCriteria: 0.07,
-                StartProfitCriteria: 0.028,
-                OpenCriteria: 0.046,
+                StopLossCriteria: 0.018,
+                StopProfitCriteria: 0.05,
+                StartProfitCriteria: 0.023,
+                OpenCriteria: 0.026,
                 FollowTrend: false,
                 BudgetFactor: 1.21,
                 BondPercentage: 11,
@@ -1211,14 +1233,26 @@
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 2
             },
+            //'PP': {
+            //    TransactionFeeRate: 0.00029,
+            //    StopLossCriteria: 0.012,
+            //    StopProfitCriteria: 0.12,
+            //    StartProfitCriteria: 0.128,
+            //    OpenCriteria: 0.054,
+            //    FollowTrend: false,
+            //    BudgetFactor: 2.28,
+            //    BondPercentage: 11,
+            //    NeverEnterAmbiguousState: false,
+            //    MinimumPriceUnit: 1
+            //},
             'PP': {
-                TransactionFeeRate: 0.000288,
-                StopLossCriteria: 0.012,
-                StopProfitCriteria: 0.12,
-                StartProfitCriteria: 0.128,
-                OpenCriteria: 0.054,
+                TransactionFeeRate: 0.00008,
+                StopLossCriteria: 0.014,
+                StopProfitCriteria: 0.05,
+                StartProfitCriteria: 0.068,
+                OpenCriteria: 0.027,
                 FollowTrend: false,
-                BudgetFactor: 2.28,
+                BudgetFactor: 1.46,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1
