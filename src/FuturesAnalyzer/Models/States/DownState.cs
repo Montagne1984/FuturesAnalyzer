@@ -98,15 +98,13 @@ namespace FuturesAnalyzer.Models.States
             }
             var contract = new Contract { Direction = Direction.Sell, Price = StartPrice };
             Account.Contract = contract;
-            var transactionFee = StartPrice * Account.TransactionFeeRate;
-            Account.Balance -= transactionFee;
             return new Transaction
             {
                 Behavior = Behavior.Open,
                 Date = dailyPrice.Date,
                 Contract = contract,
                 Price = StartPrice,
-                TransactionFee = transactionFee
+                TransactionFee = Account.DeductTransactionFee(StartPrice, 1)
             };
         }
 
