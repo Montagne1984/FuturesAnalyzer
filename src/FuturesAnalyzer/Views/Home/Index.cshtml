@@ -122,7 +122,7 @@
 </div>
 @section scripts
 {
-    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="~/js/highcharts.js"></script>
     <script>
         $().ready(function() {
             var d = new Date();
@@ -347,10 +347,13 @@
             });
             var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
 
+            var daysInYear = 245;
+            var yearCount = report.length / daysInYear;
+
             var summaryText =
                 '每笔交易本金相同：' +
                 '最终盈利倍数：' + percentageBalance +
-                '，年化盈利倍数：' + Math.pow(percentageBalance, 1 / (report.length / 245.0)) +
+                '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
                 '，最长持仓日：' + longestContractDays +
                 '<br/><br/>最终盈利：' + endBalance +
