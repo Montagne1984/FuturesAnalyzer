@@ -10,5 +10,6 @@ namespace FuturesAnalyzer.Models
         public decimal HighestPrice { get; set; }
         public decimal LowestPrice { get; set; }
         public int Turnover { get; set; }
+        public bool? HitLowPriceFirst { get; set; }
     }
 }

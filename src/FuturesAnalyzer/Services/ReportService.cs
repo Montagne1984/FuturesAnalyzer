@@ -30,6 +30,11 @@ namespace FuturesAnalyzer.Services
                     LowestPrice = csvReader.GetField<decimal>(4),
                     Turnover = csvReader.GetField<int>(5)
                 };
+                bool hitLowPriceFirst;
+                if(csvReader.TryGetField(6, out hitLowPriceFirst))
+                {
+                    dailyPrice.HitLowPriceFirst = hitLowPriceFirst;
+                }
                 dailyPrices.Add(dailyPrice);
             }
             return dailyPrices.OrderBy(p => p.Date).ToList();

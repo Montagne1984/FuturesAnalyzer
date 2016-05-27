@@ -14,11 +14,13 @@ namespace FuturesAnalyzer.Models.States
             var ceilingOpenPrice = Ceiling(PreviousPrice.Value * (1 + Account.OpenCriteria));
             var floorOpenPrice = Floor(PreviousPrice.Value * (1 - Account.OpenCriteria));
             MarketState newState = null;
+            var hitBothCriteria = false;
             if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
             {
                 Account.HitBothCriteriaInAmbiguousStateCount++;
+                hitBothCriteria = true;
             }
-            if (dailyPrice.HighestPrice >= ceilingOpenPrice)
+            if (dailyPrice.HighestPrice >= ceilingOpenPrice && !(hitBothCriteria && dailyPrice.HitLowPriceFirst.HasValue && dailyPrice.HitLowPriceFirst.Value))
             {
                 if (Account.FollowTrend)
                 {
