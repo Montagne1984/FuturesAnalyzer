@@ -37,7 +37,7 @@ namespace FuturesAnalyzer.Services
                 }
                 dailyPrices.Add(dailyPrice);
             }
-            return dailyPrices.OrderBy(p => p.Date).ToList();
+            return dailyPrices.Where(p => p.Turnover > 0).OrderBy(p => p.Date).ToList();
         }
 
         public IEnumerable<DailyAccountData> GenerateReport(Account account, List<DailyPrice> dailyPrices)
@@ -47,7 +47,7 @@ namespace FuturesAnalyzer.Services
             {
                 return report;
             }
-            WarmUp(account, dailyPrices);
+            var startIndex = WarmUp(account, dailyPrices);
             for (var i = 1; i < dailyPrices.Count; i++)
             {
                 if (dailyPrices[i].Date > dailyPrices[i - 1].Date.AddDays(15) || dailyPrices[i].Date == dailyPrices[i - 1].Date)
@@ -55,9 +55,13 @@ namespace FuturesAnalyzer.Services
                     throw new ArgumentException("日期异常：" + dailyPrices[i - 1].Date + " - " + dailyPrices[i].Date);
                 }
             }
-            for (var i = WarmUpLength; i < dailyPrices.Count; i++)
+            for (var i = startIndex; i < dailyPrices.Count; i++)
             {
                 var dailyPrice = dailyPrices[i];
+                if (dailyPrice.Turnover == 0)
+                {
+                    continue;
+                }
                 if (!CheckDailyPrice(dailyPrice))
                 {
                     throw new ArgumentException("数据异常：" + dailyPrice.Date);
@@ -97,11 +101,17 @@ namespace FuturesAnalyzer.Services
             return report;
         }
 
-        private static void WarmUp(Account account, List<DailyPrice> dailyPrices)
+        private static int WarmUp(Account account, List<DailyPrice> dailyPrices)
         {
             var direction = 0;
-            for (var i = 1; i < WarmUpLength && i < dailyPrices.Count; i++)
+            var zeroTurnoverCount = 0;
+            for (var i = 1; i < WarmUpLength + zeroTurnoverCount && i < dailyPrices.Count; i++)
             {
+                if (dailyPrices[i].Turnover == 0)
+                {
+                    zeroTurnoverCount++;
+                    continue;
+                }
                 direction += Math.Sign(dailyPrices[i].ClosePrice - dailyPrices[i - 1].ClosePrice);
             }
             if (direction > 1)
@@ -121,6 +131,7 @@ namespace FuturesAnalyzer.Services
             account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
             account.MarketState.Account = account;
             account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
+            return WarmUpLength + zeroTurnoverCount;
         }
 
         private bool CheckDailyPrice(DailyPrice dailyPrice)
