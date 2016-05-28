@@ -224,12 +224,12 @@
             var maxLossRangeEndDate = new Date();
             var longestContractDays = 0;
             var longestEmptyDays = 0;
+            var currentContractDays = 0;
             if (report.length > 0) {
                 lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                 var currentLossRangeStartPoint = 0;
                 var currentLossRange = 0;
                 var currentLossRangeStartDate = report[0].DailyPrice.Date;
-                var currentContractDays = 0;
                 var currentEmptyDays = 0;
                 maxLossRangeStartDate = report[0].DailyPrice.Date;
                 maxLossRangeEndDate = report[0].DailyPrice.Date;
@@ -364,6 +364,7 @@
                 '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
                 '，最长持仓日：' + longestContractDays +
+                '，当前持仓日：' + currentContractDays +
                 '，最长空仓日：' + longestEmptyDays +
                 '<br/><br/>最终盈利：' + endBalance +
                 '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
