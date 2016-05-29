@@ -142,20 +142,20 @@
             return date.getFullYear() + "-" + fullMonth + "-" + fullDay;
         }
 
-        $('#optimize').click(function (event) {
+        $('#optimize').click(function(event) {
             event.preventDefault();
             $("#results").hide();
             var $inputs = $('#form input');
             var values = {};
-            $inputs.each(function () {
+            $inputs.each(function() {
                 values[this.name] = $(this).val();
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
             values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
-            $.post("home/optimize", 
+            $.post("home/optimize",
                 values,
-                function (data) {
+                function(data) {
                     var bestSettings = data.BestSettings;
                     $("#StopLossCriteria").val(bestSettings.StopLossCriteria);
                     $("#StartProfitCriteria").val(bestSettings.StartProfitCriteria);
@@ -165,8 +165,8 @@
                     $('#NeverEnterAmbiguousState').prop('checked', bestSettings.NeverEnterAmbiguousState);
                     $("#results").show();
                     showResult(data);
-            });
-        })
+                });
+        });
 
         $('#form').submit(function(event) {
             event.preventDefault();
@@ -222,9 +222,12 @@
             var maxLossRange = 0;
             var maxLossRangeStartDate = new Date();
             var maxLossRangeEndDate = new Date();
-            var longestContractDays = 0;
+            var longestProfitDays = 0;
+            var longestLossDays = 0;
             var longestEmptyDays = 0;
             var currentContractDays = 0;
+            var totalProfitContractDays = 0;
+            var totalLossContractDays = 0;
             if (report.length > 0) {
                 lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                 var currentLossRangeStartPoint = 0;
@@ -242,14 +245,6 @@
                     } else {
                         currentEmptyDays++;
                         longestEmptyDays = Math.max(currentEmptyDays, longestEmptyDays);
-                    }
-                    if (value.Contract && (index === 0 || report[index - 1].Contract && report[index - 1].Contract.Price === report[index].Contract.Price)) {
-                        currentContractDays++;
-                    } else {
-                        currentContractDays = value.Contract ? 1 : 0;
-                    }
-                    if (currentContractDays > longestContractDays) {
-                        longestContractDays = currentContractDays;
                     }
                     balances.push(value.Balance);
                     var delta = value.Balance - lastBalance;
@@ -333,10 +328,22 @@
 
                     if (value.CloseTransaction && index > 0) {
                         if (report[index].Balance > report[index - 1].Balance) {
+                            totalProfitContractDays += currentContractDays;
                             profitCount++;
+                            if (currentContractDays > longestProfitDays) {
+                                longestProfitDays = currentContractDays;
+                            }
                         } else {
+                            totalLossContractDays += currentContractDays;
                             lossCount++;
+                            if (currentContractDays > longestLossDays) {
+                                longestLossDays = currentContractDays;
+                            }
                         }
+                        currentContractDays = 0;
+                    }
+                    if (value.Contract) {
+                        currentContractDays++;
                     }
                 });
 
@@ -363,9 +370,12 @@
                 '最终盈利倍数：' + percentageBalance +
                 '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
-                '，最长持仓日：' + longestContractDays +
+                '，最长盈利持仓日：' + longestProfitDays +
+                '，最长亏损持仓日：' + longestLossDays +
                 '，当前持仓日：' + currentContractDays +
                 '，最长空仓日：' + longestEmptyDays +
+                '，平均盈利持仓日：' + totalProfitContractDays / profitCount +
+                '，平均亏损持仓日：' + totalLossContractDays / lossCount +
                 '<br/><br/>最终盈利：' + endBalance +
                 '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                 '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
