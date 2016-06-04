@@ -142,20 +142,20 @@
             return date.getFullYear() + "-" + fullMonth + "-" + fullDay;
         }
 
-        $('#optimize').click(function (event) {
+        $('#optimize').click(function(event) {
             event.preventDefault();
             $("#results").hide();
             var $inputs = $('#form input');
             var values = {};
-            $inputs.each(function () {
+            $inputs.each(function() {
                 values[this.name] = $(this).val();
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
             values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
-            $.post("home/optimize", 
+            $.post("home/optimize",
                 values,
-                function (data) {
+                function(data) {
                     var bestSettings = data.BestSettings;
                     $("#StopLossCriteria").val(bestSettings.StopLossCriteria);
                     $("#StartProfitCriteria").val(bestSettings.StartProfitCriteria);
@@ -165,8 +165,8 @@
                     $('#NeverEnterAmbiguousState').prop('checked', bestSettings.NeverEnterAmbiguousState);
                     $("#results").show();
                     showResult(data);
-            });
-        })
+                });
+        });
 
         $('#form').submit(function(event) {
             event.preventDefault();
@@ -222,34 +222,42 @@
             var maxLossRange = 0;
             var maxLossRangeStartDate = new Date();
             var maxLossRangeEndDate = new Date();
-            var longestContractDays = 0;
+            var longestProfitDays = 0;
+            var longestProfitDaysStartDate = new Date();
+            var longestProfitDaysEndDate = new Date();
+            var longestLossDays = 0;
+            var longestLossDaysStartDate = new Date();
+            var longestLossDaysEndDate = new Date();
             var longestEmptyDays = 0;
+            var longestEmptyDaysStartDate = new Date();
+            var longestEmptyDaysEndDate = new Date();
             var currentContractDays = 0;
+            var totalProfitContractDays = 0;
+            var totalLossContractDays = 0;
             if (report.length > 0) {
                 lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                 var currentLossRangeStartPoint = 0;
                 var currentLossRange = 0;
                 var currentLossRangeStartDate = report[0].DailyPrice.Date;
                 var currentEmptyDays = 0;
+                var currentContractDaysStartDate = report[0].DailyPrice.Date;
+                var currentEmptyDaysStartDate = report[0].DailyPrice.Date;
                 maxLossRangeStartDate = report[0].DailyPrice.Date;
                 maxLossRangeEndDate = report[0].DailyPrice.Date;
                 $.each(report, function (index, value) {
                     categories.push(formatDate(value.DailyPrice.Date));
                     prices.push(value.DailyPrice.ClosePrice);
                     contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
-                    if (value.Contract) {
+                    if (value.Contract && currentEmptyDays > 0) {
+                        if (currentEmptyDays >= longestEmptyDays && index > 0) {
+                            longestEmptyDays = currentEmptyDays;
+                            longestEmptyDaysStartDate = currentEmptyDaysStartDate;
+                            longestEmptyDaysEndDate = report[index - 1].DailyPrice.Date;
+                        }
                         currentEmptyDays = 0;
+                        currentEmptyDaysStartDate = value.DailyPrice.Date;
                     } else {
                         currentEmptyDays++;
-                        longestEmptyDays = Math.max(currentEmptyDays, longestEmptyDays);
-                    }
-                    if (value.Contract && (index === 0 || report[index - 1].Contract && report[index - 1].Contract.Price === report[index].Contract.Price)) {
-                        currentContractDays++;
-                    } else {
-                        currentContractDays = value.Contract ? 1 : 0;
-                    }
-                    if (currentContractDays > longestContractDays) {
-                        longestContractDays = currentContractDays;
                     }
                     balances.push(value.Balance);
                     var delta = value.Balance - lastBalance;
@@ -333,10 +341,29 @@
 
                     if (value.CloseTransaction && index > 0) {
                         if (report[index].Balance > report[index - 1].Balance) {
+                            totalProfitContractDays += currentContractDays;
                             profitCount++;
+                            if (currentContractDays >= longestProfitDays) {
+                                longestProfitDays = currentContractDays;
+                                longestProfitDaysStartDate = currentContractDaysStartDate;
+                                longestProfitDaysEndDate = report[index - 1].DailyPrice.Date;
+                            }
                         } else {
+                            totalLossContractDays += currentContractDays;
                             lossCount++;
+                            if (currentContractDays >= longestLossDays) {
+                                longestLossDays = currentContractDays;
+                                longestLossDaysStartDate = currentContractDaysStartDate;
+                                longestLossDaysEndDate = report[index - 1].DailyPrice.Date;
+                            }
                         }
+                        currentContractDays = 0;
+                    }
+                    if (value.OpenTransaction) {
+                        currentContractDaysStartDate = value.DailyPrice.Date;
+                    }
+                    if (value.Contract) {
+                        currentContractDays++;
                     }
                 });
 
@@ -363,15 +390,18 @@
                 '最终盈利倍数：' + percentageBalance +
                 '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
-                '，最长持仓日：' + longestContractDays +
+                '，最长盈利持仓日：' + longestProfitDays + '(' + formatDate(longestProfitDaysStartDate) + " - " + formatDate(longestProfitDaysEndDate) + "）" +
+                '，最长亏损持仓日：' + longestLossDays + '(' + formatDate(longestLossDaysStartDate) + " - " + formatDate(longestLossDaysEndDate) + "）" +
                 '，当前持仓日：' + currentContractDays +
-                '，最长空仓日：' + longestEmptyDays +
+                '，最长空仓日：' + longestEmptyDays + '(' + formatDate(longestEmptyDaysStartDate) + " - " + formatDate(longestEmptyDaysEndDate) + "）" +
+                '，平均盈利持仓日：' + totalProfitContractDays / profitCount +
+                '，平均亏损持仓日：' + totalLossContractDays / lossCount +
+                '，盈利次数：' + profitCount +
+                '，亏损次数：' + lossCount +
                 '<br/><br/>最终盈利：' + endBalance +
                 '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
                 '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
                 '，日均盈利：' + averageBalance +
-                '，盈利次数：' + profitCount +
-                '，亏损次数：' + lossCount +
                 '，最大份数：' + maxUnit +
                 '，最大盈利：' + maxBalance +
                 '，最小盈利：' + minBalance +
