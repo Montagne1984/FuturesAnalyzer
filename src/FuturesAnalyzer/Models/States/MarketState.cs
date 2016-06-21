@@ -17,8 +17,8 @@ namespace FuturesAnalyzer.Models.States
 
         public abstract Transaction TryOpen(DailyPrice dailyPrice);
 
-        protected abstract decimal GetStopProfitPrice();
-        protected abstract decimal GetStopLossPrice();
+        public abstract decimal GetStopProfitPrice();
+        public abstract decimal GetStopLossPrice();
 
         protected virtual decimal Ceiling(decimal price)
         {
@@ -29,5 +29,7 @@ namespace FuturesAnalyzer.Models.States
         {
             return Math.Floor(price/ Account.MinimumPriceUnit)* Account.MinimumPriceUnit;
         }
+
+        public abstract string GetNextTransaction();
     }
 }

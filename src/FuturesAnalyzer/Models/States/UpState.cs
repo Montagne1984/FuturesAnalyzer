@@ -134,12 +134,12 @@
             Account.Contract = null;
         }
 
-        protected override decimal GetStopLossPrice()
+        public override decimal GetStopLossPrice()
         {
             return Floor(Account.Contract.Price*(1 - Account.StopLossCriteria));
         }
 
-        protected override decimal GetStopProfitPrice()
+        public override decimal GetStopProfitPrice()
         {
             if (Account.Contract.Unit > 1)
             {
@@ -148,6 +148,17 @@
             return HighestPrice <= Account.Contract.Price*(1 + Account.StartProfitCriteria)
                 ? decimal.MinValue
                 : Floor(HighestPrice - (HighestPrice - Account.Contract.Price)* Account.StopProfitCriteria);
+        }
+
+        public override string GetNextTransaction()
+        {
+            var stopProfitPrice = GetStopProfitPrice();
+            if (stopProfitPrice > decimal.MinValue)
+            {
+                return $@"卖反{stopProfitPrice}";
+            }
+            var stopLossPrice = GetStopLossPrice();
+            return $@"卖{(Account.IsLastTransactionLoss.HasValue && Account.IsLastTransactionLoss.Value ? "平" : "反")}{stopLossPrice}";
         }
     }
 }

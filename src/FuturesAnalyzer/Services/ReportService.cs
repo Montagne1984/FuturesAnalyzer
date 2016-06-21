@@ -75,6 +75,7 @@ namespace FuturesAnalyzer.Services
                 currentState.HighestPrice = Math.Max(currentState.HighestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
                 currentState.LowestPrice = Math.Min(currentState.LowestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
                 currentState.PreviousPrice = dailyPrice.ClosePrice;
+                dailyAccountData.NextTransaction = account.MarketState.GetNextTransaction();
             }
             if(report.Count > 1)
             {

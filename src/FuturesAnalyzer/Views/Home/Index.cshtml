@@ -393,6 +393,7 @@
             var yearCount = report.length / daysInYear;
 
             var summaryText =
+                '下一交易日：' + report[report.length - 1].NextTransaction + "<br/>" +
                 '每笔交易本金相同：' +
                 '最终盈利倍数：' + percentageBalance +
                 '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +

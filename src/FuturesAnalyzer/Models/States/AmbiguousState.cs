@@ -11,8 +11,8 @@ namespace FuturesAnalyzer.Models.States
             {
                 return null;
             }
-            var ceilingOpenPrice = Ceiling(PreviousPrice.Value * (1 + Account.OpenCriteria));
-            var floorOpenPrice = Floor(PreviousPrice.Value * (1 - Account.OpenCriteria));
+            var ceilingOpenPrice = GetCeilingOpenPrice();
+            var floorOpenPrice = GetFloorOpenPrice();
             MarketState newState = null;
             var hitBothCriteria = false;
             if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
@@ -67,14 +67,29 @@ namespace FuturesAnalyzer.Models.States
         {
         }
 
-        protected override decimal GetStopLossPrice()
+        public override decimal GetStopLossPrice()
         {
             return 0;
         }
 
-        protected override decimal GetStopProfitPrice()
+        public override decimal GetStopProfitPrice()
         {
             return 0;
+        }
+
+        public decimal GetCeilingOpenPrice()
+        {
+            return Ceiling(PreviousPrice.Value*(1 + Account.OpenCriteria));
+        }
+
+        public decimal GetFloorOpenPrice()
+        {
+            return Floor(PreviousPrice.Value*(1 - Account.OpenCriteria));
+        }
+
+        public override string GetNextTransaction()
+        {
+            return $@"买开{GetFloorOpenPrice()} 卖开{GetCeilingOpenPrice()}";
         }
     }
 }
