@@ -53,6 +53,11 @@
             <input asp-for="NeverEnterAmbiguousState" type="checkbox"> 禁用观望期
         </label>
     </div>
+    <div class="checkbox">
+        <label asp-for="NotUseClosePrice">
+            <input asp-for="NotUseClosePrice" type="checkbox"> 使用日最大最小值
+        </label>
+    </div>
     <div class="form-group form-inline">
         <label asp-for="OpenCriteria">开仓点</label>
         <input type="number" min="0" step="0.001" asp-for="OpenCriteria" class="form-control" />
@@ -70,11 +75,11 @@
         <option>镍</option>
         <option>菜粕</option>
         <option>PP</option>
-        <option>热轧卷板1610</option>
+        @*<option>热轧卷板1610</option>
         <option>热轧卷板1605</option>
         <option>螺纹钢1605</option>
         <option>焦炭1605</option>
-        <option>焦煤1605</option>
+        <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -152,6 +157,7 @@
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
             values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
+            values['NotUseClosePrice'] = $('#NotUseClosePrice')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
             $.post("home/optimize",
                 values,
@@ -178,6 +184,7 @@
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
             values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
+            values['NotUseClosePrice'] = $('#NotUseClosePrice')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
                 $("#results").show();
@@ -855,7 +862,8 @@
                 FollowTrend: true,
                 BudgetFactor: 1.29,
                 BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false
             },
             '螺纹钢': {
                 TransactionFeeRate: 0.00012,
@@ -867,7 +875,8 @@
                 FollowTrend: true,
                 BudgetFactor: 1.68,
                 BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false
             },
             //'焦炭': {
             //    TransactionFeeRate: 0.000864,
@@ -890,19 +899,21 @@
                 FollowTrend: false,
                 BudgetFactor: 1.94,
                 BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false
             },
             '焦煤': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.012,
-                StopProfitCriteria: 0.08,
-                StartProfitCriteria: 0.153,
-                OpenCriteria: 0.019,
-                FollowTrend: false,
-                BudgetFactor: 1.93,
+                StopLossCriteria: 0.039,
+                StopProfitCriteria: 0.06,
+                StartProfitCriteria: 0.046,
+                OpenCriteria: 0.007,
+                FollowTrend: true,
+                BudgetFactor: 1.35,
                 BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true
             },
             '热轧卷板1610': {
                 TransactionFeeRate: 0.00004,
@@ -910,7 +921,8 @@
                 StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.157,
                 OpenCriteria: 0.012,
-                FollowTrend: true
+                FollowTrend: true,
+                NotUseClosePrice: false
             },
             '热轧卷板1605': {
                 TransactionFeeRate: 0.000045,
@@ -954,7 +966,8 @@
                 FollowTrend: true,
                 BudgetFactor: 1.94,
                 BondPercentage: 9,
-                NeverEnterAmbiguousState: false
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false
             },
             '黄金': {
                 TransactionFeeRate: 0.000047,
@@ -965,7 +978,8 @@
                 FollowTrend: false,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 0.01
+                MinimumPriceUnit: 0.01,
+                NotUseClosePrice: false
             },
             '锌': {
                 TransactionFeeRate: 0.000048,
@@ -976,7 +990,8 @@
                 FollowTrend: false,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 5
+                MinimumPriceUnit: 5,
+                NotUseClosePrice: false
             },
             '铜': {
                 TransactionFeeRate: 0.00006,
@@ -987,7 +1002,8 @@
                 FollowTrend: false,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 10
+                MinimumPriceUnit: 10,
+                NotUseClosePrice: false
             },
             '铅': {
                 TransactionFeeRate: 0.000048,
@@ -998,7 +1014,8 @@
                 FollowTrend: false,
                 BondPercentage: 10,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 5
+                MinimumPriceUnit: 5,
+                NotUseClosePrice: false
             },
             '白银': {
                 TransactionFeeRate: 0.00006,
@@ -1010,7 +1027,8 @@
                 BondPercentage: 12,
                 BudgetFactor: 1.24,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '沥青': {
                 TransactionFeeRate: 0.00012,
@@ -1022,7 +1040,8 @@
                 BondPercentage: 13,
                 BudgetFactor: 1.46,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 2
+                MinimumPriceUnit: 2,
+                NotUseClosePrice: false
             },
             '锡': {
                 MinimumPriceUnit: 10,
@@ -1034,7 +1053,8 @@
                 FollowTrend: false,
                 BudgetFactor: 1.53,
                 BondPercentage: 10,
-                NeverEnterAmbiguousState: false
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false
             },
             '镍': {
                 MinimumPriceUnit: 10,
@@ -1046,7 +1066,8 @@
                 FollowTrend: false,
                 BudgetFactor: 1.23,
                 BondPercentage: 13,
-                NeverEnterAmbiguousState: false
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false
             },
             '菜籽': {
                 TransactionFeeRate: 0.000061,
@@ -1058,7 +1079,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 10,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '硅铁': {
                 TransactionFeeRate: 0.00017,
@@ -1070,7 +1092,8 @@
                 BudgetFactor: 1.8,
                 BondPercentage: 9,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 2
+                MinimumPriceUnit: 2,
+                NotUseClosePrice: false
             },
             '锰硅': {
                 TransactionFeeRate: 0.000135,
@@ -1082,7 +1105,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 9,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 2
+                MinimumPriceUnit: 2,
+                NotUseClosePrice: false
             },
             '强麦': {
                 TransactionFeeRate: 0.000056,
@@ -1094,7 +1118,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 9,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '橡胶': {
                 TransactionFeeRate: 0.000054,
@@ -1106,7 +1131,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 5
+                MinimumPriceUnit: 5,
+                NotUseClosePrice: false
             },
             '玻璃': {
                 TransactionFeeRate: 0.00018,
@@ -1118,7 +1144,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 9,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '醇': {
                 TransactionFeeRate: 0.000086,
@@ -1130,7 +1157,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '菜油': {
                 TransactionFeeRate: 0.00005,
@@ -1142,7 +1170,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 10,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 2
+                MinimumPriceUnit: 2,
+                NotUseClosePrice: false
             },
             '菜粕': {
                 TransactionFeeRate: 0.00009,
@@ -1154,7 +1183,8 @@
                 BudgetFactor: 1.22,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '白糖': {
                 TransactionFeeRate: 0.000064,
@@ -1166,7 +1196,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 10,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             'PTA': {
                 TransactionFeeRate: 0.000015,
@@ -1178,7 +1209,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '动力煤': {
                 TransactionFeeRate: 0.00013,
@@ -1190,7 +1222,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 0.2
+                MinimumPriceUnit: 0.2,
+                NotUseClosePrice: false
             },
             '豆一': {
                 TransactionFeeRate: 0.00007,
@@ -1202,7 +1235,8 @@
                 BudgetFactor: 1.87,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '玉米': {
                 TransactionFeeRate: 0.000095,
@@ -1214,7 +1248,8 @@
                 BudgetFactor: 1.41,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '玉米淀粉': {
                 TransactionFeeRate: 0.000091,
@@ -1226,7 +1261,8 @@
                 BudgetFactor: 1.87,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '铁矿石': {
                 TransactionFeeRate: 0.00036,
@@ -1238,7 +1274,8 @@
                 BudgetFactor: 1.87,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 0.5
+                MinimumPriceUnit: 0.5,
+                NotUseClosePrice: false
             },
             '鸡蛋': {
                 TransactionFeeRate: 0.00018,
@@ -1250,7 +1287,8 @@
                 BudgetFactor: 1.21,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '豆粕': {
                 TransactionFeeRate: 0.000073,
@@ -1262,7 +1300,8 @@
                 BudgetFactor: 1.87,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             '棕榈': {
                 TransactionFeeRate: 0.000054,
@@ -1274,7 +1313,8 @@
                 BudgetFactor: 1.87,
                 BondPercentage: 9,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 2
+                MinimumPriceUnit: 2,
+                NotUseClosePrice: false
             },
             //'PP': {
             //    TransactionFeeRate: 0.00029,
@@ -1298,7 +1338,8 @@
                 BudgetFactor: 1.46,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false
             },
             'PVC': {
                 TransactionFeeRate: 0.00008,
@@ -1310,7 +1351,8 @@
                 BudgetFactor: 1.87,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 5
+                MinimumPriceUnit: 5,
+                NotUseClosePrice: false
             },
             '豆油': {
                 TransactionFeeRate: 0.000033,
@@ -1322,7 +1364,8 @@
                 BudgetFactor: 1.87,
                 BondPercentage: 9,
                 NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 2
+                MinimumPriceUnit: 2,
+                NotUseClosePrice: false
             }
         };
 
@@ -1342,6 +1385,7 @@
                 $('#BondPercentage').val(settings[selectedProductName].BondPercentage);
                 $('#FollowTrend').prop('checked', settings[selectedProductName].FollowTrend);
                 $('#NeverEnterAmbiguousState').prop('checked', settings[selectedProductName].NeverEnterAmbiguousState);
+                $('#NotUseClosePrice').prop('checked', settings[selectedProductName].NotUseClosePrice);
                 if (settings[selectedProductName].BudgetFactor) {
                     $('#BudgetFactor').val(settings[selectedProductName].BudgetFactor);
                 }

@@ -58,25 +58,22 @@ namespace FuturesAnalyzer.Services
             for (var i = startIndex; i < dailyPrices.Count; i++)
             {
                 var dailyPrice = dailyPrices[i];
-                if (dailyPrice.Turnover == 0)
-                {
-                    continue;
-                }
                 if (!CheckDailyPrice(dailyPrice))
                 {
                     throw new ArgumentException("数据异常：" + dailyPrice.Date);
                 }
-                report.Add(new DailyAccountData
+                var dailyAccountData = new DailyAccountData
                 {
                     DailyPrice = dailyPrice,
-                    CloseTransaction = dailyPrice.Turnover > 0 ? account.MarketState.TryClose(dailyPrice) : null,
-                    OpenTransaction = dailyPrice.Turnover > 0 ? account.MarketState.TryOpen(dailyPrice) : null,
+                    CloseTransaction = account.MarketState.TryClose(dailyPrice),
+                    OpenTransaction = account.MarketState.TryOpen(dailyPrice),
                     Balance = account.Balance,
                     Contract = account.Contract
-                });
+                };
+                report.Add(dailyAccountData);
                 var currentState = account.MarketState;
-                currentState.HighestPrice = Math.Max(currentState.HighestPrice, dailyPrice.ClosePrice);
-                currentState.LowestPrice = Math.Min(currentState.LowestPrice, dailyPrice.ClosePrice);
+                currentState.HighestPrice = Math.Max(currentState.HighestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
+                currentState.LowestPrice = Math.Min(currentState.LowestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
                 currentState.PreviousPrice = dailyPrice.ClosePrice;
             }
             if(report.Count > 1)
@@ -104,14 +101,8 @@ namespace FuturesAnalyzer.Services
         private static int WarmUp(Account account, List<DailyPrice> dailyPrices)
         {
             var direction = 0;
-            var zeroTurnoverCount = 0;
-            for (var i = 1; i < WarmUpLength + zeroTurnoverCount && i < dailyPrices.Count; i++)
+            for (var i = 1; i < WarmUpLength && i < dailyPrices.Count; i++)
             {
-                if (dailyPrices[i].Turnover == 0)
-                {
-                    zeroTurnoverCount++;
-                    continue;
-                }
                 direction += Math.Sign(dailyPrices[i].ClosePrice - dailyPrices[i - 1].ClosePrice);
             }
             if (direction > 1)
@@ -126,12 +117,16 @@ namespace FuturesAnalyzer.Services
             {
                 account.MarketState = new AmbiguousState();
             }
-            account.MarketState.HighestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
-            account.MarketState.LowestPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
-            account.MarketState.StartPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
+            account.MarketState.HighestPrice = dailyPrices[WarmUpLength].OpenPrice;
+            account.MarketState.LowestPrice = dailyPrices[WarmUpLength].OpenPrice;
+            account.MarketState.StartPrice = dailyPrices[WarmUpLength].OpenPrice;
             account.MarketState.Account = account;
             account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
-            return WarmUpLength + zeroTurnoverCount;
+            if (account.MarketState is UpState || account.MarketState is DownState)
+            {
+                account.MarketState.TryOpen(dailyPrices[WarmUpLength]);
+            }
+            return WarmUpLength;
         }
 
         private bool CheckDailyPrice(DailyPrice dailyPrice)

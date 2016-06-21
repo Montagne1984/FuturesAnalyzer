@@ -16,7 +16,7 @@
                 if (Account.Contract.AppendUnitPrice <= Floor(dailyPrice.ClosePrice - (dailyPrice.ClosePrice - Account.Contract.Price) * Account.StopProfitCriteria))
                 {
                     Account.Contract.AppendUnitPrice = decimal.MaxValue;
-            }
+                }
             }
 
             var stopLossPrice = GetStopLossPrice();
