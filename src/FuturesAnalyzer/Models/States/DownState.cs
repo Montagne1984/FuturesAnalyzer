@@ -136,7 +136,7 @@ namespace FuturesAnalyzer.Models.States
             Account.Contract = null;
         }
 
-        protected override decimal GetStopProfitPrice()
+        public override decimal GetStopProfitPrice()
         {
             if (Account.Contract.Unit > 1)
             {
@@ -147,9 +147,20 @@ namespace FuturesAnalyzer.Models.States
                 : Ceiling(LowestPrice + (Account.Contract.Price - LowestPrice) * Account.StopProfitCriteria);
         }
 
-        protected override decimal GetStopLossPrice()
+        public override decimal GetStopLossPrice()
         {
             return Ceiling(Account.Contract.Price * (1 + Account.StopLossCriteria));
+        }
+
+        public override string GetNextTransaction()
+        {
+            var stopProfitPrice = GetStopProfitPrice();
+            if (stopProfitPrice < decimal.MaxValue)
+            {
+                return $@"买反{stopProfitPrice}";
+            }
+            var stopLossPrice = GetStopLossPrice();
+            return $@"买{(Account.IsLastTransactionLoss.HasValue && Account.IsLastTransactionLoss.Value ? "平" : "反")}{stopLossPrice}";
         }
     }
 }

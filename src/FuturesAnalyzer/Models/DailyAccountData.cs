@@ -1,4 +1,5 @@
 ﻿using System;
+using FuturesAnalyzer.Models.States;
 
 namespace FuturesAnalyzer.Models
 {
@@ -10,5 +11,6 @@ namespace FuturesAnalyzer.Models
         public Contract Contract { get; set; }
         public Transaction CloseTransaction { get; set; }
         public Transaction OpenTransaction { get; set; }
+        public string NextTransaction { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using FuturesAnalyzer.Models.States;
+﻿using System;
+using FuturesAnalyzer.Models.States;
 
 namespace FuturesAnalyzer.Models
 {
@@ -21,11 +22,12 @@ namespace FuturesAnalyzer.Models
         public decimal MinimumPriceUnit = 1;
         public decimal OpenCriteria = 0.02m;
         public bool FollowTrend = true;
+        public bool NotUseClosePrice = false;
 
         public decimal DeductTransactionFee(decimal price, int unit)
         {
             var transactionFee = price * TransactionFeeRate * unit;
-            Balance -= transactionFee;
+            Balance -= Math.Round(transactionFee, 2);
             return transactionFee;
         }
     }
