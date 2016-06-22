@@ -264,7 +264,7 @@
                         currentEmptyDays = 0;
                         currentEmptyDaysStartDate = value.DailyPrice.Date;
                     } else {
-                        currentEmptyDays++;
+                        currentEmptyDays = value.Contract ? 0: currentEmptyDays + 1;
                     }
                     balances.push(value.Balance);
                     var delta = value.Balance - lastBalance;
