@@ -242,6 +242,7 @@
             var currentContractDays = 0;
             var totalProfitContractDays = 0;
             var totalLossContractDays = 0;
+            var emptyCount = 0;
             if (report.length > 0) {
                 lastYearStartPrice = report[0].DailyPrice.ClosePrice;
                 var currentLossRangeStartPoint = 0;
@@ -307,6 +308,9 @@
                             maxLossRangeStartPoint = currentLossRangeStartPoint;
                             maxLossRangeStartDate = currentLossRangeStartDate;
                             maxLossRangeEndDate = value.DailyPrice.Date;
+                        }
+                        if (!report[index].Contract) {
+                            emptyCount++;
                         }
                     } else if (index === report.length - 1 && report[index].Contract) {
                         var percentageDelta = report[index].PercentageBalance - report[index - 1].PercentageBalance;
@@ -403,6 +407,7 @@
                 '，当前持仓日：' + currentContractDays +
                 '，最长空仓日：' + longestEmptyDays + '(' + formatDate(longestEmptyDaysStartDate) + " - " + formatDate(longestEmptyDaysEndDate) + "）" +
                 '，当前空仓日：' + currentEmptyDays +
+                '，空仓次数：' + emptyCount +
                 '，平均盈利持仓日：' + totalProfitContractDays / profitCount +
                 '，平均亏损持仓日：' + totalLossContractDays / lossCount +
                 '，盈利次数：' + profitCount +
