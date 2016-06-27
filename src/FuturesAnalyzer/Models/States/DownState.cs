@@ -110,17 +110,7 @@ namespace FuturesAnalyzer.Models.States
 
         protected override void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice)
         {
-            MarketState newState;
-            if (Account.NeverEnterAmbiguousState || closePrice < Account.Contract.Price || !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)
-            {
-                newState = new UpState();
-                Account.IsLastTransactionLoss = closePrice > Account.Contract.Price;
-            }
-            else
-            {
-                newState = new AmbiguousState();
-                Account.IsLastTransactionLoss = null;
-            }
+            var newState = GetNewState(closePrice);
             newState.Account = Account;
             newState.StartPrice = closePrice;
             newState.HighestPrice = dailyPrice.ClosePrice;
@@ -134,6 +124,23 @@ namespace FuturesAnalyzer.Models.States
             Account.DeductTransactionFee(closePrice, Account.Contract.Unit);
             Account.MarketState = newState;
             Account.Contract = null;
+        }
+
+        protected override MarketState GetNewState(decimal closePrice)
+        {
+            MarketState newState;
+            if (Account.NeverEnterAmbiguousState || closePrice < Account.Contract.Price ||
+                !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)
+            {
+                newState = new UpState();
+                Account.IsLastTransactionLoss = closePrice > Account.Contract.Price;
+            }
+            else
+            {
+                newState = new AmbiguousState();
+                Account.IsLastTransactionLoss = null;
+            }
+            return newState;
         }
 
         public override decimal GetStopProfitPrice()

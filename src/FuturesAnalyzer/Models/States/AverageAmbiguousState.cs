@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FuturesAnalyzer.Models.States
 {
-    public class AmbiguousState : MarketState
+    public class AverageAmbiguousState: AmbiguousState
     {
         public override Transaction TryOpen(DailyPrice dailyPrice)
         {
@@ -23,11 +26,11 @@ namespace FuturesAnalyzer.Models.States
             {
                 if (Account.FollowTrend)
                 {
-                    newState = new UpState();
+                    newState = new AverageUpState();
                 }
                 else
                 {
-                    newState = new DownState();
+                    newState = new AverageDownState();
                 }
                 newState.StartPrice = Math.Max(dailyPrice.OpenPrice, ceilingOpenPrice);
             }
@@ -35,11 +38,11 @@ namespace FuturesAnalyzer.Models.States
             {
                 if (Account.FollowTrend)
                 {
-                    newState = new DownState();
+                    newState = new AverageDownState();
                 }
                 else
                 {
-                    newState = new UpState();
+                    newState = new AverageUpState();
                 }
                 newState.StartPrice = Math.Min(dailyPrice.OpenPrice, floorOpenPrice);
             }
@@ -57,38 +60,14 @@ namespace FuturesAnalyzer.Models.States
             return transaction;
         }
 
-        public override Transaction TryClose(DailyPrice dailyPrice)
+        public override decimal GetCeilingOpenPrice()
         {
-            return null;
+            return Ceiling(Account.FiveDaysAveragePrice * (1 + Account.OpenCriteria));
         }
 
-        protected override void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice)
+        public override decimal GetFloorOpenPrice()
         {
-        }
-
-        public override decimal GetStopLossPrice()
-        {
-            return 0;
-        }
-
-        public override decimal GetStopProfitPrice()
-        {
-            return 0;
-        }
-
-        public virtual decimal GetCeilingOpenPrice()
-        {
-            return Ceiling(PreviousPrice.Value*(1 + Account.OpenCriteria));
-        }
-
-        public virtual decimal GetFloorOpenPrice()
-        {
-            return Floor(PreviousPrice.Value*(1 - Account.OpenCriteria));
-        }
-
-        public override string GetNextTransaction()
-        {
-            return $@"{(Account.FollowTrend ? "卖" : "买")}开{GetFloorOpenPrice()} {(Account.FollowTrend ? "买" : "卖")}开{GetCeilingOpenPrice()}";
+            return Floor(Account.FiveDaysAveragePrice * (1 - Account.OpenCriteria));
         }
     }
 }

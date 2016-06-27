@@ -117,6 +117,11 @@
         <label asp-for="EndDate">结束日期</label>
         <input type="date" asp-for="EndDate" class="form-control" />
     </div>
+    <div class="checkbox">
+        <label asp-for="UseAverageMarketState">
+            <input asp-for="UseAverageMarketState" type="checkbox"> 使用五日均线
+        </label>
+    </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
     <button id="optimize" class="btn btn-default">优化</button>
 </form>
@@ -159,6 +164,7 @@
             values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
             values['NotUseClosePrice'] = $('#NotUseClosePrice')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
+            values['UseAverageMarketState'] = $('#UseAverageMarketState')[0].checked;
             $.post("home/optimize",
                 values,
                 function(data) {
@@ -186,6 +192,7 @@
             values['NeverEnterAmbiguousState'] = $('#NeverEnterAmbiguousState')[0].checked;
             values['NotUseClosePrice'] = $('#NotUseClosePrice')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
+            values['UseAverageMarketState'] = $('#UseAverageMarketState')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
                 $("#results").show();
                 showResult(data);
@@ -263,9 +270,11 @@
                             longestEmptyDaysEndDate = report[index - 1].DailyPrice.Date;
                         }
                         currentEmptyDays = 0;
-                        currentEmptyDaysStartDate = value.DailyPrice.Date;
                     } else {
-                        currentEmptyDays = value.Contract ? 0: currentEmptyDays + 1;
+                        currentEmptyDays = value.Contract ? 0 : currentEmptyDays + 1;
+                        if (currentEmptyDays === 1) {
+                            currentEmptyDaysStartDate = value.DailyPrice.Date;
+                        }
                     }
                     balances.push(value.Balance);
                     var delta = value.Balance - lastBalance;

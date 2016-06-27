@@ -76,6 +76,10 @@ namespace FuturesAnalyzer.Services
                 currentState.LowestPrice = Math.Min(currentState.LowestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
                 currentState.PreviousPrice = dailyPrice.ClosePrice;
                 dailyAccountData.NextTransaction = account.MarketState.GetNextTransaction();
+                account.PreviousFiveDayPrices.Dequeue();
+                account.PreviousFiveDayPrices.Enqueue(dailyPrice.ClosePrice);
+                account.PreviousFiveDayDirections.Dequeue();
+                account.PreviousFiveDayDirections.Enqueue(Math.Sign(dailyPrices[i].ClosePrice - dailyPrices[i - 1].ClosePrice));
             }
             if(report.Count > 1)
             {
@@ -104,19 +108,24 @@ namespace FuturesAnalyzer.Services
             var direction = 0;
             for (var i = 1; i < WarmUpLength && i < dailyPrices.Count; i++)
             {
-                direction += Math.Sign(dailyPrices[i].ClosePrice - dailyPrices[i - 1].ClosePrice);
+                var d = Math.Sign(dailyPrices[i].ClosePrice - dailyPrices[i - 1].ClosePrice);
+                direction += d;
+                account.PreviousFiveDayPrices.Enqueue(dailyPrices[i].ClosePrice);
+                account.PreviousFiveDayDirections.Enqueue(d);
             }
+            if(account.Direction != direction)
+                throw new ArgumentException();
             if (direction > 1)
             {
-                account.MarketState = new UpState();
+                account.MarketState = account.UseAverageMarketState ? new AverageUpState() : new UpState();
             }
             else if (direction < -1)
             {
-                account.MarketState = new DownState();
+                account.MarketState = account.UseAverageMarketState ? new AverageDownState() : new DownState();
             }
             else
             {
-                account.MarketState = new AmbiguousState();
+                account.MarketState = account.UseAverageMarketState ? new AverageAmbiguousState() : new AmbiguousState();
             }
             account.MarketState.HighestPrice = dailyPrices[WarmUpLength].OpenPrice;
             account.MarketState.LowestPrice = dailyPrices[WarmUpLength].OpenPrice;

@@ -15,6 +15,11 @@ namespace FuturesAnalyzer.Models.States
 
         protected abstract void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice);
 
+        protected virtual MarketState GetNewState(decimal closePrice)
+        {
+            return null;
+        }
+
         public abstract Transaction TryOpen(DailyPrice dailyPrice);
 
         public abstract decimal GetStopProfitPrice();

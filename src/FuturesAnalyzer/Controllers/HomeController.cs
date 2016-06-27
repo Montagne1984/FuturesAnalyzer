@@ -72,14 +72,14 @@ namespace FuturesAnalyzer.Controllers
             ReportSettingViewModel bestSettings = model.Clone();
             var bestPercentageBalance = 0m;
 
-            var followTrends = new bool[] { true, false };
 
             var startTime = DateTime.Now;
 
             var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");
 
             //var range = ranges.ContainsKey(model.SelectedProductName) ? ranges[model.SelectedProductName] : ranges["big"];
-            var range = ranges["big"];
+            var range = model.UseAverageMarketState ? ranges["average"] : ranges["big"];
+            var followTrends = model.UseAverageMarketState ? new [] { true } : new[] { true, false };
 
             for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
             {
@@ -189,7 +189,8 @@ namespace FuturesAnalyzer.Controllers
                 MinimumPriceUnit = model.MinimumPriceUnit,
                 OpenCriteria = model.OpenCriteria,
                 FollowTrend = model.FollowTrend,
-                NotUseClosePrice = model.NotUseClosePrice
+                NotUseClosePrice = model.NotUseClosePrice,
+                UseAverageMarketState = model.UseAverageMarketState
             };
             var dateRange = dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList();
             return _reportService.GenerateReport(account, dateRange).ToList();
@@ -211,6 +212,23 @@ namespace FuturesAnalyzer.Controllers
                     TopStartProfit = 0.08m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0.05m,
+                    TopStopProfit = 0.3m,
+                    StopProfitStep = 0.01m,
+                    BottomOpenCriteria = 0.005m,
+                    TopOpenCriteria = 0.04m,
+                    OpenCriteriaStep = 0.001m,
+                    NeverEnterAmbiguousState = false
+                });
+            ranges.Add("average",
+                new OptimizeRange
+                {
+                    BottomStopLoss = 0.005m,
+                    TopStopLoss = 0.04m,
+                    StopLossStep = 0.001m,
+                    BottomStartProfit = 0.08m,
+                    TopStartProfit = 0.08m,
+                    StartProfitStep = 0.001m,
+                    BottomStopProfit = 0.3m,
                     TopStopProfit = 0.3m,
                     StopProfitStep = 0.01m,
                     BottomOpenCriteria = 0.005m,

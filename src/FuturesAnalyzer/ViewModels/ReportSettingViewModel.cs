@@ -20,6 +20,7 @@ namespace FuturesAnalyzer.ViewModels
         public DateTime EndDate { get; set; } = DateTime.Now.AddDays(-1);
         public decimal MinimumPriceUnit { get; set; } = 1;
         public bool NotUseClosePrice { get; set; } = false;
+        public bool UseAverageMarketState { get; set; }
 
         public ReportSettingViewModel Clone()
         {
@@ -40,7 +41,8 @@ namespace FuturesAnalyzer.ViewModels
                 StartDate = StartDate,
                 EndDate = EndDate,
                 MinimumPriceUnit = MinimumPriceUnit,
-                NotUseClosePrice = NotUseClosePrice
+                NotUseClosePrice = NotUseClosePrice,
+                UseAverageMarketState = UseAverageMarketState
             };
         }
 
