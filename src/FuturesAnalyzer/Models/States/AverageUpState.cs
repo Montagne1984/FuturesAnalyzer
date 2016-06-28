@@ -25,7 +25,7 @@ namespace FuturesAnalyzer.Models.States
 
         public override decimal GetStopProfitPrice()
         {
-            return Account.Direction > 1 ? Account.FiveDaysAveragePrice*(1 - Account.StopLossCriteria) : decimal.MaxValue;
+            return Account.Direction < -1 ? decimal.MaxValue : Account.FiveDaysAveragePrice*(1 - Account.StopLossCriteria);
         }
 
         public override decimal GetStopLossPrice()

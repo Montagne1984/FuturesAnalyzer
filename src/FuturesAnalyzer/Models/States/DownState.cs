@@ -145,6 +145,10 @@ namespace FuturesAnalyzer.Models.States
 
         public override decimal GetStopProfitPrice()
         {
+            //if (Account.Direction > 1)
+            //{
+            //    return decimal.MinValue;
+            //}
             if (Account.Contract.Unit > 1)
             {
                 return Account.Contract.Price * (1 - Account.StartProfitCriteriaForMultiUnits);
@@ -156,6 +160,10 @@ namespace FuturesAnalyzer.Models.States
 
         public override decimal GetStopLossPrice()
         {
+            //if (Account.Direction > 1)
+            //{
+            //    return decimal.MinValue;
+            //}
             return Ceiling(Account.Contract.Price * (1 + Account.StopLossCriteria));
         }
 

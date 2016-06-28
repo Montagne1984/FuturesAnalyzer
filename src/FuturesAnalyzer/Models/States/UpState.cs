@@ -143,11 +143,19 @@
 
         public override decimal GetStopLossPrice()
         {
+            //if (Account.Direction < -1)
+            //{
+            //    return decimal.MaxValue;
+            //}
             return Floor(Account.Contract.Price*(1 - Account.StopLossCriteria));
         }
 
         public override decimal GetStopProfitPrice()
         {
+            //if (Account.Direction < -1)
+            //{
+            //    return decimal.MaxValue;
+            //}
             if (Account.Contract.Unit > 1)
             {
                 return Account.Contract.Price*(1 + Account.StartProfitCriteriaForMultiUnits);
