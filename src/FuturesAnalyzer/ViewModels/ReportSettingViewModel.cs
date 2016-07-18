@@ -21,6 +21,8 @@ namespace FuturesAnalyzer.ViewModels
         public decimal MinimumPriceUnit { get; set; } = 1;
         public bool NotUseClosePrice { get; set; } = false;
         public bool UseAverageMarketState { get; set; }
+        public bool CloseAfterProfit { get; set; }
+        public bool OnlyUseClosePrice { get; set; }
 
         public ReportSettingViewModel Clone()
         {
@@ -42,7 +44,9 @@ namespace FuturesAnalyzer.ViewModels
                 EndDate = EndDate,
                 MinimumPriceUnit = MinimumPriceUnit,
                 NotUseClosePrice = NotUseClosePrice,
-                UseAverageMarketState = UseAverageMarketState
+                UseAverageMarketState = UseAverageMarketState,
+                CloseAfterProfit = CloseAfterProfit,
+                OnlyUseClosePrice = OnlyUseClosePrice
             };
         }
 

@@ -38,6 +38,8 @@ namespace FuturesAnalyzer.Models
         public bool FollowTrend = true;
         public bool NotUseClosePrice = false;
         public bool UseAverageMarketState = false;
+        public bool CloseAfterProfit = false;
+        public bool OnlyUseClosePrice = false;
 
         public decimal DeductTransactionFee(decimal price, int unit = 1)
         {

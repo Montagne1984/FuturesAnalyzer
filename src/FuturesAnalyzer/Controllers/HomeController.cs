@@ -190,7 +190,9 @@ namespace FuturesAnalyzer.Controllers
                 OpenCriteria = model.OpenCriteria,
                 FollowTrend = model.FollowTrend,
                 NotUseClosePrice = model.NotUseClosePrice,
-                UseAverageMarketState = model.UseAverageMarketState
+                UseAverageMarketState = model.UseAverageMarketState,
+                CloseAfterProfit = model.CloseAfterProfit,
+                OnlyUseClosePrice = model.OnlyUseClosePrice
             };
             var dateRange = dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList();
             return _reportService.GenerateReport(account, dateRange).ToList();
@@ -208,8 +210,8 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0.005m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.02m,
-                    TopStartProfit = 0.08m,
+                    BottomStartProfit = 0.121m,
+                    TopStartProfit = 0.15m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0.05m,
                     TopStopProfit = 0.3m,

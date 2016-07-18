@@ -122,6 +122,16 @@
             <input asp-for="UseAverageMarketState" type="checkbox"> 使用五日均线
         </label>
     </div>
+    <div class="checkbox">
+        <label asp-for="CloseAfterProfit">
+            <input asp-for="CloseAfterProfit" type="checkbox"> 止盈后平仓
+        </label>
+    </div>
+    <div class="checkbox">
+        <label asp-for="OnlyUseClosePrice">
+            <input asp-for="OnlyUseClosePrice" type="checkbox"> 止盈仅看收盘价
+        </label>
+    </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
     <button id="optimize" class="btn btn-default">优化</button>
 </form>
@@ -165,6 +175,8 @@
             values['NotUseClosePrice'] = $('#NotUseClosePrice')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
             values['UseAverageMarketState'] = $('#UseAverageMarketState')[0].checked;
+            values['CloseAfterProfit'] = $('#CloseAfterProfit')[0].checked;
+            values['OnlyUseClosePrice'] = $('#OnlyUseClosePrice')[0].checked;
             $.post("home/optimize",
                 values,
                 function(data) {
@@ -193,6 +205,8 @@
             values['NotUseClosePrice'] = $('#NotUseClosePrice')[0].checked;
             values['FollowTrend'] = $('#FollowTrend')[0].checked;
             values['UseAverageMarketState'] = $('#UseAverageMarketState')[0].checked;
+            values['CloseAfterProfit'] = $('#CloseAfterProfit')[0].checked;
+            values['OnlyUseClosePrice'] = $('#OnlyUseClosePrice')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
                 $("#results").show();
                 showResult(data);
@@ -1191,16 +1205,16 @@
             },
             '菜粕': {
                 TransactionFeeRate: 0.00009,
-                StopLossCriteria: 0.028,
-                StopProfitCriteria: 0.15,
-                StartProfitCriteria: 0.045,
-                OpenCriteria: 0.027,
+                StopLossCriteria: 0.018,
+                StopProfitCriteria: 0.06,
+                StartProfitCriteria: 0.066,
+                OpenCriteria: 0.03,
                 FollowTrend: false,
                 BudgetFactor: 1.22,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1,
-                NotUseClosePrice: false
+                NotUseClosePrice: true
             },
             '白糖': {
                 TransactionFeeRate: 0.000064,
