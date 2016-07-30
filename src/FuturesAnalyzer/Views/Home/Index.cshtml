@@ -132,6 +132,16 @@
             <input asp-for="OnlyUseClosePrice" type="checkbox"> 止盈仅看收盘价
         </label>
     </div>
+    <div class="checkbox">
+        <label asp-for="UseCrossStarStrategy">
+            <input asp-for="UseCrossStarStrategy" type="checkbox"> 十字星策略
+        </label>
+    </div>
+    <div class="checkbox">
+        <label asp-for="UseInternalProfit">
+            <input asp-for="UseInternalProfit" type="checkbox"> 到达起盈点临时止盈
+        </label>
+    </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
     <button id="optimize" class="btn btn-default">优化</button>
 </form>
@@ -177,6 +187,8 @@
             values['UseAverageMarketState'] = $('#UseAverageMarketState')[0].checked;
             values['CloseAfterProfit'] = $('#CloseAfterProfit')[0].checked;
             values['OnlyUseClosePrice'] = $('#OnlyUseClosePrice')[0].checked;
+            values['UseCrossStarStrategy'] = $('#UseCrossStarStrategy')[0].checked;
+            values['UseInternalProfit'] = $('#UseInternalProfit')[0].checked;
             $.post("home/optimize",
                 values,
                 function(data) {
@@ -207,7 +219,9 @@
             values['UseAverageMarketState'] = $('#UseAverageMarketState')[0].checked;
             values['CloseAfterProfit'] = $('#CloseAfterProfit')[0].checked;
             values['OnlyUseClosePrice'] = $('#OnlyUseClosePrice')[0].checked;
-            $.post($('#form').attr('action'), values, function (data) {
+            values['UseCrossStarStrategy'] = $('#UseCrossStarStrategy')[0].checked;
+            values['UseInternalProfit'] = $('#UseInternalProfit')[0].checked;
+            $.post($('#form').attr('action'), values, function(data) {
                 $("#results").show();
                 showResult(data);
             });
@@ -244,7 +258,9 @@
             var profitFactor = 100 / $("#BondPercentage").val();
             var dailyPercentageBalance = [];
             var dailyBudgetFactor = [];
+            var dailyBudgetFactorLevel = [];
             var budgetFactor = 1;
+            var budgetFactorLevel = 0;
             var budgetChangeFactor = $("#UseBudgetFactor").prop("checked") ? $("#BudgetFactor").val() : 1;
             var maxLossRangeStartPoint = 0;
             var maxLossRange = 0;
@@ -273,7 +289,7 @@
                 var currentEmptyDaysStartDate = report[0].DailyPrice.Date;
                 maxLossRangeStartDate = report[0].DailyPrice.Date;
                 maxLossRangeEndDate = report[0].DailyPrice.Date;
-                $.each(report, function (index, value) {
+                $.each(report, function(index, value) {
                     categories.push(formatDate(value.DailyPrice.Date));
                     prices.push(value.DailyPrice.ClosePrice);
                     contracts.push(value.Contract ? value.Contract.Price * value.Contract.Direction * value.Contract.Unit : 0);
@@ -312,10 +328,16 @@
                         percentageBalance += percentageDelta * profitFactor;
                         if (percentageDelta > 0) {
                             if ((percentageBalance + 1) * 0.8 >= budgetFactor * budgetChangeFactor) {
+                                if (budgetChangeFactor !== 1) {
+                                    budgetFactorLevel++;
+                                }
                                 budgetFactor *= budgetChangeFactor;
                             }
                         } else {
                             while ((percentageBalance + 1) * 0.8 < budgetFactor && budgetFactor > 1) {
+                                if (budgetChangeFactor !== 1) {
+                                    budgetFactorLevel--;
+                                }
                                 budgetFactor /= budgetChangeFactor;
                             }
                         }
@@ -349,6 +371,7 @@
                     }
                     dailyPercentageBalance.push(percentageBalance);
                     dailyBudgetFactor.push(budgetFactor);
+                    dailyBudgetFactorLevel.push(budgetFactorLevel);
                     maxBalance = Math.max(maxBalance, value.Balance);
                     minBalance = Math.min(minBalance, value.Balance);
                     lastBalance = value.Balance;
@@ -411,7 +434,7 @@
             }
 
             var totalProfitPercentage = 0;
-            $.each(annualProfits, function (key, value) {
+            $.each(annualProfits, function(key, value) {
                 totalProfitPercentage += value.profitPercentage;
             });
             var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
@@ -421,37 +444,37 @@
 
             var summaryText =
                 '下一交易日：' + report[report.length - 1].NextTransaction + "<br/>" +
-                '每笔交易本金相同：' +
-                '最终盈利倍数：' + percentageBalance +
-                '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
-                '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
-                '，最长盈利持仓日：' + longestProfitDays + '(' + formatDate(longestProfitDaysStartDate) + " - " + formatDate(longestProfitDaysEndDate) + "）" +
-                '，最长亏损持仓日：' + longestLossDays + '(' + formatDate(longestLossDaysStartDate) + " - " + formatDate(longestLossDaysEndDate) + "）" +
-                '，当前持仓日：' + currentContractDays +
-                '，最长空仓日：' + longestEmptyDays + '(' + formatDate(longestEmptyDaysStartDate) + " - " + formatDate(longestEmptyDaysEndDate) + "）" +
-                '，当前空仓日：' + currentEmptyDays +
-                '，空仓次数：' + emptyCount +
-                '，平均盈利持仓日：' + totalProfitContractDays / profitCount +
-                '，平均亏损持仓日：' + totalLossContractDays / lossCount +
-                '，盈利次数：' + profitCount +
-                '，亏损次数：' + lossCount +
-                '<br/><br/>最终盈利：' + endBalance +
-                '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
-                '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
-                '，日均盈利：' + averageBalance +
-                '，最大份数：' + maxUnit +
-                '，最大盈利：' + maxBalance +
-                '，最小盈利：' + minBalance +
-                '，最大单日盈利：' + maxSingleDelta + '(' + formatDate(maxSingleDeltaDate) + ')' +
-                '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
-                '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
-                '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
+                    '每笔交易本金相同：' +
+                    '最终盈利倍数：' + percentageBalance +
+                    '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
+                    '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
+                    '，最长盈利持仓日：' + longestProfitDays + '(' + formatDate(longestProfitDaysStartDate) + " - " + formatDate(longestProfitDaysEndDate) + "）" +
+                    '，最长亏损持仓日：' + longestLossDays + '(' + formatDate(longestLossDaysStartDate) + " - " + formatDate(longestLossDaysEndDate) + "）" +
+                    '，当前持仓日：' + currentContractDays +
+                    '，最长空仓日：' + longestEmptyDays + '(' + formatDate(longestEmptyDaysStartDate) + " - " + formatDate(longestEmptyDaysEndDate) + "）" +
+                    '，当前空仓日：' + currentEmptyDays +
+                    '，空仓次数：' + emptyCount +
+                    '，平均盈利持仓日：' + totalProfitContractDays / profitCount +
+                    '，平均亏损持仓日：' + totalLossContractDays / lossCount +
+                    '，盈利次数：' + profitCount +
+                    '，亏损次数：' + lossCount +
+                    '<br/><br/>最终盈利：' + endBalance +
+                    '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
+                    '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
+                    '，日均盈利：' + averageBalance +
+                    '，最大份数：' + maxUnit +
+                    '，最大盈利：' + maxBalance +
+                    '，最小盈利：' + minBalance +
+                    '，最大单日盈利：' + maxSingleDelta + '(' + formatDate(maxSingleDeltaDate) + ')' +
+                    '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
+                    '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
+                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
             summaryText += '<br/><br/>每笔交易本金相同时各年盈利<br/>';
-            $.each(annualProfits, function (key, value) {
+            $.each(annualProfits, function(key, value) {
                 summaryText += key + '盈利倍数：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
             });
             summaryText += '<br/><br/>';
-            $.each(annualProfits, function (key, value) {
+            $.each(annualProfits, function(key, value) {
                 summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
             });
 
@@ -578,6 +601,22 @@
                                 color: Highcharts.getOptions().colors[1]
                             }
                         }
+                    },
+                    {
+                        // Secondary yAxis
+                        title: {
+                            text: '成本系数等级',
+                            style: {
+                                color: Highcharts.getOptions().colors[2]
+                            }
+                        },
+                        labels: {
+                            format: '{value}',
+                            style: {
+                                color: Highcharts.getOptions().colors[2]
+                            }
+                        },
+                        opposite: true
                     }
                 ],
                 tooltip: {
@@ -593,6 +632,12 @@
                         name: '成本系数',
                         type: 'spline',
                         data: dailyBudgetFactor
+                    },
+                    {
+                        name: '成本系数等级',
+                        type: 'spline',
+                        data: dailyBudgetFactorLevel,
+                        yAxis: 2
                     }
                 ]
             });

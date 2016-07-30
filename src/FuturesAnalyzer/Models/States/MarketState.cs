@@ -9,7 +9,12 @@ namespace FuturesAnalyzer.Models.States
         public decimal HighestPrice { get; set; }
         public decimal LowestPrice { get; set; }
         public decimal StartPrice { get; set; }
-        public decimal? PreviousPrice { get; set; }
+        public DailyPrice PreviousPrice { get; set; }
+        public bool StopInternalProfit { get; set; }
+        public bool New { get; set; }
+
+        public virtual bool CloseWithinStartProfitPrice(DailyPrice dailyPrice) => false;
+        public virtual bool HitStartProfitPrice(DailyPrice dailyPrice) => false;
 
         public abstract Transaction TryClose(DailyPrice dailyPrice);
 

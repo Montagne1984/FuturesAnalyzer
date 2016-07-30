@@ -6,7 +6,7 @@ namespace FuturesAnalyzer.Models.States
     {
         public override Transaction TryOpen(DailyPrice dailyPrice)
         {
-            if (Account.Contract != null || dailyPrice == null || !PreviousPrice.HasValue)
+            if (Account.Contract != null || dailyPrice == null || PreviousPrice == null)
             {
                 return null;
             }
@@ -78,12 +78,12 @@ namespace FuturesAnalyzer.Models.States
 
         public virtual decimal GetCeilingOpenPrice()
         {
-            return Ceiling(PreviousPrice.Value*(1 + Account.OpenCriteria));
+            return Ceiling(PreviousPrice.ClosePrice*(1 + Account.OpenCriteria));
         }
 
         public virtual decimal GetFloorOpenPrice()
         {
-            return Floor(PreviousPrice.Value*(1 - Account.OpenCriteria));
+            return Floor(PreviousPrice.ClosePrice*(1 - Account.OpenCriteria));
         }
 
         public override string GetNextTransaction()

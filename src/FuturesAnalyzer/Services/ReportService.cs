@@ -40,14 +40,15 @@ namespace FuturesAnalyzer.Services
             return dailyPrices.Where(p => p.Turnover > 0).OrderBy(p => p.Date).ToList();
         }
 
-        public IEnumerable<DailyAccountData> GenerateReport(Account account, List<DailyPrice> dailyPrices)
+        public virtual IEnumerable<DailyAccountData> GenerateReport(Account account, List<DailyPrice> dailyPrices)
         {
             var report = new List<DailyAccountData>();
             if (dailyPrices.Count <= WarmUpLength)
             {
                 return report;
             }
-            var startIndex = WarmUp(account, dailyPrices);
+            Transaction firstDayOpenTransaction;
+            var startIndex = WarmUp(account, dailyPrices, out firstDayOpenTransaction);
             for (var i = 1; i < dailyPrices.Count; i++)
             {
                 if (dailyPrices[i].Date > dailyPrices[i - 1].Date.AddDays(15) || dailyPrices[i].Date == dailyPrices[i - 1].Date)
@@ -65,8 +66,8 @@ namespace FuturesAnalyzer.Services
                 var dailyAccountData = new DailyAccountData
                 {
                     DailyPrice = dailyPrice,
-                    CloseTransaction = account.MarketState.TryClose(dailyPrice),
-                    OpenTransaction = account.MarketState.TryOpen(dailyPrice),
+                    CloseTransaction = i == startIndex ? null : account.MarketState.TryClose(dailyPrice),
+                    OpenTransaction = i == startIndex ? firstDayOpenTransaction : account.MarketState.TryOpen(dailyPrice),
                     Balance = account.Balance,
                     Contract = account.Contract
                 };
@@ -74,7 +75,7 @@ namespace FuturesAnalyzer.Services
                 var currentState = account.MarketState;
                 currentState.HighestPrice = Math.Max(currentState.HighestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
                 currentState.LowestPrice = Math.Min(currentState.LowestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
-                currentState.PreviousPrice = dailyPrice.ClosePrice;
+                currentState.PreviousPrice = dailyPrice;
                 dailyAccountData.NextTransaction = account.MarketState.GetNextTransaction();
                 account.PreviousFiveDayPrices.Dequeue();
                 account.PreviousFiveDayPrices.Enqueue(dailyPrice.ClosePrice);
@@ -102,8 +103,8 @@ namespace FuturesAnalyzer.Services
             }
             return report;
         }
-
-        private static int WarmUp(Account account, List<DailyPrice> dailyPrices)
+        
+        private static int WarmUp(Account account, List<DailyPrice> dailyPrices, out Transaction firstDayOpenTransaction)
         {
             var direction = 0;
             for (var i = 1; i < WarmUpLength && i < dailyPrices.Count; i++)
@@ -131,15 +132,19 @@ namespace FuturesAnalyzer.Services
             account.MarketState.LowestPrice = dailyPrices[WarmUpLength].OpenPrice;
             account.MarketState.StartPrice = dailyPrices[WarmUpLength].OpenPrice;
             account.MarketState.Account = account;
-            account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1].ClosePrice;
+            account.MarketState.PreviousPrice = dailyPrices[WarmUpLength - 1];
             if (account.MarketState is UpState || account.MarketState is DownState)
             {
-                account.MarketState.TryOpen(dailyPrices[WarmUpLength]);
+                firstDayOpenTransaction = account.MarketState.TryOpen(dailyPrices[WarmUpLength]);
+            }
+            else
+            {
+                firstDayOpenTransaction = null;
             }
             return WarmUpLength;
         }
 
-        private bool CheckDailyPrice(DailyPrice dailyPrice)
+        protected bool CheckDailyPrice(DailyPrice dailyPrice)
         {
             return dailyPrice.ClosePrice > 0 && dailyPrice.OpenPrice > 0 && dailyPrice.HighestPrice > 0 &&
                    dailyPrice.LowestPrice > 0 

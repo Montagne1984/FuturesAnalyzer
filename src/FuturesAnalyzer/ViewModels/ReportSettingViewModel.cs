@@ -23,6 +23,8 @@ namespace FuturesAnalyzer.ViewModels
         public bool UseAverageMarketState { get; set; }
         public bool CloseAfterProfit { get; set; }
         public bool OnlyUseClosePrice { get; set; }
+        public bool UseCrossStarStrategy { get; set; }
+        public bool UseInternalProfit { get; set; }
 
         public ReportSettingViewModel Clone()
         {

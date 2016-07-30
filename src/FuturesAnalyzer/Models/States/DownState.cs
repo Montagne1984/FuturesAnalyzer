@@ -5,6 +5,12 @@ namespace FuturesAnalyzer.Models.States
 {
     public class DownState : MarketState
     {
+        public decimal StartProfitPoint => Account.Contract.Price * (1 - Account.StartProfitCriteria);
+        public override bool CloseWithinStartProfitPrice(DailyPrice dailyPrice) => dailyPrice.ClosePrice > StartProfitPoint;
+        public override bool HitStartProfitPrice(DailyPrice dailyPrice) => dailyPrice.LowestPrice <= StartProfitPoint - Account.Contract.Price * 0.01m;
+
+        private decimal _internalProfit;
+
         public override Transaction TryClose(DailyPrice dailyPrice)
         {
             if (Account.Contract == null)
@@ -76,6 +82,22 @@ namespace FuturesAnalyzer.Models.States
             }
             if (closePrice == 0)
             {
+                if (New)
+                {
+                    New = false;
+                    return null;
+                }
+                if (!Account.UseInternalProfit) return null;
+                if (!StopInternalProfit && HitStartProfitPrice(PreviousPrice))
+                {
+                    var hitPrice = StartProfitPoint - Account.Contract.Price*0.01m;
+                    _internalProfit += dailyPrice.OpenPrice - hitPrice -
+                                      (StartProfitPoint + dailyPrice.OpenPrice) * Account.TransactionFeeRate;
+                }
+                if (!CloseWithinStartProfitPrice(PreviousPrice))
+                {
+                    StopInternalProfit = true;
+                }
                 return null;
             }
             var transaction = new Transaction
@@ -99,6 +121,11 @@ namespace FuturesAnalyzer.Models.States
             }
             var contract = new Contract { Direction = Direction.Sell, Price = StartPrice };
             Account.Contract = contract;
+            if (!CloseWithinStartProfitPrice(dailyPrice))
+            {
+                StopInternalProfit = true;
+            }
+            New = true;
             return new Transaction
             {
                 Behavior = Behavior.Open,
@@ -113,7 +140,7 @@ namespace FuturesAnalyzer.Models.States
         {
             if (!(Account.CloseAfterProfit && Account.IsLastTransactionLoss.HasValue && !Account.IsLastTransactionLoss.Value))
             {
-                var balanceDelta = (Account.Contract.Price - closePrice) * Account.Contract.Unit;
+                var balanceDelta = (Account.Contract.Price - closePrice) * Account.Contract.Unit + _internalProfit;
                 Account.Balance += balanceDelta;
                 if (balanceDelta > 0 && Account.Contract.AppendUnitPrice != decimal.MaxValue)
                 {
@@ -157,17 +184,12 @@ namespace FuturesAnalyzer.Models.States
             {
                 return Account.Contract.Price * (1 - Account.StartProfitCriteriaForMultiUnits);
             }
-            if (Account.OnlyUseClosePrice)
-            {
-                var startProfitPoint = Account.Contract.Price*(1 - Account.StartProfitCriteria);
-                var stopProfitPoint = LowestPrice + (Account.Contract.Price - LowestPrice)*Account.StopProfitCriteria;
-                return LowestPrice <= startProfitPoint && Account.PreviousFiveDayPrices.Last() >= stopProfitPoint
-                    ? Ceiling(stopProfitPoint)
-                    : decimal.MaxValue;
-            }
-            return LowestPrice > Account.Contract.Price * (1 - Account.StartProfitCriteria)
-                ? decimal.MaxValue
-                : Ceiling(LowestPrice + (Account.Contract.Price - LowestPrice) * Account.StopProfitCriteria);
+            var stopProfitPoint = Ceiling(LowestPrice + (Account.Contract.Price - LowestPrice) * Account.StopProfitCriteria);
+
+            return LowestPrice <= StartProfitPoint &&
+                   (!Account.OnlyUseClosePrice || Account.PreviousFiveDayPrices.Last() >= stopProfitPoint)
+                ? stopProfitPoint
+                : decimal.MaxValue;
         }
 
         public override decimal GetStopLossPrice()

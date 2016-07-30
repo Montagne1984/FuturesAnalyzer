@@ -11,7 +11,7 @@ namespace FuturesAnalyzer.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IReportService _reportService;
+        private IReportService _reportService;
         private object lockObject = new object();
 
         public IActionResult Index()
@@ -22,7 +22,7 @@ namespace FuturesAnalyzer.Controllers
 
         public JsonResult Report(ReportSettingViewModel model)
         {
-
+            _reportService = model.UseCrossStarStrategy ? new CrossStarReportService() : new ReportService();
             //if (report.Any())
             //{
             //    var bestBalance = report.Last().Balance;
@@ -69,6 +69,7 @@ namespace FuturesAnalyzer.Controllers
 
         public JsonResult Optimize(ReportSettingViewModel model)
         {
+            _reportService = model.UseCrossStarStrategy ? new CrossStarReportService() : new ReportService();
             ReportSettingViewModel bestSettings = model.Clone();
             var bestPercentageBalance = 0m;
 
@@ -79,6 +80,10 @@ namespace FuturesAnalyzer.Controllers
 
             //var range = ranges.ContainsKey(model.SelectedProductName) ? ranges[model.SelectedProductName] : ranges["big"];
             var range = model.UseAverageMarketState ? ranges["average"] : ranges["big"];
+            if (model.UseCrossStarStrategy)
+            {
+                range = ranges["crossstar"];
+            }
             var followTrends = model.UseAverageMarketState ? new [] { true } : new[] { true, false };
 
             for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
@@ -192,7 +197,9 @@ namespace FuturesAnalyzer.Controllers
                 NotUseClosePrice = model.NotUseClosePrice,
                 UseAverageMarketState = model.UseAverageMarketState,
                 CloseAfterProfit = model.CloseAfterProfit,
-                OnlyUseClosePrice = model.OnlyUseClosePrice
+                OnlyUseClosePrice = model.OnlyUseClosePrice,
+                UseCrossStarStrategy = model.UseCrossStarStrategy,
+                UseInternalProfit = model.UseInternalProfit
             };
             var dateRange = dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList();
             return _reportService.GenerateReport(account, dateRange).ToList();
@@ -210,8 +217,8 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0.005m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.121m,
-                    TopStartProfit = 0.15m,
+                    BottomStartProfit = 0.02m,
+                    TopStartProfit = 0.1m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0.05m,
                     TopStopProfit = 0.3m,
@@ -235,6 +242,23 @@ namespace FuturesAnalyzer.Controllers
                     StopProfitStep = 0.01m,
                     BottomOpenCriteria = 0.005m,
                     TopOpenCriteria = 0.04m,
+                    OpenCriteriaStep = 0.001m,
+                    NeverEnterAmbiguousState = false
+                });
+            ranges.Add("crossstar",
+                new OptimizeRange
+                {
+                    BottomStopLoss = 0.005m,
+                    TopStopLoss = 0.005m,
+                    StopLossStep = 0.001m,
+                    BottomStartProfit = 0.08m,
+                    TopStartProfit = 0.08m,
+                    StartProfitStep = 0.001m,
+                    BottomStopProfit = 0.3m,
+                    TopStopProfit = 0.3m,
+                    StopProfitStep = 0.01m,
+                    BottomOpenCriteria = 0.001m,
+                    TopOpenCriteria = 0.05m,
                     OpenCriteriaStep = 0.001m,
                     NeverEnterAmbiguousState = false
                 });

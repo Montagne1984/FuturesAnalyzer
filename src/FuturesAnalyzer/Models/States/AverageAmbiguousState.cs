@@ -9,7 +9,7 @@ namespace FuturesAnalyzer.Models.States
     {
         public override Transaction TryOpen(DailyPrice dailyPrice)
         {
-            if (Account.Contract != null || dailyPrice == null || !PreviousPrice.HasValue)
+            if (Account.Contract != null || dailyPrice == null || PreviousPrice == null)
             {
                 return null;
             }
