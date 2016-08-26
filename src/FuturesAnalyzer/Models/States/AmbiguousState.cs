@@ -4,52 +4,90 @@ namespace FuturesAnalyzer.Models.States
 {
     public class AmbiguousState : MarketState
     {
+        private decimal _ceilingOpenPrice;
+        private decimal _floorOpenPrice;
+        private bool _hitBothCriteria;
+
         public override Transaction TryOpen(DailyPrice dailyPrice)
         {
             if (Account.Contract != null || dailyPrice == null || PreviousPrice == null)
             {
                 return null;
             }
-            var ceilingOpenPrice = GetCeilingOpenPrice();
-            var floorOpenPrice = GetFloorOpenPrice();
+
             MarketState newState = null;
-            var hitBothCriteria = false;
-            if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
+
+            if (_hitBothCriteria)
             {
-                Account.HitBothCriteriaInAmbiguousStateCount++;
-                hitBothCriteria = true;
-            }
-            if (dailyPrice.HighestPrice >= ceilingOpenPrice && !(hitBothCriteria && dailyPrice.HitLowPriceFirst.HasValue && dailyPrice.HitLowPriceFirst.Value))
-            {
-                if (Account.FollowTrend)
+                if (dailyPrice.OpenPrice > _ceilingOpenPrice)
                 {
-                    newState = new UpState();
+                    var closeContractPrice = Account.FollowTrend ? _floorOpenPrice : _ceilingOpenPrice;
+                    var loss = dailyPrice.OpenPrice - closeContractPrice +
+                                       (dailyPrice.OpenPrice + closeContractPrice) * Account.TransactionFeeRate;
+                    newState = new UpState {StartPrice = Account.FollowTrend ? _ceilingOpenPrice : _floorOpenPrice, InternalProfit = -loss};
+                }
+                else if (dailyPrice.OpenPrice < _floorOpenPrice)
+                {
+                    var closeContractPrice = Account.FollowTrend ? _ceilingOpenPrice : _floorOpenPrice;
+                    var loss = closeContractPrice - dailyPrice.OpenPrice +
+                                       (dailyPrice.OpenPrice + closeContractPrice) * Account.TransactionFeeRate;
+                    newState = new DownState { StartPrice = Account.FollowTrend ? _floorOpenPrice : _ceilingOpenPrice, InternalProfit = -loss};
                 }
                 else
                 {
-                    newState = new DownState();
+                    return null;
                 }
-                newState.StartPrice = Math.Max(dailyPrice.OpenPrice, ceilingOpenPrice);
             }
-            else if (dailyPrice.LowestPrice <= floorOpenPrice)
+            else
             {
-                if (Account.FollowTrend)
+                var ceilingOpenPrice = GetCeilingOpenPrice();
+                var floorOpenPrice = GetFloorOpenPrice();
+                _hitBothCriteria = false;
+                if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
                 {
-                    newState = new DownState();
+                    Account.HitBothCriteriaInAmbiguousStateCount++;
+                    _hitBothCriteria = true;
                 }
-                else
+
+                if (_hitBothCriteria)
                 {
-                    newState = new UpState();
+                    _ceilingOpenPrice = Math.Max(ceilingOpenPrice, dailyPrice.OpenPrice);
+                    _floorOpenPrice = Math.Min(floorOpenPrice, dailyPrice.OpenPrice);
+                    return null;
                 }
-                newState.StartPrice = Math.Min(dailyPrice.OpenPrice, floorOpenPrice);
+
+                if (dailyPrice.HighestPrice >= ceilingOpenPrice && !(_hitBothCriteria && dailyPrice.HitLowPriceFirst.HasValue && dailyPrice.HitLowPriceFirst.Value))
+                {
+                    if (Account.FollowTrend)
+                    {
+                        newState = new UpState();
+                    }
+                    else
+                    {
+                        newState = new DownState();
+                    }
+                    newState.StartPrice = Math.Max(dailyPrice.OpenPrice, ceilingOpenPrice);
+                }
+                else if (dailyPrice.LowestPrice <= floorOpenPrice)
+                {
+                    if (Account.FollowTrend)
+                    {
+                        newState = new DownState();
+                    }
+                    else
+                    {
+                        newState = new UpState();
+                    }
+                    newState.StartPrice = Math.Min(dailyPrice.OpenPrice, floorOpenPrice);
+                }
             }
             if (newState == null)
             {
                 return null;
             }
 
-            newState.HighestPrice = dailyPrice.ClosePrice;
-            newState.LowestPrice = dailyPrice.ClosePrice;
+            newState.HighestPrice = Math.Max(newState.StartPrice, dailyPrice.ClosePrice);
+            newState.LowestPrice = Math.Min(newState.StartPrice, dailyPrice.ClosePrice);
             newState.Account = Account;
             var transaction = newState.TryOpen(dailyPrice);
             Account.MarketState = newState;
@@ -88,6 +126,10 @@ namespace FuturesAnalyzer.Models.States
 
         public override string GetNextTransaction()
         {
+            if (_hitBothCriteria)
+            {
+                return $"开盘大于{_ceilingOpenPrice}买平 开盘小于{_floorOpenPrice}卖平";
+            }
             return $@"{(Account.FollowTrend ? "卖" : "买")}开{GetFloorOpenPrice()} {(Account.FollowTrend ? "买" : "卖")}开{GetCeilingOpenPrice()}";
         }
     }

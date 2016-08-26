@@ -69,6 +69,8 @@ namespace FuturesAnalyzer.Controllers
 
         public JsonResult Optimize(ReportSettingViewModel model)
         {
+            var topThreeSettings = new SortedList<decimal, List<SettingResult>>();
+
             _reportService = model.UseCrossStarStrategy ? new CrossStarReportService() : new ReportService();
             ReportSettingViewModel bestSettings = model.Clone();
             var bestPercentageBalance = 0m;
@@ -108,6 +110,8 @@ namespace FuturesAnalyzer.Controllers
                                 bestPercentageBalance = percentageBalance;
                                 bestSettings = settings;
                             }
+                            var settingResult = new SettingResult {Result = percentageBalance, Setting = settings};
+                            UpdateTopThreeSettings(ref topThreeSettings, settingResult);
                         }
                         ));
 
@@ -137,6 +141,8 @@ namespace FuturesAnalyzer.Controllers
                                         bestPercentageBalance = percentageBalance;
                                         bestSettings = currentSettings;
                                     }
+                                    var settingResult = new SettingResult { Result = percentageBalance, Setting = currentSettings };
+                                    UpdateTopThreeSettings(ref topThreeSettings, settingResult);
                                 }
                                 ));
                             }
@@ -206,7 +212,25 @@ namespace FuturesAnalyzer.Controllers
         }
 
         private Dictionary<string, OptimizeRange> ranges;
-        
+
+        private void UpdateTopThreeSettings(
+            ref SortedList<decimal, List<SettingResult>> topThreeSettings, SettingResult result)
+        {
+            lock (lockObject)
+            {
+                if (topThreeSettings.ContainsKey(result.Result))
+                {
+                    topThreeSettings[result.Result].Add(result);
+                    return;
+                }
+                topThreeSettings.Add(result.Result, new List<SettingResult> {result});
+                if (topThreeSettings.Count > 3)
+                {
+                    topThreeSettings.RemoveAt(0);
+                }
+            }
+        }
+
         public HomeController(IReportService reportService)
         {
             _reportService = reportService;
@@ -217,13 +241,13 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0.005m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.02m,
-                    TopStartProfit = 0.08m,
+                    BottomStartProfit = 0.121m,
+                    TopStartProfit = 0.14m,
                     StartProfitStep = 0.001m,
-                    BottomStopProfit = 0.05m,
+                    BottomStopProfit = 0.01m,
                     TopStopProfit = 0.3m,
                     StopProfitStep = 0.01m,
-                    BottomOpenCriteria = 0.005m,
+                    BottomOpenCriteria = 0.001m,
                     TopOpenCriteria = 0.04m,
                     OpenCriteriaStep = 0.001m,
                     NeverEnterAmbiguousState = false
@@ -331,5 +355,11 @@ namespace FuturesAnalyzer.Controllers
         public decimal TopOpenCriteria { get; set; }
         public decimal OpenCriteriaStep { get; set; }
         public bool NeverEnterAmbiguousState { get; set; }
+    }
+
+    class SettingResult
+    {
+        public ReportSettingViewModel Setting { get; set; }
+        public decimal Result { get; set; }
     }
 }
