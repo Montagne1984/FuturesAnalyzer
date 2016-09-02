@@ -9,8 +9,6 @@ namespace FuturesAnalyzer.Models.States
         public override bool CloseWithinStartProfitPrice(DailyPrice dailyPrice) => dailyPrice.ClosePrice > StartProfitPoint;
         public override bool HitStartProfitPrice(DailyPrice dailyPrice) => dailyPrice.LowestPrice <= StartProfitPoint - Account.Contract.Price * 0.01m;
 
-        public decimal InternalProfit { get; set; }
-
         public override Transaction TryClose(DailyPrice dailyPrice)
         {
             if (Account.Contract == null)

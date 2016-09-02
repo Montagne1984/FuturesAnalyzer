@@ -96,10 +96,8 @@ namespace FuturesAnalyzer.Services
             if (report.Count > 0 && account.Contract != null)
             {
                 var finalPrice = dailyPrices.Last().ClosePrice;
-                report.Last().Balance += (finalPrice - account.Contract.Price) *
-                                        (int)account.Contract.Direction * account.Contract.Unit;
-                report.Last().PercentageBalance += (finalPrice - account.Contract.Price) *
-                                        (int)account.Contract.Direction / account.Contract.Price;
+                report.Last().Balance += ((finalPrice - account.Contract.Price) * (int)account.Contract.Direction + account.MarketState.InternalProfit) * account.Contract.Unit;
+                report.Last().PercentageBalance += ((finalPrice - account.Contract.Price) * (int)account.Contract.Direction + account.MarketState.InternalProfit) / account.Contract.Price;
             }
             return report;
         }

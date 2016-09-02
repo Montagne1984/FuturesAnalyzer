@@ -53,6 +53,7 @@ namespace FuturesAnalyzer.Models.States
                 {
                     _ceilingOpenPrice = Math.Max(ceilingOpenPrice, dailyPrice.OpenPrice);
                     _floorOpenPrice = Math.Min(floorOpenPrice, dailyPrice.OpenPrice);
+                    InternalProfit = (_floorOpenPrice - _ceilingOpenPrice)*(Account.FollowTrend ? 1 : -1);
                     return null;
                 }
 
