@@ -149,8 +149,8 @@ namespace FuturesAnalyzer.Models.States
             MarketState newState = GetNewState(closePrice);
             newState.Account = Account;
             newState.StartPrice = closePrice;
-            newState.HighestPrice = dailyPrice.ClosePrice;
-            newState.LowestPrice = dailyPrice.ClosePrice;
+            newState.HighestPrice = Account.FollowTrend && Account.NotUseClosePrice ? dailyPrice.HighestPrice : dailyPrice.ClosePrice;
+            newState.LowestPrice = Account.FollowTrend && Account.NotUseClosePrice ? dailyPrice.LowestPrice : dailyPrice.ClosePrice;
             Account.MarketState = newState;
             Account.Contract = null;
         }

@@ -86,7 +86,8 @@ namespace FuturesAnalyzer.Controllers
             {
                 range = ranges["crossstar"];
             }
-            var followTrends = model.UseAverageMarketState ? new [] { true } : new[] { true, false };
+            //var followTrends = model.UseAverageMarketState ? new[] { true } : new[] { true, false };
+            var followTrends = new[] { true };
 
             for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
             {
@@ -241,8 +242,8 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0.001m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.1m,
-                    TopStartProfit = 0.12m,
+                    BottomStartProfit = 0.02m,
+                    TopStartProfit = 0.08m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0.01m,
                     TopStopProfit = 0.3m,
