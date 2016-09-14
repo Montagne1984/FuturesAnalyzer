@@ -86,8 +86,8 @@ namespace FuturesAnalyzer.Controllers
             {
                 range = ranges["crossstar"];
             }
-            //var followTrends = model.UseAverageMarketState ? new[] { true } : new[] { true, false };
-            var followTrends = new[] { true };
+            var followTrends = model.UseAverageMarketState ? new[] { true } : new[] { true, false };
+            //var followTrends = new[] { true };
 
             for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
             {
