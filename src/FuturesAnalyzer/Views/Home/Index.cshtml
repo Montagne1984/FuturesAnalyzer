@@ -482,7 +482,16 @@
 
             $('#chart').highcharts({
                 chart: {
-                    zoomType: 'x'
+                    zoomType: 'x',
+                    resetZoomButton: {
+                        position: {
+                            align: 'right', // by default
+                            verticalAlign: 'top', // by default
+                            x: -10,
+                            y: 10
+                        },
+                        relativeTo: 'chart'
+                    }
                 },
                 title: {
                     text: $("#SelectedProductName").val()
@@ -560,7 +569,16 @@
             });
             $('#percentageChart').highcharts({
                 chart: {
-                    zoomType: 'x'
+                    zoomType: 'x',
+                    resetZoomButton: {
+                        position: {
+                            align: 'right', // by default
+                            verticalAlign: 'top', // by default
+                            x: -10,
+                            y: 10
+                        },
+                        relativeTo: 'chart'
+                    }
                 },
                 title: {
                     text: $("#SelectedProductName").val()
