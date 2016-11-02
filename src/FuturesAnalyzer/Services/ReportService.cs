@@ -76,11 +76,11 @@ namespace FuturesAnalyzer.Services
                 currentState.HighestPrice = Math.Max(currentState.HighestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
                 currentState.LowestPrice = Math.Min(currentState.LowestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
                 currentState.PreviousPrice = dailyPrice;
-                dailyAccountData.NextTransaction = account.MarketState.GetNextTransaction();
                 account.PreviousFiveDayPrices.Dequeue();
                 account.PreviousFiveDayPrices.Enqueue(dailyPrice.ClosePrice);
                 account.PreviousFiveDayDirections.Dequeue();
                 account.PreviousFiveDayDirections.Enqueue(Math.Sign(dailyPrices[i].ClosePrice - dailyPrices[i - 1].ClosePrice));
+                dailyAccountData.NextTransaction = account.MarketState.GetNextTransaction();
             }
             if(report.Count > 1)
             {

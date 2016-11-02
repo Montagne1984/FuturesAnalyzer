@@ -117,12 +117,12 @@
         <label asp-for="EndDate">结束日期</label>
         <input type="date" asp-for="EndDate" class="form-control" />
     </div>
-    <div class="checkbox">
+    <div class="checkbox hidden">
         <label asp-for="UseAverageMarketState">
             <input asp-for="UseAverageMarketState" type="checkbox"> 使用五日均线
         </label>
     </div>
-    <div class="checkbox">
+    <div class="checkbox hidden">
         <label asp-for="CloseAfterProfit">
             <input asp-for="CloseAfterProfit" type="checkbox"> 止盈后平仓
         </label>
@@ -132,12 +132,12 @@
             <input asp-for="OnlyUseClosePrice" type="checkbox"> 止盈仅看收盘价
         </label>
     </div>
-    <div class="checkbox">
+    <div class="checkbox hidden">
         <label asp-for="UseCrossStarStrategy">
             <input asp-for="UseCrossStarStrategy" type="checkbox"> 十字星策略
         </label>
     </div>
-    <div class="checkbox">
+    <div class="checkbox hidden">
         <label asp-for="UseInternalProfit">
             <input asp-for="UseInternalProfit" type="checkbox"> 到达起盈点临时止盈
         </label>
@@ -1020,7 +1020,7 @@
                 StartProfitCriteria: 0.038,
                 OpenCriteria: 0.006,
                 FollowTrend: false,
-                BudgetFactor: 1.11,
+                BudgetFactor: 1.12,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,

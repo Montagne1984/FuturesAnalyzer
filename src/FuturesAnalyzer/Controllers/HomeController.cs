@@ -4,6 +4,7 @@ using FuturesAnalyzer.ViewModels;
 using Microsoft.AspNet.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -86,15 +87,19 @@ namespace FuturesAnalyzer.Controllers
             {
                 range = ranges["crossstar"];
             }
-            var followTrends = model.UseAverageMarketState ? new[] { true } : new[] { true, false };
+            var followTrends = model.UseAverageMarketState ? new[] {true} : new[] {true, false};
             //var followTrends = new[] { true };
 
             for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
             {
-                for (var startProfit = range.BottomStartProfit; startProfit <= range.TopStartProfit; startProfit += range.StartProfitStep)
+                for (var startProfit = range.BottomStartProfit;
+                    startProfit <= range.TopStartProfit;
+                    startProfit += range.StartProfitStep)
                 {
                     var taskList = new List<Task>();
-                    for (var stopProfit = range.BottomStopProfit; stopProfit <= range.TopStopProfit; stopProfit += range.StopProfitStep)
+                    for (var stopProfit = range.BottomStopProfit;
+                        stopProfit <= range.TopStopProfit;
+                        stopProfit += range.StopProfitStep)
                     {
                         var settings = model.Clone();
                         settings.StopLossCriteria = stopLoss;
@@ -114,14 +119,16 @@ namespace FuturesAnalyzer.Controllers
                             var settingResult = new SettingResult {Result = percentageBalance, Setting = settings};
                             UpdateTopThreeSettings(ref topThreeSettings, settingResult);
                         }
-                        ));
+                            ));
 
                         if (range.NeverEnterAmbiguousState)
                         {
                             continue;
                         }
 
-                        for (var openCriteria = range.BottomOpenCriteria; openCriteria <= range.TopOpenCriteria; openCriteria += range.OpenCriteriaStep)
+                        for (var openCriteria = range.BottomOpenCriteria;
+                            openCriteria <= range.TopOpenCriteria;
+                            openCriteria += range.OpenCriteriaStep)
                         {
                             foreach (var followTrend in followTrends)
                             {
@@ -142,10 +149,14 @@ namespace FuturesAnalyzer.Controllers
                                         bestPercentageBalance = percentageBalance;
                                         bestSettings = currentSettings;
                                     }
-                                    var settingResult = new SettingResult { Result = percentageBalance, Setting = currentSettings };
+                                    var settingResult = new SettingResult
+                                    {
+                                        Result = percentageBalance,
+                                        Setting = currentSettings
+                                    };
                                     UpdateTopThreeSettings(ref topThreeSettings, settingResult);
                                 }
-                                ));
+                                    ));
                             }
                         }
                     }
@@ -158,6 +169,23 @@ namespace FuturesAnalyzer.Controllers
             }
 
             var timeSpan = DateTime.Now.Subtract(startTime);
+
+            using (
+                var streamWriter =
+                    new StreamWriter(
+                        $"Results\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}_{range.BottomStartProfit*1000}_{range.TopStartProfit*1000}.csv",
+                        false))
+            {
+                streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
+                for (var i = topThreeSettings.Count - 1; i >= 0; i--)
+                {
+                    foreach (var settings in topThreeSettings.ElementAt(i).Value)
+                    {
+                        streamWriter.WriteLine(
+                            $"{settings.Setting.StopLossCriteria},{settings.Setting.StopProfitCriteria},{settings.Setting.StartProfitCriteria},{settings.Setting.OpenCriteria},{settings.Setting.FollowTrend},{settings.Result}");
+                    }
+                }
+            }
 
             return Json(
                 new
@@ -242,8 +270,8 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0.001m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.02m,
-                    TopStartProfit = 0.08m,
+                    BottomStartProfit = 0.1m,
+                    TopStartProfit = 0.12m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0.01m,
                     TopStopProfit = 0.3m,
