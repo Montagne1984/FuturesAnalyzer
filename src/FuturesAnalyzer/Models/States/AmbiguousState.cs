@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace FuturesAnalyzer.Models.States
 {
@@ -19,17 +20,18 @@ namespace FuturesAnalyzer.Models.States
 
             if (_hitBothCriteria)
             {
-                if (dailyPrice.OpenPrice > _ceilingOpenPrice)
+                var lastPrice = Account.PreviousFiveDayPrices.Last();
+                if (lastPrice > _ceilingOpenPrice && dailyPrice.HighestPrice > _ceilingOpenPrice)
                 {
                     var closeContractPrice = Account.FollowTrend ? _floorOpenPrice : _ceilingOpenPrice;
-                    var loss = dailyPrice.OpenPrice - closeContractPrice +
+                    var loss = (dailyPrice.OpenPrice > _ceilingOpenPrice ? dailyPrice.OpenPrice : _ceilingOpenPrice + Account.MinimumPriceUnit) - closeContractPrice +
                                        (dailyPrice.OpenPrice + closeContractPrice) * Account.TransactionFeeRate;
                     newState = new UpState {StartPrice = Account.FollowTrend ? _ceilingOpenPrice : _floorOpenPrice, InternalProfit = -loss};
                 }
-                else if (dailyPrice.OpenPrice < _floorOpenPrice)
+                else if (lastPrice < _floorOpenPrice && dailyPrice.LowestPrice < _floorOpenPrice)
                 {
                     var closeContractPrice = Account.FollowTrend ? _ceilingOpenPrice : _floorOpenPrice;
-                    var loss = closeContractPrice - dailyPrice.OpenPrice +
+                    var loss = closeContractPrice - (dailyPrice.OpenPrice < _floorOpenPrice ? dailyPrice.OpenPrice : _floorOpenPrice - Account.MinimumPriceUnit) +
                                        (dailyPrice.OpenPrice + closeContractPrice) * Account.TransactionFeeRate;
                     newState = new DownState { StartPrice = Account.FollowTrend ? _floorOpenPrice : _ceilingOpenPrice, InternalProfit = -loss};
                 }
@@ -129,7 +131,16 @@ namespace FuturesAnalyzer.Models.States
         {
             if (_hitBothCriteria)
             {
-                return $"开盘大于{_ceilingOpenPrice}买平 开盘小于{_floorOpenPrice}卖平";
+                var lastPrice = Account.PreviousFiveDayPrices.Last();
+                if (lastPrice > _ceilingOpenPrice)
+                {
+                    return $"大于{_ceilingOpenPrice}买平";
+                }
+                if (lastPrice < _floorOpenPrice)
+                {
+                    return $"小于{_floorOpenPrice}卖平";
+                }
+                return "不交易";
             }
             return $@"{(Account.FollowTrend ? "卖" : "买")}开{GetFloorOpenPrice()} {(Account.FollowTrend ? "买" : "卖")}开{GetCeilingOpenPrice()}";
         }
