@@ -446,6 +446,7 @@
                 '下一交易日：' + report[report.length - 1].NextTransaction + "<br/>" +
                     '每笔交易本金相同：' +
                     '最终盈利倍数：' + percentageBalance +
+                    ' 最终盈利（初始25000）：' + 25000 * percentageBalance +
                     '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
                     '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
                     '，最长盈利持仓日：' + longestProfitDays + '(' + formatDate(longestProfitDaysStartDate) + " - " + formatDate(longestProfitDaysEndDate) + "）" +
@@ -469,9 +470,13 @@
                     '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
                     '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
                     '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
-            summaryText += '<br/><br/>每笔交易本金相同时各年盈利<br/>';
+            summaryText += '<br/><br/>每笔交易本金相同时各年盈利倍数<br/>';
             $.each(annualProfits, function(key, value) {
                 summaryText += key + '盈利倍数：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
+            });
+            summaryText += '<br/><br/>每笔交易本金相同时各年盈利（初始资金25000）<br/>';
+            $.each(annualProfits, function (key, value) {
+                summaryText += key + '盈利：' + 25000 * value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
             });
             summaryText += '<br/><br/>';
             $.each(annualProfits, function(key, value) {
@@ -981,7 +986,7 @@
                 StartProfitCriteria: 0.137,
                 OpenCriteria: 0.006,
                 FollowTrend: false,
-                BudgetFactor: 1.74,
+                BudgetFactor: 1.64,
                 BondPercentage: 14,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
@@ -1002,11 +1007,11 @@
                 TransactionFeeRate: 0.00014,
                 MinimumPriceUnit: 0.5,
                 StopLossCriteria: 0.012,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.16,
-                OpenCriteria: 0.02,
+                StopProfitCriteria: 0.02,
+                StartProfitCriteria: 0.149,
+                OpenCriteria: 0.004,
                 FollowTrend: false,
-                BudgetFactor: 1.75,
+                BudgetFactor: 1.49,
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
@@ -1020,7 +1025,7 @@
                 StartProfitCriteria: 0.032,
                 OpenCriteria: 0.019,
                 FollowTrend: false,
-                BudgetFactor: 1.31,
+                BudgetFactor: 1.43,
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,

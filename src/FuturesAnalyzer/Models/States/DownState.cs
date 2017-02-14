@@ -5,9 +5,13 @@ namespace FuturesAnalyzer.Models.States
 {
     public class DownState : MarketState
     {
-        public decimal StartProfitPoint => Account.Contract.Price * (1 - Account.StartProfitCriteria);
-        public override bool CloseWithinStartProfitPrice(DailyPrice dailyPrice) => dailyPrice.ClosePrice > StartProfitPoint;
-        public override bool HitStartProfitPrice(DailyPrice dailyPrice) => dailyPrice.LowestPrice <= StartProfitPoint - Account.Contract.Price * 0.01m;
+        public decimal StartProfitPoint => Account.Contract.Price*(1 - Account.StartProfitCriteria);
+
+        public override bool CloseWithinStartProfitPrice(DailyPrice dailyPrice)
+            => dailyPrice.ClosePrice > StartProfitPoint;
+
+        public override bool HitStartProfitPrice(DailyPrice dailyPrice)
+            => dailyPrice.LowestPrice <= StartProfitPoint - Account.Contract.Price*0.01m;
 
         public override Transaction TryClose(DailyPrice dailyPrice)
         {
@@ -17,10 +21,12 @@ namespace FuturesAnalyzer.Models.States
             }
 
             if (Account.Contract.AppendUnitPrice < Account.Contract.Price
-                && dailyPrice.ClosePrice <= Account.Contract.Price * (1 - Account.StartProfitCriteria))
+                && dailyPrice.ClosePrice <= Account.Contract.Price*(1 - Account.StartProfitCriteria))
             {
-                Account.Contract.AppendUnitPrice = Account.Contract.Price * (1 - Account.StartProfitCriteria);
-                if (Account.Contract.AppendUnitPrice >= Ceiling(dailyPrice.ClosePrice + (Account.Contract.Price - dailyPrice.ClosePrice) * Account.StopProfitCriteria))
+                Account.Contract.AppendUnitPrice = Account.Contract.Price*(1 - Account.StartProfitCriteria);
+                if (Account.Contract.AppendUnitPrice >=
+                    Ceiling(dailyPrice.ClosePrice +
+                            (Account.Contract.Price - dailyPrice.ClosePrice)*Account.StopProfitCriteria))
                 {
                     Account.Contract.AppendUnitPrice = decimal.MaxValue;
                 }
@@ -50,7 +56,8 @@ namespace FuturesAnalyzer.Models.States
                     };
                 }
             }
-            else if (Account.Contract.Unit == 1 && dailyPrice.OpenPrice >= stopProfitPrice || Account.Contract.Unit > 1 && dailyPrice.OpenPrice <= stopProfitPrice)
+            else if (Account.Contract.Unit == 1 && dailyPrice.OpenPrice >= stopProfitPrice ||
+                     Account.Contract.Unit > 1 && dailyPrice.OpenPrice <= stopProfitPrice)
             {
                 closePrice = dailyPrice.OpenPrice;
             }
@@ -90,7 +97,7 @@ namespace FuturesAnalyzer.Models.States
                 {
                     var hitPrice = StartProfitPoint - Account.Contract.Price*0.01m;
                     InternalProfit += dailyPrice.OpenPrice - hitPrice -
-                                      (StartProfitPoint + dailyPrice.OpenPrice) * Account.TransactionFeeRate;
+                                      (StartProfitPoint + dailyPrice.OpenPrice)*Account.TransactionFeeRate;
                 }
                 if (!CloseWithinStartProfitPrice(PreviousPrice))
                 {
@@ -104,7 +111,7 @@ namespace FuturesAnalyzer.Models.States
                 Date = dailyPrice.Date,
                 Contract = Account.Contract,
                 Price = closePrice,
-                TransactionFee = closePrice * Account.TransactionFeeRate * Account.Contract.Unit, 
+                TransactionFee = closePrice*Account.TransactionFeeRate*Account.Contract.Unit,
                 Unit = Account.Contract.Unit
             };
             ActionAfterClose(closePrice, dailyPrice);
@@ -117,7 +124,7 @@ namespace FuturesAnalyzer.Models.States
             {
                 return null;
             }
-            var contract = new Contract { Direction = Direction.Sell, Price = StartPrice };
+            var contract = new Contract {Direction = Direction.Sell, Price = StartPrice};
             Account.Contract = contract;
             if (!CloseWithinStartProfitPrice(dailyPrice))
             {
@@ -136,13 +143,16 @@ namespace FuturesAnalyzer.Models.States
 
         protected override void ActionAfterClose(decimal closePrice, DailyPrice dailyPrice)
         {
-            if (!(Account.CloseAfterProfit && Account.IsLastTransactionLoss.HasValue && !Account.IsLastTransactionLoss.Value))
+            if (
+                !(Account.CloseAfterProfit && Account.IsLastTransactionLoss.HasValue &&
+                  !Account.IsLastTransactionLoss.Value))
             {
-                var balanceDelta = (Account.Contract.Price - closePrice) * Account.Contract.Unit + InternalProfit;
+                var balanceDelta = (Account.Contract.Price - closePrice)*Account.Contract.Unit + InternalProfit;
                 Account.Balance += balanceDelta;
                 if (balanceDelta > 0 && Account.Contract.AppendUnitPrice != decimal.MaxValue)
                 {
-                    Account.Balance += (Account.Contract.AppendUnitPrice - closePrice) * Account.AppendUnitCountAfterProfitStart;
+                    Account.Balance += (Account.Contract.AppendUnitPrice - closePrice)*
+                                       Account.AppendUnitCountAfterProfitStart;
                 }
             }
             Account.DeductTransactionFee(closePrice, Account.Contract.Unit);
@@ -180,9 +190,10 @@ namespace FuturesAnalyzer.Models.States
             //}
             if (Account.Contract.Unit > 1)
             {
-                return Account.Contract.Price * (1 - Account.StartProfitCriteriaForMultiUnits);
+                return Account.Contract.Price*(1 - Account.StartProfitCriteriaForMultiUnits);
             }
-            var stopProfitPoint = Ceiling(LowestPrice + (Account.Contract.Price - LowestPrice) * Account.StopProfitCriteria);
+            var stopProfitPoint =
+                Ceiling(LowestPrice + (Account.Contract.Price - LowestPrice)*Account.StopProfitCriteria);
 
             return LowestPrice <= StartProfitPoint &&
                    (!Account.OnlyUseClosePrice || Account.PreviousFiveDayPrices.Last() >= stopProfitPoint)
@@ -196,18 +207,25 @@ namespace FuturesAnalyzer.Models.States
             //{
             //    return decimal.MinValue;
             //}
-            return Ceiling(Account.Contract.Price * (1 + Account.StopLossCriteria));
+            return Ceiling(Account.Contract.Price*(1 + Account.StopLossCriteria));
         }
 
         public override string GetNextTransaction()
         {
+            string nextTransaction;
             var stopProfitPrice = GetStopProfitPrice();
             if (stopProfitPrice < decimal.MaxValue)
             {
-                return $@"买反{stopProfitPrice}";
+                nextTransaction = $@"买反{stopProfitPrice}";
             }
-            var stopLossPrice = GetStopLossPrice();
-            return $@"买{(Account.IsLastTransactionLoss.HasValue && Account.IsLastTransactionLoss.Value ? "平" : "反")}{stopLossPrice}";
+            else
+            {
+                var stopLossPrice = GetStopLossPrice();
+                nextTransaction =
+                    $@"买{(Account.IsLastTransactionLoss.HasValue && Account.IsLastTransactionLoss.Value ? "平" : "反")}{stopLossPrice}";
+            }
+            return nextTransaction +
+                   $" 合约价格{Account.Contract.Price} 当前价格{Account.PreviousFiveDayPrices.Last()} 目标盈利价{Floor(StartProfitPoint)}";
         }
     }
 }
