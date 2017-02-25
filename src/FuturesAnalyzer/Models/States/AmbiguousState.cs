@@ -8,6 +8,7 @@ namespace FuturesAnalyzer.Models.States
         private decimal _ceilingOpenPrice;
         private decimal _floorOpenPrice;
         private bool _hitBothCriteria;
+        private decimal _internalProfit;
 
         public override Transaction TryOpen(DailyPrice dailyPrice)
         {
@@ -48,6 +49,12 @@ namespace FuturesAnalyzer.Models.States
                 if (dailyPrice.HighestPrice >= ceilingOpenPrice && dailyPrice.LowestPrice <= floorOpenPrice)
                 {
                     Account.HitBothCriteriaInAmbiguousStateCount++;
+                    if (Account.CloseAmbiguousStateToday)
+                    {
+                        _internalProfit += (floorOpenPrice - ceilingOpenPrice)* (Account.FollowTrend ? 1 : -1) -
+                                           (ceilingOpenPrice + floorOpenPrice)*Account.TransactionFeeRate;
+                        return null;
+                    }
                     _hitBothCriteria = true;
                 }
 
@@ -70,6 +77,7 @@ namespace FuturesAnalyzer.Models.States
                         newState = new DownState();
                     }
                     newState.StartPrice = Math.Max(dailyPrice.OpenPrice, ceilingOpenPrice);
+                    newState.InternalProfit = _internalProfit;
                 }
                 else if (dailyPrice.LowestPrice <= floorOpenPrice)
                 {
@@ -82,6 +90,7 @@ namespace FuturesAnalyzer.Models.States
                         newState = new UpState();
                     }
                     newState.StartPrice = Math.Min(dailyPrice.OpenPrice, floorOpenPrice);
+                    newState.InternalProfit = _internalProfit;
                 }
             }
             if (newState == null)

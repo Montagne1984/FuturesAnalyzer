@@ -25,6 +25,7 @@ namespace FuturesAnalyzer.ViewModels
         public bool OnlyUseClosePrice { get; set; }
         public bool UseCrossStarStrategy { get; set; }
         public bool UseInternalProfit { get; set; }
+        public bool CloseAmbiguousStateToday { get; set; }
 
         public ReportSettingViewModel Clone()
         {
@@ -48,7 +49,8 @@ namespace FuturesAnalyzer.ViewModels
                 NotUseClosePrice = NotUseClosePrice,
                 UseAverageMarketState = UseAverageMarketState,
                 CloseAfterProfit = CloseAfterProfit,
-                OnlyUseClosePrice = OnlyUseClosePrice
+                OnlyUseClosePrice = OnlyUseClosePrice,
+                CloseAmbiguousStateToday = CloseAmbiguousStateToday
             };
         }
 
@@ -70,7 +72,8 @@ namespace FuturesAnalyzer.ViewModels
                 && TransactionFeeRate == settings.TransactionFeeRate
                 && StartDate == settings.StartDate
                 && EndDate == settings.EndDate
-                && MinimumPriceUnit == settings.MinimumPriceUnit;
+                && MinimumPriceUnit == settings.MinimumPriceUnit
+                && CloseAmbiguousStateToday == settings.CloseAmbiguousStateToday;
         }
     }
 }

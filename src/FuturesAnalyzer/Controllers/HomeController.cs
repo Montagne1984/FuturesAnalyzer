@@ -234,7 +234,8 @@ namespace FuturesAnalyzer.Controllers
                 CloseAfterProfit = model.CloseAfterProfit,
                 OnlyUseClosePrice = model.OnlyUseClosePrice,
                 UseCrossStarStrategy = model.UseCrossStarStrategy,
-                UseInternalProfit = model.UseInternalProfit
+                UseInternalProfit = model.UseInternalProfit,
+                CloseAmbiguousStateToday = model.CloseAmbiguousStateToday
             };
             var dateRange = dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList();
             return _reportService.GenerateReport(account, dateRange).ToList();
@@ -270,8 +271,8 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0.001m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.141m,
-                    TopStartProfit = 0.16m,
+                    BottomStartProfit = 0.02m,
+                    TopStartProfit = 0.08m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0.01m,
                     TopStopProfit = 0.3m,

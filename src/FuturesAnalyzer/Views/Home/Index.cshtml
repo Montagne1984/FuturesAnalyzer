@@ -142,6 +142,11 @@
             <input asp-for="UseInternalProfit" type="checkbox"> 到达起盈点临时止盈
         </label>
     </div>
+    <div class="checkbox">
+        <label asp-for="CloseAmbiguousStateToday">
+            <input asp-for="CloseAmbiguousStateToday" type="checkbox"> 到达两端点平今
+        </label>
+    </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
     <button id="optimize" class="btn btn-default">优化</button>
 </form>
@@ -189,6 +194,7 @@
             values['OnlyUseClosePrice'] = $('#OnlyUseClosePrice')[0].checked;
             values['UseCrossStarStrategy'] = $('#UseCrossStarStrategy')[0].checked;
             values['UseInternalProfit'] = $('#UseInternalProfit')[0].checked;
+            values['CloseAmbiguousStateToday'] = $('#CloseAmbiguousStateToday')[0].checked;
             $.post("home/optimize",
                 values,
                 function(data) {
@@ -221,6 +227,7 @@
             values['OnlyUseClosePrice'] = $('#OnlyUseClosePrice')[0].checked;
             values['UseCrossStarStrategy'] = $('#UseCrossStarStrategy')[0].checked;
             values['UseInternalProfit'] = $('#UseInternalProfit')[0].checked;
+            values['CloseAmbiguousStateToday'] = $('#CloseAmbiguousStateToday')[0].checked;
             $.post($('#form').attr('action'), values, function(data) {
                 $("#results").show();
                 showResult(data);
