@@ -957,18 +957,19 @@
         //};
 
         var settings = {
+            // 09/08/2016 -
             '热轧卷板': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.023,
-                StopProfitCriteria: 0.12,
-                StartProfitCriteria: 0.072,
-                OpenCriteria: 0.009,
+                StopLossCriteria: 0.013,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.079,
+                OpenCriteria: 0.015,
                 FollowTrend: true,
-                BudgetFactor: 1.28,
+                BudgetFactor: 1.5,
                 BondPercentage: 14,
                 NeverEnterAmbiguousState: false,
-                NotUseClosePrice: true,
+                NotUseClosePrice: false,
                 OnlyUseClosePrice: false
             },
             //'螺纹钢': {
@@ -1038,50 +1039,19 @@
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false
             },
-            '热轧卷板1610': {
-                TransactionFeeRate: 0.00004,
-                StopLossCriteria: 0.006,
-                StopProfitCriteria: 0.09,
-                StartProfitCriteria: 0.157,
-                OpenCriteria: 0.012,
+            // 2016.09.08 - 2017.03.07
+            '热轧卷板20160908-20170307': {
+                TransactionFeeRate: 0.00012,
+                MinimumPriceUnit: 1,
+                StopLossCriteria: 0.023,
+                StopProfitCriteria: 0.12,
+                StartProfitCriteria: 0.072,
+                OpenCriteria: 0.009,
                 FollowTrend: true,
-                NotUseClosePrice: false,
-                OnlyUseClosePrice: false
-            },
-            '热轧卷板1605': {
-                TransactionFeeRate: 0.000045,
-                StopLossCriteria: 0.006,
-                StopProfitCriteria: 0.09,
-                StartProfitCriteria: 0.157,
-                OpenCriteria: 0.012,
-                FollowTrend: true,
-                OnlyUseClosePrice: false
-            },
-            '螺纹钢1605': {
-                TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.007,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.128,
-                OpenCriteria: 0.01,
-                FollowTrend: true,
-                OnlyUseClosePrice: false
-            },
-            '焦炭1605': {
-                TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.019,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.068,
-                OpenCriteria: 0.021,
-                FollowTrend: false,
-                OnlyUseClosePrice: false
-            },
-            '焦煤1605': {
-                TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.029,
-                StopProfitCriteria: 0.2,
-                StartProfitCriteria: 0.12,
-                OpenCriteria: 0.03,
-                FollowTrend: false,
+                BudgetFactor: 1.28,
+                BondPercentage: 14,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
                 OnlyUseClosePrice: false
             },
             '铝': {
