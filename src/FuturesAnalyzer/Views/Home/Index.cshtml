@@ -75,6 +75,8 @@
         <option>镍</option>
         <option>菜粕</option>
         <option>PP</option>
+        <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
+        <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
         @*<option>热轧卷板1610</option>
         <option>热轧卷板1605</option>
         <option>螺纹钢1605</option>
@@ -957,19 +959,20 @@
         //};
 
         var settings = {
-            // 09/08/2016 -
+            // 2016.09.08 - 2017.03.07
+            // 2017.06.16 -
             '热轧卷板': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.013,
-                StopProfitCriteria: 0.03,
-                StartProfitCriteria: 0.079,
-                OpenCriteria: 0.015,
+                StopLossCriteria: 0.023,
+                StopProfitCriteria: 0.12,
+                StartProfitCriteria: 0.072,
+                OpenCriteria: 0.009,
                 FollowTrend: true,
-                BudgetFactor: 1.5,
+                BudgetFactor: 1.28,
                 BondPercentage: 14,
                 NeverEnterAmbiguousState: false,
-                NotUseClosePrice: false,
+                NotUseClosePrice: true,
                 OnlyUseClosePrice: false
             },
             //'螺纹钢': {
@@ -1011,16 +1014,17 @@
             //    BudgetFactor: 1.89,
             //    BondPercentage: 13
             //},
+            // 2017.06.01 -
             '焦炭': {
                 TransactionFeeRate: 0.00014,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.012,
-                StopProfitCriteria: 0.02,
-                StartProfitCriteria: 0.149,
-                OpenCriteria: 0.004,
+                StopLossCriteria: 0.014,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.148,
+                OpenCriteria: 0.027,
                 FollowTrend: false,
-                BudgetFactor: 1.49,
-                BondPercentage: 17,
+                BudgetFactor: 1.91,
+                BondPercentage: 15,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false
@@ -1033,25 +1037,40 @@
                 StartProfitCriteria: 0.032,
                 OpenCriteria: 0.019,
                 FollowTrend: false,
-                BudgetFactor: 1.43,
-                BondPercentage: 17,
+                BudgetFactor: 1.48,
+                BondPercentage: 15,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false
             },
-            // 2016.09.08 - 2017.03.07
-            '热轧卷板20160908-20170307': {
+            // 2017.03.07 -
+            '热轧卷板20170307-20170616': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.023,
-                StopProfitCriteria: 0.12,
-                StartProfitCriteria: 0.072,
-                OpenCriteria: 0.009,
+                StopLossCriteria: 0.013,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.079,
+                OpenCriteria: 0.015,
                 FollowTrend: true,
-                BudgetFactor: 1.28,
+                BudgetFactor: 1.55,
                 BondPercentage: 14,
                 NeverEnterAmbiguousState: false,
-                NotUseClosePrice: true,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false
+            },
+            // 2017.02.07 - 2017.06.01
+            '焦炭20170207-20170601': {
+                TransactionFeeRate: 0.00014,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.02,
+                StartProfitCriteria: 0.149,
+                OpenCriteria: 0.004,
+                FollowTrend: false,
+                BudgetFactor: 1.91,
+                BondPercentage: 15,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
                 OnlyUseClosePrice: false
             },
             '铝': {
@@ -1503,7 +1522,8 @@
         });
 
         function setDefaultSettings() {
-            var selectedProductName = $('#SelectedProductName').val();
+            var attribute = $('#SelectedProductName')[0].selectedOptions[0].attributes['data-setting'];
+            var selectedProductName = attribute ? attribute.value : $('#SelectedProductName').val();
             if (settings[selectedProductName]) {
                 $('#TransactionFeeRate').val(settings[selectedProductName].TransactionFeeRate);
                 $('#MinimumPriceUnit').val(settings[selectedProductName].MinimumPriceUnit);

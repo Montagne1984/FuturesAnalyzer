@@ -268,13 +268,13 @@ namespace FuturesAnalyzer.Controllers
             ranges.Add("big",
                 new OptimizeRange
                 {
-                    BottomStopLoss = 0.001m,
+                    BottomStopLoss = 0m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
                     BottomStartProfit = 0.02m,
                     TopStartProfit = 0.08m,
                     StartProfitStep = 0.001m,
-                    BottomStopProfit = 0.01m,
+                    BottomStopProfit = 0m,
                     TopStopProfit = 0.3m,
                     StopProfitStep = 0.01m,
                     BottomOpenCriteria = 0.001m,
