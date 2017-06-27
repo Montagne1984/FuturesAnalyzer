@@ -77,6 +77,7 @@
         <option>PP</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
+        <option value="焦煤" data-setting="焦煤20161227-20170620">焦煤20161227-20170620</option>
         @*<option>热轧卷板1610</option>
         <option>热轧卷板1605</option>
         <option>螺纹钢1605</option>
@@ -1023,7 +1024,7 @@
                 StartProfitCriteria: 0.148,
                 OpenCriteria: 0.027,
                 FollowTrend: false,
-                BudgetFactor: 1.91,
+                BudgetFactor: 1.51,
                 BondPercentage: 15,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
@@ -1032,11 +1033,11 @@
             '焦煤': {
                 TransactionFeeRate: 0.00014,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.009,
-                StopProfitCriteria: 0.01,
-                StartProfitCriteria: 0.032,
-                OpenCriteria: 0.019,
-                FollowTrend: false,
+                StopLossCriteria: 0.033,
+                StopProfitCriteria: 0,
+                StartProfitCriteria: 0.042,
+                OpenCriteria: 0.026,
+                FollowTrend: true,
                 BudgetFactor: 1.48,
                 BondPercentage: 15,
                 NeverEnterAmbiguousState: false,
@@ -1068,6 +1069,20 @@
                 OpenCriteria: 0.004,
                 FollowTrend: false,
                 BudgetFactor: 1.91,
+                BondPercentage: 15,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false
+            },
+            '焦煤20161227-20170620': {
+                TransactionFeeRate: 0.00014,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.009,
+                StopProfitCriteria: 0.01,
+                StartProfitCriteria: 0.032,
+                OpenCriteria: 0.019,
+                FollowTrend: false,
+                BudgetFactor: 1.48,
                 BondPercentage: 15,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
