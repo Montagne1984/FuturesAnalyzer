@@ -1,0 +1,9 @@
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.deps.json
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.runtimeconfig.json
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.runtimeconfig.dev.json
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.dll
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.csprojResolveAssemblyReference.cache
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.AssemblyInfo.cs
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.pdb
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.dll
+c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.pdb
