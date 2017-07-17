@@ -7,3 +7,12 @@ c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnaly
 c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.pdb
 c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.dll
 c:\users\ship\documents\visual studio 2017\Projects\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.pdb
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.deps.json
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.runtimeconfig.json
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.runtimeconfig.dev.json
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.dll
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Debug\netcoreapp1.1\FuturesAnalyzer.pdb
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.csprojResolveAssemblyReference.cache
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.AssemblyInfo.cs
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.dll
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Debug\netcoreapp1.1\FuturesAnalyzer.pdb
