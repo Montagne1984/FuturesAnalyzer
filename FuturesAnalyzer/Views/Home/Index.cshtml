@@ -313,7 +313,7 @@
                     } else {
                         currentEmptyDays = value.contract ? 0 : currentEmptyDays + 1;
                         if (currentEmptyDays === 1) {
-                            currentEmptyDaysStartDate = value.dailyPrice.Date;
+                            currentEmptyDaysStartDate = value.dailyPrice.date;
                         }
                     }
                     balances.push(value.balance);
