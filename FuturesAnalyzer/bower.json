@@ -6,10 +6,11 @@
     "jquery": "3.2.1",
     "jquery-validation": "1.16.0",
     "jquery-validation-unobtrusive": "3.2.6",
-    "highcharts": "v5.0.12"
+    "highcharts": "v5.0.14"
   },
   "resolutions": {
     "jquery": "3.2.1",
-    "jquery-validation": "1.16.0"
+    "jquery-validation": "1.16.0",
+    "highcharts": "v5.0.14"
   }
 }
