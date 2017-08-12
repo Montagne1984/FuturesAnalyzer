@@ -78,6 +78,7 @@
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
         <option value="焦煤" data-setting="焦煤20161227-20170620">焦煤20161227-20170620</option>
+        <option value="焦煤" data-setting="焦煤20170620-20170810">焦煤20170620-20170810</option>
         @*<option>热轧卷板1610</option>
             <option>热轧卷板1605</option>
             <option>螺纹钢1605</option>
@@ -1033,10 +1034,10 @@
             '焦煤': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.033,
-                StopProfitCriteria: 0,
-                StartProfitCriteria: 0.042,
-                OpenCriteria: 0.026,
+                StopLossCriteria: 0.038,
+                StopProfitCriteria: 0.01,
+                StartProfitCriteria: 0.041,
+                OpenCriteria: 0.031,
                 FollowTrend: true,
                 BudgetFactor: 1.48,
                 BondPercentage: 15,
@@ -1124,6 +1125,20 @@
                 StartProfitCriteria: 0.032,
                 OpenCriteria: 0.019,
                 FollowTrend: false,
+                BudgetFactor: 1.48,
+                BondPercentage: 15,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false
+            },
+            '焦煤20170620-20170810': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.033,
+                StopProfitCriteria: 0,
+                StartProfitCriteria: 0.042,
+                OpenCriteria: 0.026,
+                FollowTrend: true,
                 BudgetFactor: 1.48,
                 BondPercentage: 15,
                 NeverEnterAmbiguousState: false,
