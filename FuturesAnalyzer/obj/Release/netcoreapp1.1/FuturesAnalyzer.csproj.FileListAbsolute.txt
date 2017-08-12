@@ -1,0 +1,16 @@
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\FuturesAnalyzer.deps.json
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\FuturesAnalyzer.runtimeconfig.json
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\FuturesAnalyzer.runtimeconfig.dev.json
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\FuturesAnalyzer.dll
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\FuturesAnalyzer.pdb
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Release\netcoreapp1.1\FuturesAnalyzer.csprojResolveAssemblyReference.cache
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Release\netcoreapp1.1\FuturesAnalyzer.AssemblyInfo.cs
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Release\netcoreapp1.1\FuturesAnalyzer.dll
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\obj\Release\netcoreapp1.1\FuturesAnalyzer.pdb
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\Data\镍.csv
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\Data\PP.csv
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\Data\热轧卷板.csv
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\Data\焦炭.csv
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\Data\焦煤.csv
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\Data\菜粕.csv
+D:\Repos\FuturesAnalyzer\FuturesAnalyzer\bin\Release\netcoreapp1.1\Data\螺纹钢.csv
