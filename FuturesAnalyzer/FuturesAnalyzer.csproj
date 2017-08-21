@@ -5,6 +5,40 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\PP.csv" />
+    <None Remove="Data\热轧卷板.csv" />
+    <None Remove="Data\焦炭.csv" />
+    <None Remove="Data\焦煤.csv" />
+    <None Remove="Data\菜粕.csv" />
+    <None Remove="Data\螺纹钢.csv" />
+    <None Remove="Data\镍.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\PP.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\热轧卷板.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\焦炭.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\焦煤.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\菜粕.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\螺纹钢.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\镍.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CsvHelper" Version="2.16.3" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
   </ItemGroup>
