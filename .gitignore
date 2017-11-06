@@ -4,3 +4,7 @@
 
 /FuturesAnalyzer/obj
 /FuturesAnalyzer/bin
+/.vs/FuturesAnalyzer/v15/Server/sqlite3
+/.vs/FuturesAnalyzer/v15/sqlite3/db.lock
+/.vs/FuturesAnalyzer/v15/sqlite3/storage.ide-shm
+/.vs/FuturesAnalyzer/v15/sqlite3/storage.ide-wal
