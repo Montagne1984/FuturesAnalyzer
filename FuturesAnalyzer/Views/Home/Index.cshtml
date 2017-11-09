@@ -82,6 +82,7 @@
         <option value="焦煤" data-setting="焦煤20170810-20170905">焦煤20170810-20170905</option>
         <option value="焦煤" data-setting="焦煤20170905-20171010">焦煤20170905-20171010</option>
         <option value="镍" data-setting="镍20160426-20171016">镍20160426-20171016</option>
+        <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         @*<option>热轧卷板1610</option>
             <option>热轧卷板1605</option>
             <option>螺纹钢1605</option>
@@ -1078,12 +1079,12 @@
             },
             'PP': {
                 TransactionFeeRate: 0.00008,
-                StopLossCriteria: 0.027,
-                StopProfitCriteria: 0.11,
-                StartProfitCriteria: 0.054,
-                OpenCriteria: 0.008,
+                StopLossCriteria: 0.025,
+                StopProfitCriteria: 0.09,
+                StartProfitCriteria: 0.049,
+                OpenCriteria: 0.009,
                 FollowTrend: false,
-                BudgetFactor: 1.27,
+                BudgetFactor: 1.26,
                 BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1,
@@ -1189,6 +1190,20 @@
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false
+            },
+            'PP20161213-20171109': {
+                TransactionFeeRate: 0.00008,
+                StopLossCriteria: 0.027,
+                StopProfitCriteria: 0.11,
+                StartProfitCriteria: 0.054,
+                OpenCriteria: 0.008,
+                FollowTrend: false,
+                BudgetFactor: 1.27,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: true
             },
             '铝': {
                 TransactionFeeRate: 0.000236,
