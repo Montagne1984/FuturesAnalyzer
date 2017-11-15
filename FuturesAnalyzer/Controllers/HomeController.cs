@@ -251,7 +251,7 @@ namespace FuturesAnalyzer.Controllers
                     return;
                 }
                 topThreeSettings.Add(result.Result, new List<SettingResult> { result });
-                if (topThreeSettings.Count > 3)
+                if (topThreeSettings.Count > 10)
                 {
                     topThreeSettings.RemoveAt(0);
                 }
@@ -268,7 +268,7 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.081m,
+                    BottomStartProfit = 0.02m,
                     TopStartProfit = 0.16m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0m,
