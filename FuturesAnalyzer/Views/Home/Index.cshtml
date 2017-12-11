@@ -76,7 +76,9 @@
         <option>菜粕</option>
         <option>PP</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
+        <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
+        <option value="焦炭" data-setting="焦炭20170601-20171205">焦炭20170601-20171205</option>
         <option value="焦煤" data-setting="焦煤20161227-20170620">焦煤20161227-20170620</option>
         <option value="焦煤" data-setting="焦煤20170620-20170810">焦煤20170620-20170810</option>
         <option value="焦煤" data-setting="焦煤20170810-20170905">焦煤20170810-20170905</option>
@@ -84,10 +86,10 @@
         <option value="镍" data-setting="镍20160426-20171016">镍20160426-20171016</option>
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         @*<option>热轧卷板1610</option>
-            <option>热轧卷板1605</option>
-            <option>螺纹钢1605</option>
-            <option>焦炭1605</option>
-            <option>焦煤1605</option>*@
+        <option>热轧卷板1605</option>
+        <option>螺纹钢1605</option>
+        <option>焦炭1605</option>
+        <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -998,12 +1000,12 @@
             '螺纹钢': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.018,
-                StopProfitCriteria: 0.08,
-                StartProfitCriteria: 0.137,
-                OpenCriteria: 0.006,
-                FollowTrend: false,
-                BudgetFactor: 1.64,
+                StopLossCriteria: 0.024,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.109,
+                OpenCriteria: 0.017,
+                FollowTrend: true,
+                BudgetFactor: 1.55,
                 BondPercentage: 14,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
@@ -1024,15 +1026,15 @@
             '焦炭': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.014,
-                StopProfitCriteria: 0.03,
-                StartProfitCriteria: 0.148,
-                OpenCriteria: 0.027,
+                StopLossCriteria: 0.015,
+                StopProfitCriteria: 0.17,
+                StartProfitCriteria: 0.139,
+                OpenCriteria: 0.025,
                 FollowTrend: false,
-                BudgetFactor: 1.52,
+                BudgetFactor: 1.5,
                 BondPercentage: 16,
                 NeverEnterAmbiguousState: false,
-                NotUseClosePrice: false,
+                NotUseClosePrice: true,
                 OnlyUseClosePrice: false
             },
             '焦煤': {
@@ -1091,7 +1093,7 @@
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: true
             },
-            // 2017.03.07 -
+            // 2017.03.07 - 2017.06.16
             '热轧卷板20170307-20170616': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
@@ -1106,6 +1108,21 @@
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false
             },
+            // 2017.01.28 - 2017.12.11
+            '螺纹钢20170128-20171211': {
+                TransactionFeeRate: 0.00012,
+                MinimumPriceUnit: 1,
+                StopLossCriteria: 0.018,
+                StopProfitCriteria: 0.08,
+                StartProfitCriteria: 0.137,
+                OpenCriteria: 0.006,
+                FollowTrend: false,
+                BudgetFactor: 1.64,
+                BondPercentage: 14,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: false
+            },
             // 2017.02.07 - 2017.06.01
             '焦炭20170207-20170601': {
                 TransactionFeeRate: 0.00014,
@@ -1116,6 +1133,21 @@
                 OpenCriteria: 0.004,
                 FollowTrend: false,
                 BudgetFactor: 1.91,
+                BondPercentage: 16,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false
+            },
+            // 2017.06.01 - 2017.12.05
+            '焦炭20170601-20171205': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.014,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.148,
+                OpenCriteria: 0.027,
+                FollowTrend: false,
+                BudgetFactor: 1.52,
                 BondPercentage: 16,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,

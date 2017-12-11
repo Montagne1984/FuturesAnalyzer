@@ -250,6 +250,10 @@ namespace FuturesAnalyzer.Controllers
                     topThreeSettings[result.Result].Add(result);
                     return;
                 }
+                if(topThreeSettings.Count >= 10 && result.Result < topThreeSettings.First().Key)
+                {
+                    return;
+                }
                 topThreeSettings.Add(result.Result, new List<SettingResult> { result });
                 if (topThreeSettings.Count > 10)
                 {
