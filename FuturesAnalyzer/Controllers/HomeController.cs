@@ -272,7 +272,7 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.02m,
+                    BottomStartProfit = 0.081m,
                     TopStartProfit = 0.16m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0m,
