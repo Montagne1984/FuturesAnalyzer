@@ -170,7 +170,7 @@ namespace FuturesAnalyzer.Controllers
 
             var timeSpan = DateTime.Now.Subtract(startTime);
 
-            using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}.csv", FileMode.Create))
+            using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}.csv", FileMode.Create))
             using (var streamWriter = new StreamWriter(fileStream))
             {
                 streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
