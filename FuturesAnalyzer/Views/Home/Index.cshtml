@@ -84,6 +84,7 @@
         <option value="焦煤" data-setting="焦煤20170810-20170905">焦煤20170810-20170905</option>
         <option value="焦煤" data-setting="焦煤20170905-20171010">焦煤20170905-20171010</option>
         <option value="镍" data-setting="镍20160426-20171016">镍20160426-20171016</option>
+        <option value="镍" data-setting="镍20171016-20180130">镍20171016-20180130</option>
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         @*<option>热轧卷板1610</option>
         <option>热轧卷板1605</option>
@@ -1058,17 +1059,17 @@
             '镍': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.022,
-                StopProfitCriteria: 0.03,
-                StartProfitCriteria: 0.065,
-                OpenCriteria: 0.023,
+                StopLossCriteria: 0.025,
+                StopProfitCriteria: 0.02,
+                StartProfitCriteria: 0.042,
+                OpenCriteria: 0.013,
                 FollowTrend: false,
-                BudgetFactor: 1.3,
+                BudgetFactor: 1.25,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
-                NotUseClosePrice: true,
-                OnlyUseClosePrice: true,
-                CloseAmbiguousStateToday: false
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
             },
             '菜粕': {
                 TransactionFeeRate: 0.000078,
@@ -1237,6 +1238,21 @@
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: false
+            },
+            '镍20171016-20180130': {
+                MinimumPriceUnit: 10,
+                TransactionFeeRate: 0.00006,
+                StopLossCriteria: 0.022,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.065,
+                OpenCriteria: 0.023,
+                FollowTrend: false,
+                BudgetFactor: 1.3,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: true,
                 CloseAmbiguousStateToday: false
             },
             'PP20161213-20171109': {
