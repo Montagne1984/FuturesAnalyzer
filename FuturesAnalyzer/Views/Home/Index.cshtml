@@ -75,6 +75,11 @@
         <option>镍</option>
         <option>菜粕</option>
         <option>PP</option>
+        <option value="热轧卷板" data-setting="热轧卷板1">热轧卷板1</option>
+        <option value="焦炭" data-setting="焦炭1">焦炭1</option>
+        <option value="焦煤" data-setting="焦煤1">焦煤1</option>
+        <option value="焦煤" data-setting="焦煤2">焦煤2</option>
+        <option value="菜粕" data-setting="菜粕1">菜粕1</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
@@ -985,6 +990,21 @@
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
+            '热轧卷板1': {
+                TransactionFeeRate: 0.00012,
+                MinimumPriceUnit: 1,
+                StopLossCriteria: 0.026,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.086,
+                OpenCriteria: 0.001,
+                FollowTrend: true,
+                BudgetFactor: 1.38,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: false
+            },
             //'螺纹钢': {
             //    TransactionFeeRate: 0.00012,
             //    MinimumPriceUnit: 1,
@@ -1034,12 +1054,27 @@
                 StartProfitCriteria: 0.139,
                 OpenCriteria: 0.025,
                 FollowTrend: false,
-                BudgetFactor: 1.5,
-                BondPercentage: 16,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
+            },
+            '焦炭1': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.015,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.157,
+                OpenCriteria: 0.019,
+                FollowTrend: false,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
             },
             '焦煤': {
                 TransactionFeeRate: 0.00008,
@@ -1050,9 +1085,39 @@
                 OpenCriteria: 0.015,
                 FollowTrend: false,
                 BudgetFactor: 1.47,
-                BondPercentage: 16,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: false
+            },
+            '焦煤1': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.02,
+                StartProfitCriteria: 0.15,
+                OpenCriteria: 0.006,
+                FollowTrend: true,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: true,
+                CloseAmbiguousStateToday: true
+            },
+            '焦煤2': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.019,
+                StopProfitCriteria: 0.01,
+                StartProfitCriteria: 0.14,
+                OpenCriteria: 0.029,
+                FollowTrend: false,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
@@ -1079,12 +1144,27 @@
                 OpenCriteria: 0.032,
                 FollowTrend: false,
                 BudgetFactor: 1.37,
-                BondPercentage: 12,
+                BondPercentage: 11,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
+            },
+            '菜粕1': {
+                TransactionFeeRate: 0.000078,
+                StopLossCriteria: 0.015,
+                StopProfitCriteria: 0.08,
+                StartProfitCriteria: 0.152,
+                OpenCriteria: 0.016,
+                FollowTrend: false,
+                BudgetFactor: 1.37,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
             },
             'PP': {
                 TransactionFeeRate: 0.00008,
@@ -1094,7 +1174,7 @@
                 OpenCriteria: 0.009,
                 FollowTrend: false,
                 BudgetFactor: 1.26,
-                BondPercentage: 11,
+                BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1,
                 NotUseClosePrice: true,
@@ -1143,7 +1223,7 @@
                 OpenCriteria: 0.004,
                 FollowTrend: false,
                 BudgetFactor: 1.91,
-                BondPercentage: 16,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
@@ -1159,7 +1239,7 @@
                 OpenCriteria: 0.027,
                 FollowTrend: false,
                 BudgetFactor: 1.52,
-                BondPercentage: 16,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
@@ -1174,7 +1254,7 @@
                 OpenCriteria: 0.019,
                 FollowTrend: false,
                 BudgetFactor: 1.48,
-                BondPercentage: 16,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
@@ -1189,7 +1269,7 @@
                 OpenCriteria: 0.026,
                 FollowTrend: true,
                 BudgetFactor: 1.48,
-                BondPercentage: 16,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
@@ -1204,7 +1284,7 @@
                 OpenCriteria: 0.031,
                 FollowTrend: true,
                 BudgetFactor: 1.48,
-                BondPercentage: 16,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
@@ -1219,7 +1299,7 @@
                 OpenCriteria: 0.018,
                 FollowTrend: false,
                 BudgetFactor: 1.48,
-                BondPercentage: 16,
+                BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
@@ -1263,7 +1343,7 @@
                 OpenCriteria: 0.008,
                 FollowTrend: false,
                 BudgetFactor: 1.27,
-                BondPercentage: 11,
+                BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1,
                 NotUseClosePrice: true,
