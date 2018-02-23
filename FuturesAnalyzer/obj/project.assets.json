@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v2.0": {
-      "CsvHelper/6.1.0": {
+      "CsvHelper/7.0.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.CSharp": "4.4.0",
@@ -4759,12 +4759,12 @@
     }
   },
   "libraries": {
-    "CsvHelper/6.1.0": {
-      "sha512": "TEGteqFTRIHt+d83BK589bRs0Gzr1rdKYGHvLEi6pUiaaqP+msunS/MhumjTpjDRGtLyDxk/qL5TWAZtcKvQIA==",
+    "CsvHelper/7.0.0": {
+      "sha512": "2kIzzT4sniCBFyUKb/hz7siakQ758421jAuEQ1fCC3D70EhsGgrvRHuHCUlo6f+YGiue2Nq2pvsmnDEmf1DWZg==",
       "type": "package",
-      "path": "csvhelper/6.1.0",
+      "path": "csvhelper/7.0.0",
       "files": [
-        "csvhelper.6.1.0.nupkg.sha512",
+        "csvhelper.7.0.0.nupkg.sha512",
         "csvhelper.nuspec",
         "lib/net45/CsvHelper.dll",
         "lib/net45/CsvHelper.xml",
@@ -12562,7 +12562,7 @@
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.0": [
-      "CsvHelper >= 6.1.0",
+      "CsvHelper >= 7.0.0",
       "Microsoft.AspNetCore.All >= 2.0.5",
       "Microsoft.NETCore.App >= 2.0.0"
     ]
@@ -12613,7 +12613,7 @@
         "dependencies": {
           "CsvHelper": {
             "target": "Package",
-            "version": "[6.1.0, )"
+            "version": "[7.0.0, )"
           },
           "Microsoft.AspNetCore.All": {
             "target": "Package",
