@@ -2,7 +2,7 @@
   "name": "asp.net",
   "private": true,
   "dependencies": {
-    "bootstrap": "3.3.7",
+    "bootstrap": "v4.0.0",
     "jquery": "3.3.1",
     "jquery-validation": "1.17.0",
     "jquery-validation-unobtrusive": "3.2.6",
@@ -11,6 +11,7 @@
   "resolutions": {
     "jquery": "3.3.1",
     "jquery-validation": "1.17.0",
-    "highcharts": "v6.0.7"
+    "highcharts": "v6.0.7",
+    "bootstrap": "v4.0.0"
   }
 }
