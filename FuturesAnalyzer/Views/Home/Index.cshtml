@@ -76,9 +76,11 @@
         <option>菜粕</option>
         <option>PP</option>
         <option value="热轧卷板" data-setting="热轧卷板1">热轧卷板1</option>
+        <option value="螺纹钢" data-setting="螺纹钢1">螺纹钢1</option>
         <option value="焦炭" data-setting="焦炭1">焦炭1</option>
         <option value="焦煤" data-setting="焦煤1">焦煤1</option>
         <option value="焦煤" data-setting="焦煤2">焦煤2</option>
+        <option value="镍" data-setting="镍1">镍1</option>
         <option value="菜粕" data-setting="菜粕1">菜粕1</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
@@ -1034,6 +1036,21 @@
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
+            '螺纹钢1': {
+                TransactionFeeRate: 0.00012,
+                MinimumPriceUnit: 1,
+                StopLossCriteria: 0.022,
+                StopProfitCriteria: 0.04,
+                StartProfitCriteria: 0.118,
+                OpenCriteria: 0.005,
+                FollowTrend: true,
+                BudgetFactor: 1.55,
+                BondPercentage: 14,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
+            },
             //'焦炭': {
             //    TransactionFeeRate: 0.000864,
             //    MinimumPriceUnit: 0.5,
@@ -1127,6 +1144,21 @@
                 StopLossCriteria: 0.025,
                 StopProfitCriteria: 0.02,
                 StartProfitCriteria: 0.042,
+                OpenCriteria: 0.013,
+                FollowTrend: false,
+                BudgetFactor: 1.25,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
+            },
+            '镍1': {
+                MinimumPriceUnit: 10,
+                TransactionFeeRate: 0.00006,
+                StopLossCriteria: 0.03,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.038,
                 OpenCriteria: 0.013,
                 FollowTrend: false,
                 BudgetFactor: 1.25,
