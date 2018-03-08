@@ -78,10 +78,7 @@
         <option value="热轧卷板" data-setting="热轧卷板1">热轧卷板1</option>
         <option value="螺纹钢" data-setting="螺纹钢1">螺纹钢1</option>
         <option value="焦炭" data-setting="焦炭1">焦炭1</option>
-        <option value="焦煤" data-setting="焦煤1">焦煤1</option>
-        <option value="焦煤" data-setting="焦煤2">焦煤2</option>
         <option value="镍" data-setting="镍1">镍1</option>
-        <option value="菜粕" data-setting="菜粕1">菜粕1</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
@@ -90,8 +87,10 @@
         <option value="焦煤" data-setting="焦煤20170620-20170810">焦煤20170620-20170810</option>
         <option value="焦煤" data-setting="焦煤20170810-20170905">焦煤20170810-20170905</option>
         <option value="焦煤" data-setting="焦煤20170905-20171010">焦煤20170905-20171010</option>
+        <option value="焦煤" data-setting="焦煤20171010-20180301">焦煤20171010-20180301</option>
         <option value="镍" data-setting="镍20160426-20171016">镍20160426-20171016</option>
         <option value="镍" data-setting="镍20171016-20180130">镍20171016-20180130</option>
+        <option value="菜粕" data-setting="菜粕20161122-20180302">菜粕20161122-20180302</option>
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         @*<option>热轧卷板1610</option>
         <option>热轧卷板1605</option>
@@ -1097,21 +1096,6 @@
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
                 StopLossCriteria: 0.012,
-                StopProfitCriteria: 0.04,
-                StartProfitCriteria: 0.098,
-                OpenCriteria: 0.015,
-                FollowTrend: false,
-                BudgetFactor: 1.47,
-                BondPercentage: 17,
-                NeverEnterAmbiguousState: false,
-                NotUseClosePrice: true,
-                OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: false
-            },
-            '焦煤1': {
-                TransactionFeeRate: 0.00008,
-                MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.012,
                 StopProfitCriteria: 0.02,
                 StartProfitCriteria: 0.15,
                 OpenCriteria: 0.006,
@@ -1122,21 +1106,6 @@
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: true,
                 CloseAmbiguousStateToday: true
-            },
-            '焦煤2': {
-                TransactionFeeRate: 0.00008,
-                MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.019,
-                StopProfitCriteria: 0.01,
-                StartProfitCriteria: 0.14,
-                OpenCriteria: 0.029,
-                FollowTrend: false,
-                BudgetFactor: 1.47,
-                BondPercentage: 17,
-                NeverEnterAmbiguousState: false,
-                NotUseClosePrice: false,
-                OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: false
             },
             '镍': {
                 MinimumPriceUnit: 10,
@@ -1169,21 +1138,6 @@
                 CloseAmbiguousStateToday: true
             },
             '菜粕': {
-                TransactionFeeRate: 0.000078,
-                StopLossCriteria: 0.027,
-                StopProfitCriteria: 0.04,
-                StartProfitCriteria: 0.056,
-                OpenCriteria: 0.032,
-                FollowTrend: false,
-                BudgetFactor: 1.37,
-                BondPercentage: 11,
-                NeverEnterAmbiguousState: false,
-                MinimumPriceUnit: 1,
-                NotUseClosePrice: false,
-                OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: false
-            },
-            '菜粕1': {
                 TransactionFeeRate: 0.000078,
                 StopLossCriteria: 0.015,
                 StopProfitCriteria: 0.08,
@@ -1337,6 +1291,21 @@
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
+            '焦煤20171010-20180301': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.04,
+                StartProfitCriteria: 0.098,
+                OpenCriteria: 0.015,
+                FollowTrend: false,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: false
+            },
             '镍20160426-20171016': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.00006,
@@ -1365,6 +1334,21 @@
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: true,
+                CloseAmbiguousStateToday: false
+            },
+            '菜粕20161122-20180302': {
+                TransactionFeeRate: 0.000078,
+                StopLossCriteria: 0.027,
+                StopProfitCriteria: 0.04,
+                StartProfitCriteria: 0.056,
+                OpenCriteria: 0.032,
+                FollowTrend: false,
+                BudgetFactor: 1.37,
+                BondPercentage: 11,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
             'PP20161213-20171109': {
