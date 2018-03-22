@@ -77,12 +77,12 @@
         <option>PP</option>
         <option value="热轧卷板" data-setting="热轧卷板1">热轧卷板1</option>
         <option value="螺纹钢" data-setting="螺纹钢1">螺纹钢1</option>
-        <option value="焦炭" data-setting="焦炭1">焦炭1</option>
         <option value="镍" data-setting="镍1">镍1</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
         <option value="焦炭" data-setting="焦炭20170601-20171205">焦炭20170601-20171205</option>
+        <option value="焦炭" data-setting="焦炭20171205-20180321">焦炭20171205-20180321</option>
         <option value="焦煤" data-setting="焦煤20161227-20170620">焦煤20161227-20170620</option>
         <option value="焦煤" data-setting="焦煤20170620-20170810">焦煤20170620-20170810</option>
         <option value="焦煤" data-setting="焦煤20170810-20170905">焦煤20170810-20170905</option>
@@ -1061,21 +1061,21 @@
             //    BudgetFactor: 1.89,
             //    BondPercentage: 13
             //},
-            // 2017.06.01 -
+            // 2018.03.21 - 
             '焦炭': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
                 StopLossCriteria: 0.015,
-                StopProfitCriteria: 0.17,
-                StartProfitCriteria: 0.139,
-                OpenCriteria: 0.025,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.159,
+                OpenCriteria: 0.011,
                 FollowTrend: false,
                 BudgetFactor: 1.47,
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: false
+                CloseAmbiguousStateToday: true
             },
             '焦炭1': {
                 TransactionFeeRate: 0.00008,
@@ -1228,6 +1228,22 @@
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: false
+            },
+            // 2017.12.05 - 2018.03.21
+            '焦炭20171205-20180321': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.015,
+                StopProfitCriteria: 0.17,
+                StartProfitCriteria: 0.139,
+                OpenCriteria: 0.025,
+                FollowTrend: false,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
