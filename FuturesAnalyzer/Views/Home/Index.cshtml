@@ -75,11 +75,11 @@
         <option>镍</option>
         <option>菜粕</option>
         <option>PP</option>
-        <option value="热轧卷板" data-setting="热轧卷板1">热轧卷板1</option>
-        <option value="螺纹钢" data-setting="螺纹钢1">螺纹钢1</option>
         <option value="镍" data-setting="镍1">镍1</option>
+        <option value="热轧卷板" data-setting="热轧卷板20160908-20180326">热轧卷板20160908-20180326</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
+        <option value="螺纹钢" data-setting="螺纹钢20171211-20180330">螺纹钢20171211-20180330</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
         <option value="焦炭" data-setting="焦炭20170601-20171205">焦炭20170601-20171205</option>
         <option value="焦炭" data-setting="焦炭20171205-20180321">焦炭20171205-20180321</option>
@@ -974,30 +974,13 @@
         //};
 
         var settings = {
-            // 2016.09.08 - 2017.03.07
-            // 2017.06.16 -
             '热轧卷板': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.023,
-                StopProfitCriteria: 0.12,
-                StartProfitCriteria: 0.072,
-                OpenCriteria: 0.009,
-                FollowTrend: true,
-                BudgetFactor: 1.38,
-                BondPercentage: 13,
-                NeverEnterAmbiguousState: false,
-                NotUseClosePrice: true,
-                OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: false
-            },
-            '热轧卷板1': {
-                TransactionFeeRate: 0.00012,
-                MinimumPriceUnit: 1,
-                StopLossCriteria: 0.026,
-                StopProfitCriteria: 0.03,
-                StartProfitCriteria: 0.086,
-                OpenCriteria: 0.001,
+                StopLossCriteria: 0.013,
+                StopProfitCriteria: 0.05,
+                StartProfitCriteria: 0.083,
+                OpenCriteria: 0.016,
                 FollowTrend: true,
                 BudgetFactor: 1.38,
                 BondPercentage: 13,
@@ -1021,21 +1004,6 @@
             //    OnlyUseClosePrice: false
             //},
             '螺纹钢': {
-                TransactionFeeRate: 0.00012,
-                MinimumPriceUnit: 1,
-                StopLossCriteria: 0.024,
-                StopProfitCriteria: 0.1,
-                StartProfitCriteria: 0.109,
-                OpenCriteria: 0.017,
-                FollowTrend: true,
-                BudgetFactor: 1.55,
-                BondPercentage: 14,
-                NeverEnterAmbiguousState: false,
-                NotUseClosePrice: true,
-                OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: false
-            },
-            '螺纹钢1': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
                 StopLossCriteria: 0.022,
@@ -1074,21 +1042,6 @@
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
-                OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: true
-            },
-            '焦炭1': {
-                TransactionFeeRate: 0.00008,
-                MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.015,
-                StopProfitCriteria: 0.03,
-                StartProfitCriteria: 0.157,
-                OpenCriteria: 0.019,
-                FollowTrend: false,
-                BudgetFactor: 1.47,
-                BondPercentage: 17,
-                NeverEnterAmbiguousState: false,
-                NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
@@ -1167,6 +1120,23 @@
                 OnlyUseClosePrice: true,
                 CloseAmbiguousStateToday: false
             },
+            // 2016.09.08 - 2017.03.07
+            // 2017.06.16 - 2018.03.26
+            '热轧卷板20160908-20180326': {
+                TransactionFeeRate: 0.00012,
+                MinimumPriceUnit: 1,
+                StopLossCriteria: 0.023,
+                StopProfitCriteria: 0.12,
+                StartProfitCriteria: 0.072,
+                OpenCriteria: 0.009,
+                FollowTrend: true,
+                BudgetFactor: 1.38,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: false
+            },
             // 2017.03.07 - 2017.06.16
             '热轧卷板20170307-20170616': {
                 TransactionFeeRate: 0.00012,
@@ -1193,6 +1163,21 @@
                 OpenCriteria: 0.006,
                 FollowTrend: false,
                 BudgetFactor: 1.64,
+                BondPercentage: 14,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: false
+            },
+            '螺纹钢20171211-20180330': {
+                TransactionFeeRate: 0.00012,
+                MinimumPriceUnit: 1,
+                StopLossCriteria: 0.024,
+                StopProfitCriteria: 0.1,
+                StartProfitCriteria: 0.109,
+                OpenCriteria: 0.017,
+                FollowTrend: true,
+                BudgetFactor: 1.55,
                 BondPercentage: 14,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
