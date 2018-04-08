@@ -75,6 +75,8 @@
         <option>镍</option>
         <option>菜粕</option>
         <option>PP</option>
+        <option value="焦炭" data-setting="焦炭1">焦炭1</option>
+        <option value="焦煤" data-setting="焦煤1">焦煤1</option>
         <option value="镍" data-setting="镍1">镍1</option>
         <option value="热轧卷板" data-setting="热轧卷板20160908-20180326">热轧卷板20160908-20180326</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
@@ -1045,6 +1047,21 @@
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
+            '焦炭1': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.007,
+                StopProfitCriteria: 0.08,
+                StartProfitCriteria: 0.164,
+                OpenCriteria: 0.015,
+                FollowTrend: false,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: true,
+                CloseAmbiguousStateToday: true
+            },
             '焦煤': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
@@ -1058,6 +1075,21 @@
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: true,
+                CloseAmbiguousStateToday: true
+            },
+            '焦煤1': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.014,
+                StopProfitCriteria: 0,
+                StartProfitCriteria: 0.168,
+                OpenCriteria: 0.029,
+                FollowTrend: false,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
             '镍': {
