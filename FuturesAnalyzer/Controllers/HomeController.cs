@@ -7,6 +7,7 @@ using FuturesAnalyzer.ViewModels;
 using FuturesAnalyzer.Services;
 using System.IO;
 using FuturesAnalyzer.Models;
+using CsvHelper;
 
 namespace FuturesAnalyzer.Controllers
 {
@@ -68,10 +69,79 @@ namespace FuturesAnalyzer.Controllers
                 );
         }
 
+        public JsonResult Replay(string settings, string filePath, decimal transactionFeeRate)
+        {
+            var fileName = filePath.Substring(filePath.LastIndexOf('\\') + 1);
+            var dateIndex = fileName.IndexOf("20");
+            var productName = fileName.Substring(0, dateIndex);
+            var index = dateIndex + 8;
+            var notUseClosePrice = fileName[index] == 'T';
+            index += notUseClosePrice ? 4 : 5;
+            var onlyUseClosePrice = fileName[index] == 'T';
+            index += onlyUseClosePrice ? 4 : 5;
+            var closeAmbiguousStateToday = fileName[index] == 'T';
+
+            var topSettings = new SortedList<decimal, List<SettingResult>>();
+            var number = settings.Split("\n").Length;
+            var dailyPrices = _reportService.LoadDailyPrices("Data/" + productName + ".csv");
+            var startDate = new DateTime(2000, 1, 1);
+            var endDate = DateTime.Now;
+            using (var textReader = new StringReader(settings))
+            using (var csvReader = new CsvReader(textReader))
+            {
+                csvReader.Configuration.HasHeaderRecord = true;
+                csvReader.Read();
+                while (csvReader.Read())
+                {
+                    var setting = new SettingResult
+                    {
+                        Setting = new ReportSettingViewModel
+                        {
+                            NotUseClosePrice = notUseClosePrice,
+                            OnlyUseClosePrice = onlyUseClosePrice,
+                            CloseAmbiguousStateToday = closeAmbiguousStateToday,
+                            SelectedProductName = productName,
+                            StartDate = startDate,
+                            EndDate = endDate,
+                            TransactionFeeRate = transactionFeeRate,
+                            StopLossCriteria = csvReader.GetField<decimal>(0),
+                            StopProfitCriteria = csvReader.GetField<decimal>(1),
+                            StartProfitCriteria = csvReader.GetField<decimal>(2),
+                            OpenCriteria = csvReader.GetField<decimal>(3),
+                            FollowTrend = csvReader.GetField<bool>(4)
+                        }
+                    };
+                    var report = GetReport(setting.Setting, dailyPrices);
+                    setting.Result = report.Last().PercentageBalance;
+                    UpdateTopThreeSettings(ref topSettings, setting, number);
+                }
+            }
+
+            using (var fileStream = new FileStream($"Results\\{productName}\\{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now.ToString("yyyyMMdd")}.csv", FileMode.Create))
+            using (var streamWriter = new StreamWriter(fileStream))
+            {
+                streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
+                for (var i = topSettings.Count - 1; i >= 0; i--)
+                {
+                    foreach (var s in topSettings.ElementAt(i).Value)
+                    {
+                        streamWriter.WriteLine(
+                            $"{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Result}");
+                    }
+                }
+            }
+
+            var bestSettings = topSettings.Last().Value.First().Setting;
+            return Json(
+                new
+                {
+                    BestSettings = bestSettings,
+                    Report = GetReport(bestSettings, dailyPrices)
+                });
+        }
+
         public JsonResult Optimize(ReportSettingViewModel model)
         {
-            var topThreeSettings = new SortedList<decimal, List<SettingResult>>();
-
             _reportService = model.UseCrossStarStrategy ? new CrossStarReportService() : new ReportService();
             ReportSettingViewModel bestSettings = model.Clone();
             var bestPercentageBalance = 0m;
@@ -90,12 +160,36 @@ namespace FuturesAnalyzer.Controllers
             var followTrends = model.UseAverageMarketState ? new[] { true } : new[] { true, false };
             //var followTrends = new[] { true };
 
+            var topSettingsDictionary = new Dictionary<string, SortedList<decimal, List<SettingResult>>>();
+
+            var startProfitValue = range.BottomStartProfit;
+            for (;
+            startProfitValue <= range.TopStartProfit;
+            startProfitValue += range.StartProfitStep)
+            {
+                var key = GetTopSettingListKey(startProfitValue, range);
+                if (!topSettingsDictionary.ContainsKey(key))
+                {
+                    topSettingsDictionary.Add(key, new SortedList<decimal, List<SettingResult>>());
+                }
+            }
+            if(startProfitValue - range.TopStartProfit < 0.01m)
+            {
+                var key = GetTopSettingListKey(startProfitValue, range);
+                if (!topSettingsDictionary.ContainsKey(key))
+                {
+                    topSettingsDictionary.Add(key, new SortedList<decimal, List<SettingResult>>());
+                }
+            }
+
+            //var topThreeSettings = new SortedList<decimal, List<SettingResult>>();
             for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
             {
                 for (var startProfit = range.BottomStartProfit;
-                    startProfit <= range.TopStartProfit;
-                    startProfit += range.StartProfitStep)
+                startProfit <= range.TopStartProfit;
+                startProfit += range.StartProfitStep)
                 {
+                    
                     var taskList = new List<Task>();
                     for (var stopProfit = range.BottomStopProfit;
                         stopProfit <= range.TopStopProfit;
@@ -117,7 +211,8 @@ namespace FuturesAnalyzer.Controllers
                                 bestSettings = settings;
                             }
                             var settingResult = new SettingResult { Result = percentageBalance, Setting = settings };
-                            UpdateTopThreeSettings(ref topThreeSettings, settingResult);
+                            var topSettings = topSettingsDictionary[GetTopSettingListKey(startProfit, range)];
+                            UpdateTopThreeSettings(ref topSettings, settingResult);
                         }
                             ));
 
@@ -154,7 +249,8 @@ namespace FuturesAnalyzer.Controllers
                                         Result = percentageBalance,
                                         Setting = currentSettings
                                     };
-                                    UpdateTopThreeSettings(ref topThreeSettings, settingResult);
+                                    var topSettings = topSettingsDictionary[GetTopSettingListKey(startProfit, range)];
+                                    UpdateTopThreeSettings(ref topSettings, settingResult);
                                 }
                                     ));
                             }
@@ -169,14 +265,33 @@ namespace FuturesAnalyzer.Controllers
             }
 
             var timeSpan = DateTime.Now.Subtract(startTime);
-
-            using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}.csv", FileMode.Create))
+            var overallTopSettings = new SortedList<decimal, List<SettingResult>>();
+            foreach (var key in topSettingsDictionary.Keys)
+            {
+                var topSettings = topSettingsDictionary[key];
+                using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{key}.csv", FileMode.Create))
+                using (var streamWriter = new StreamWriter(fileStream))
+                {
+                    streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
+                    for (var i = topSettings.Count - 1; i >= 0; i--)
+                    {
+                        foreach (var settings in topSettings.ElementAt(i).Value)
+                        {
+                            UpdateTopThreeSettings(ref overallTopSettings, settings);
+                            streamWriter.WriteLine(
+                                $"{settings.Setting.StopLossCriteria},{settings.Setting.StopProfitCriteria},{settings.Setting.StartProfitCriteria},{settings.Setting.OpenCriteria},{settings.Setting.FollowTrend},{settings.Result}");
+                        }
+                    }
+                }
+            }
+            
+            using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}.csv", FileMode.Create))
             using (var streamWriter = new StreamWriter(fileStream))
             {
                 streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
-                for (var i = topThreeSettings.Count - 1; i >= 0; i--)
+                for (var i = overallTopSettings.Count - 1; i >= 0; i--)
                 {
-                    foreach (var settings in topThreeSettings.ElementAt(i).Value)
+                    foreach (var settings in overallTopSettings.ElementAt(i).Value)
                     {
                         streamWriter.WriteLine(
                             $"{settings.Setting.StopLossCriteria},{settings.Setting.StopProfitCriteria},{settings.Setting.StartProfitCriteria},{settings.Setting.OpenCriteria},{settings.Setting.FollowTrend},{settings.Result}");
@@ -241,7 +356,7 @@ namespace FuturesAnalyzer.Controllers
         private Dictionary<string, OptimizeRange> ranges;
 
         private void UpdateTopThreeSettings(
-            ref SortedList<decimal, List<SettingResult>> topThreeSettings, SettingResult result)
+            ref SortedList<decimal, List<SettingResult>> topThreeSettings, SettingResult result, int number = 100)
         {
             lock (lockObject)
             {
@@ -250,12 +365,12 @@ namespace FuturesAnalyzer.Controllers
                     topThreeSettings[result.Result].Add(result);
                     return;
                 }
-                if(topThreeSettings.Count >= 10 && result.Result < topThreeSettings.First().Key)
+                if (topThreeSettings.Count >= number && result.Result < topThreeSettings.First().Key)
                 {
                     return;
                 }
                 topThreeSettings.Add(result.Result, new List<SettingResult> { result });
-                if (topThreeSettings.Count > 10)
+                if (topThreeSettings.Count > number)
                 {
                     topThreeSettings.RemoveAt(0);
                 }
@@ -272,8 +387,8 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.161m,
-                    TopStartProfit = 0.2m,
+                    BottomStartProfit = 0.02m,
+                    TopStartProfit = 0.08m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0m,
                     TopStopProfit = 0.3m,
@@ -368,6 +483,22 @@ namespace FuturesAnalyzer.Controllers
             //        OpenCriteriaStep = 0.001m,
             //        NeverEnterAmbiguousState = false
             //    });
+        }
+
+        private string GetTopSettingListKey(decimal startProfit, OptimizeRange range)
+        {
+            var currentStartProfitLevelTop = Math.Ceiling(startProfit * 100) / 100m;
+            var currentStartProfitLevelBottom = currentStartProfitLevelTop - 0.009m;
+            if (currentStartProfitLevelTop > range.TopStartProfit)
+            {
+                currentStartProfitLevelTop = range.TopStartProfit;
+            }
+            if (currentStartProfitLevelBottom < range.BottomStartProfit)
+            {
+                currentStartProfitLevelBottom = range.BottomStartProfit;
+            }
+            var key = $"{currentStartProfitLevelBottom * 1000}_{currentStartProfitLevelTop * 1000}";
+            return key;
         }
     }
 

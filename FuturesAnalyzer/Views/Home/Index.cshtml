@@ -76,8 +76,7 @@
         <option>菜粕</option>
         <option>PP</option>
         <option value="焦炭" data-setting="焦炭1">焦炭1</option>
-        <option value="焦煤" data-setting="焦煤1">焦煤1</option>
-        <option value="镍" data-setting="镍1">镍1</option>
+        <option value="焦炭" data-setting="焦炭2">焦炭2</option>
         <option value="热轧卷板" data-setting="热轧卷板20160908-20180326">热轧卷板20160908-20180326</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
         <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
@@ -90,15 +89,17 @@
         <option value="焦煤" data-setting="焦煤20170810-20170905">焦煤20170810-20170905</option>
         <option value="焦煤" data-setting="焦煤20170905-20171010">焦煤20170905-20171010</option>
         <option value="焦煤" data-setting="焦煤20171010-20180301">焦煤20171010-20180301</option>
+        <option value="焦煤" data-setting="焦煤20180301-20180412">焦煤20180301-20180412</option>
         <option value="镍" data-setting="镍20160426-20171016">镍20160426-20171016</option>
         <option value="镍" data-setting="镍20171016-20180130">镍20171016-20180130</option>
+        <option value="镍" data-setting="镍20180130-20180419">镍20180130-20180419</option>
         <option value="菜粕" data-setting="菜粕20161122-20180302">菜粕20161122-20180302</option>
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         @*<option>热轧卷板1610</option>
-        <option>热轧卷板1605</option>
-        <option>螺纹钢1605</option>
-        <option>焦炭1605</option>
-        <option>焦煤1605</option>*@
+            <option>热轧卷板1605</option>
+            <option>螺纹钢1605</option>
+            <option>焦炭1605</option>
+            <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -168,6 +169,10 @@
     </div>
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
     <button id="optimize" class="btn btn-default">优化</button>
+    <div class="form-horizontal">
+        <input id="replayFile" type="file" style="float: left;" />
+        <button id="replay" class="btn btn-default">回溯</button>
+    </div>
 </form>
 <div id="results">
     <div id="chart"></div>
@@ -224,6 +229,45 @@
                     $("#OpenCriteria").val(bestSettings.openCriteria);
                     $('#FollowTrend').prop('checked', bestSettings.followTrend);
                     $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
+                    $("#results").show();
+                    showResult(data);
+                });
+        });
+
+        var reader = new FileReader();
+        function readSingleFile(e) {
+            var file = e.target.files[0];
+            if (!file) {
+                return;
+            }
+            reader.readAsText(file);
+        }
+
+        document.getElementById('replayFile').addEventListener('change', readSingleFile, false);
+
+        $('#replay').click(function (event) {
+            event.preventDefault();
+            var filePath = $('#replayFile').val();
+            var fileName = filePath.slice(filePath.lastIndexOf('\\') + 1);
+            var productName = fileName.slice(0, fileName.indexOf('20'));
+            $.post("home/replay",
+                {
+                    filePath: filePath,
+                    settings: reader.result,
+                    transactionFeeRate: settings[productName].TransactionFeeRate
+                },
+                function (data) {
+                    var bestSettings = data.bestSettings;
+                    $('#SelectedProductName').val(bestSettings.selectedProductName);
+                    setDefaultSettings();
+                    $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
+                    $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
+                    $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
+                    $("#OpenCriteria").val(bestSettings.openCriteria);
+                    $('#FollowTrend').prop('checked', bestSettings.followTrend);
+                    $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
+                    $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
+                    $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
                     $("#results").show();
                     showResult(data);
                 });
@@ -1062,22 +1106,22 @@
                 OnlyUseClosePrice: true,
                 CloseAmbiguousStateToday: true
             },
-            '焦煤': {
+            '焦炭2': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.012,
-                StopProfitCriteria: 0.02,
-                StartProfitCriteria: 0.15,
-                OpenCriteria: 0.006,
-                FollowTrend: true,
+                StopLossCriteria: 0,
+                StopProfitCriteria: 0.15,
+                StartProfitCriteria: 0.259,
+                OpenCriteria: 0.01,
+                FollowTrend: false,
                 BudgetFactor: 1.47,
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
-                OnlyUseClosePrice: true,
+                OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
-            '焦煤1': {
+            '焦煤': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
                 StopLossCriteria: 0.014,
@@ -1095,30 +1139,15 @@
             '镍': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.025,
-                StopProfitCriteria: 0.02,
-                StartProfitCriteria: 0.042,
+                StopLossCriteria: 0.027,
+                StopProfitCriteria: 0.07,
+                StartProfitCriteria: 0.053,
                 OpenCriteria: 0.013,
                 FollowTrend: false,
                 BudgetFactor: 1.25,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
-                NotUseClosePrice: false,
-                OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: true
-            },
-            '镍1': {
-                MinimumPriceUnit: 10,
-                TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.03,
-                StopProfitCriteria: 0.03,
-                StartProfitCriteria: 0.038,
-                OpenCriteria: 0.013,
-                FollowTrend: false,
-                BudgetFactor: 1.25,
-                BondPercentage: 13,
-                NeverEnterAmbiguousState: false,
-                NotUseClosePrice: false,
+                NotUseClosePrice: true,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
@@ -1339,6 +1368,21 @@
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
+            '焦煤20180301-20180412': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.02,
+                StartProfitCriteria: 0.15,
+                OpenCriteria: 0.006,
+                FollowTrend: true,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: true,
+                CloseAmbiguousStateToday: true
+            },
             '镍20160426-20171016': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.00006,
@@ -1368,6 +1412,21 @@
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: true,
                 CloseAmbiguousStateToday: false
+            },
+            '镍20180130-20180419': {
+                MinimumPriceUnit: 10,
+                TransactionFeeRate: 0.00006,
+                StopLossCriteria: 0.025,
+                StopProfitCriteria: 0.02,
+                StartProfitCriteria: 0.042,
+                OpenCriteria: 0.013,
+                FollowTrend: false,
+                BudgetFactor: 1.25,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
             },
             '菜粕20161122-20180302': {
                 TransactionFeeRate: 0.000078,
