@@ -254,7 +254,8 @@
                 {
                     filePath: filePath,
                     settings: reader.result,
-                    transactionFeeRate: settings[productName].TransactionFeeRate
+                    transactionFeeRate: settings[productName].TransactionFeeRate,
+                    minimumPriceUnit: settings[productName].MinimumPriceUnit
                 },
                 function (data) {
                     var bestSettings = data.bestSettings;
