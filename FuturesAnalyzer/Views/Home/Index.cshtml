@@ -170,7 +170,7 @@
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
     <button id="optimize" class="btn btn-default">优化</button>
     <div class="form-horizontal">
-        <input id="replayFile" type="file" style="float: left;" />
+        <input id="replayFile" type="file" style="float: left;" multiple />
         <button id="replay" class="btn btn-default">回溯</button>
     </div>
 </form>
@@ -183,7 +183,7 @@
     {
     <script src="~/lib/highcharts/highcharts.js"></script>
     <script>
-        $().ready(function() {
+        $().ready(function () {
             var d = new Date();
             d.setDate(d.getDate());
             $('#EndDate').val(toDateFormat(d));
@@ -201,12 +201,12 @@
             return date.getFullYear() + "-" + fullMonth + "-" + fullDay;
         }
 
-        $('#optimize').click(function(event) {
+        $('#optimize').click(function (event) {
             event.preventDefault();
             $("#results").hide();
             var $inputs = $('#form input');
             var values = {};
-            $inputs.each(function() {
+            $inputs.each(function () {
                 values[this.name] = $(this).val();
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
@@ -221,7 +221,7 @@
             values['CloseAmbiguousStateToday'] = $('#CloseAmbiguousStateToday')[0].checked;
             $.post("home/optimize",
                 values,
-                function(data) {
+                function (data) {
                     var bestSettings = data.bestSettings;
                     $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
                     $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
@@ -234,51 +234,70 @@
                 });
         });
 
-        var reader = new FileReader();
-        function readSingleFile(e) {
-            var file = e.target.files[0];
-            if (!file) {
-                return;
+        var readers = [];
+        $('#replayFile').change(function (e) {
+            event.preventDefault();
+            readers = [];
+            var files = e.target.files;
+            for (var i = 0; i < files.length; i++) {
+                var reader = new FileReader();
+                reader.readAsText(files[i]);
+                readers.push(reader);
             }
-            reader.readAsText(file);
-        }
-
-        document.getElementById('replayFile').addEventListener('change', readSingleFile, false);
+        });
 
         $('#replay').click(function (event) {
             event.preventDefault();
-            var filePath = $('#replayFile').val();
-            var fileName = filePath.slice(filePath.lastIndexOf('\\') + 1);
-            var productName = fileName.slice(0, fileName.indexOf('20'));
-            $.post("home/replay",
-                {
-                    filePath: filePath,
-                    settings: reader.result,
-                    transactionFeeRate: settings[productName].TransactionFeeRate
-                },
-                function (data) {
-                    var bestSettings = data.bestSettings;
-                    $('#SelectedProductName').val(bestSettings.selectedProductName);
-                    setDefaultSettings();
-                    $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
-                    $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
-                    $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
-                    $("#OpenCriteria").val(bestSettings.openCriteria);
-                    $('#FollowTrend').prop('checked', bestSettings.followTrend);
-                    $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
-                    $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
-                    $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
-                    $("#results").show();
-                    showResult(data);
+            var files = $('#replayFile')[0].files;
+            var bestResult = 0;
+            var bestData;
+            for (var i = 0; i < files.length; i++) {
+                var fileName = files[i].name;
+                var reader = readers[i];
+                var productName = fileName.slice(0, fileName.indexOf('20'));
+                $.ajax({
+                    url: "home/replay",
+                    type: "POST",
+                    data: {
+                        filePath: fileName,
+                        settings: reader.result,
+                        transactionFeeRate: settings[productName].TransactionFeeRate,
+                        minimumPriceUnit: settings[productName].MinimumPriceUnit
+                    },
+                    success: function (data) {
+                        var result = data.report[data.report.length - 1].balance;
+                        if (result > bestResult) {
+                            bestResult = result;
+                            bestData = data;
+                        }
+                    },
+                    fail: function (jqXHR, textStatus, errorThrown) {
+                        alert(textStatus);
+                    },
+                    async: false
                 });
+            };
+            var bestSettings = bestData.bestSettings;
+            $('#SelectedProductName').val(bestSettings.selectedProductName);
+            setDefaultSettings();
+            $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
+            $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
+            $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
+            $("#OpenCriteria").val(bestSettings.openCriteria);
+            $('#FollowTrend').prop('checked', bestSettings.followTrend);
+            $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
+            $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
+            $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
+            $("#results").show();
+            showResult(bestData);
         });
 
-        $('#form').submit(function(event) {
+        $('#form').submit(function (event) {
             event.preventDefault();
             $("#results").hide();
             var $inputs = $('#form input');
             var values = {};
-            $inputs.each(function() {
+            $inputs.each(function () {
                 values[this.name] = $(this).val();
             });
             values['SelectedProductName'] = $('#SelectedProductName').val();
@@ -291,7 +310,7 @@
             values['UseCrossStarStrategy'] = $('#UseCrossStarStrategy')[0].checked;
             values['UseInternalProfit'] = $('#UseInternalProfit')[0].checked;
             values['CloseAmbiguousStateToday'] = $('#CloseAmbiguousStateToday')[0].checked;
-            $.post($('#form').attr('action'), values, function(data) {
+            $.post($('#form').attr('action'), values, function (data) {
                 $("#results").show();
                 showResult(data);
             });
@@ -359,7 +378,7 @@
                 var currentEmptyDaysStartDate = report[0].dailyPrice.date;
                 maxLossRangeStartDate = report[0].dailyPrice.date;
                 maxLossRangeEndDate = report[0].dailyPrice.date;
-                $.each(report, function(index, value) {
+                $.each(report, function (index, value) {
                     categories.push(formatDate(value.dailyPrice.date));
                     prices.push(value.dailyPrice.closePrice);
                     contracts.push(value.contract ? value.contract.price * value.contract.direction * value.contract.unit : 0);
@@ -504,7 +523,7 @@
             }
 
             var totalProfitPercentage = 0;
-            $.each(annualProfits, function(key, value) {
+            $.each(annualProfits, function (key, value) {
                 totalProfitPercentage += value.profitPercentage;
             });
             var averageAnnualProfitPercentage = totalProfitPercentage / Object.keys(annualProfits).length;
@@ -514,34 +533,34 @@
 
             var summaryText =
                 '下一交易日：' + report[report.length - 1].nextTransaction + "<br/>" +
-                    '每笔交易本金相同：' +
-                    '最终盈利倍数：' + percentageBalance +
-                    ' 最终盈利（初始25000）：' + 25000 * percentageBalance +
-                    '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
-                    '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
-                    '，最长盈利持仓日：' + longestProfitDays + '(' + formatDate(longestProfitDaysStartDate) + " - " + formatDate(longestProfitDaysEndDate) + "）" +
-                    '，最长亏损持仓日：' + longestLossDays + '(' + formatDate(longestLossDaysStartDate) + " - " + formatDate(longestLossDaysEndDate) + "）" +
-                    '，当前持仓日：' + currentContractDays +
-                    '，最长空仓日：' + longestEmptyDays + '(' + formatDate(longestEmptyDaysStartDate) + " - " + formatDate(longestEmptyDaysEndDate) + "）" +
-                    '，当前空仓日：' + currentEmptyDays +
-                    '，空仓次数：' + emptyCount +
-                    '，平均盈利持仓日：' + totalProfitContractDays / profitCount +
-                    '，平均亏损持仓日：' + totalLossContractDays / lossCount +
-                    '，盈利次数：' + profitCount +
-                    '，亏损次数：' + lossCount +
-                    '<br/><br/>最终盈利：' + endBalance +
-                    '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
-                    '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
-                    '，日均盈利：' + averageBalance +
-                    '，最大份数：' + maxUnit +
-                    '，最大盈利：' + maxBalance +
-                    '，最小盈利：' + minBalance +
-                    '，最大单日盈利：' + maxSingleDelta + '(' + formatDate(maxSingleDeltaDate) + ')' +
-                    '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
-                    '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
-                    '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
+                '每笔交易本金相同：' +
+                '最终盈利倍数：' + percentageBalance +
+                ' 最终盈利（初始25000）：' + 25000 * percentageBalance +
+                '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
+                '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
+                '，最长盈利持仓日：' + longestProfitDays + '(' + formatDate(longestProfitDaysStartDate) + " - " + formatDate(longestProfitDaysEndDate) + "）" +
+                '，最长亏损持仓日：' + longestLossDays + '(' + formatDate(longestLossDaysStartDate) + " - " + formatDate(longestLossDaysEndDate) + "）" +
+                '，当前持仓日：' + currentContractDays +
+                '，最长空仓日：' + longestEmptyDays + '(' + formatDate(longestEmptyDaysStartDate) + " - " + formatDate(longestEmptyDaysEndDate) + "）" +
+                '，当前空仓日：' + currentEmptyDays +
+                '，空仓次数：' + emptyCount +
+                '，平均盈利持仓日：' + totalProfitContractDays / profitCount +
+                '，平均亏损持仓日：' + totalLossContractDays / lossCount +
+                '，盈利次数：' + profitCount +
+                '，亏损次数：' + lossCount +
+                '<br/><br/>最终盈利：' + endBalance +
+                '，总盈利百分比：' + totalProfitPercentage * 100 + '%' +
+                '，年均盈利百分比：' + averageAnnualProfitPercentage * 100 + '%' +
+                '，日均盈利：' + averageBalance +
+                '，最大份数：' + maxUnit +
+                '，最大盈利：' + maxBalance +
+                '，最小盈利：' + minBalance +
+                '，最大单日盈利：' + maxSingleDelta + '(' + formatDate(maxSingleDeltaDate) + ')' +
+                '，最大单日亏损：' + minSingleDelta + '(' + formatDate(minSingleDeltaDate) + ')' +
+                '，最大单日盈利比例：' + maxSinglePercentageDelta * 100 + '% (' + formatDate(maxSinglePercentageDeltaDate) + ')' +
+                '，最大单日亏损比例：' + minSinglePercentageDelta * 100 + '% (' + formatDate(minSinglePercentageDeltaDate) + ')';
             summaryText += '<br/><br/>每笔交易本金相同时各年盈利倍数<br/>';
-            $.each(annualProfits, function(key, value) {
+            $.each(annualProfits, function (key, value) {
                 summaryText += key + '盈利倍数：' + value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
             });
             summaryText += '<br/><br/>每笔交易本金相同时各年盈利（初始资金25000）<br/>';
@@ -549,7 +568,7 @@
                 summaryText += key + '盈利：' + 25000 * value.profitPercentageWithSameBudget + '&nbsp;&nbsp;&nbsp;';
             });
             summaryText += '<br/><br/>';
-            $.each(annualProfits, function(key, value) {
+            $.each(annualProfits, function (key, value) {
                 summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
             });
 
@@ -1075,7 +1094,7 @@
             //    BudgetFactor: 1.89,
             //    BondPercentage: 13
             //},
-            // 2018.03.21 - 
+            // 2018.03.21 -
             '焦炭': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
@@ -1860,7 +1879,7 @@
             }
         };
 
-        $('#SelectedProductName').change(function() {
+        $('#SelectedProductName').change(function () {
             setDefaultSettings();
         });
 
@@ -1890,20 +1909,20 @@
             return (new Date(date)).toLocaleDateString();
         }
 
-        //$('#optimize').click(function (event) {
-        //    event.preventDefault();
-        //    var $inputs = $('#form input');
-        //    var values = {};
-        //    $inputs.each(function() {
-        //        values[this.name] = $(this).val();
-        //    });
-        //    values['SelectedProductName'] = $('#SelectedProductName').val();
-        //    values['FollowTrend'] = $('#FollowTrend')[0].checked;
-        //    $.post('home/optimize', values, function(data) {
-        //        $('#chart').hide();
-        //        var optimizationResult = '优化结果<br/>止损点：' + data.StopLossCriteria + '，止盈点：' + data.StopProfitCriteria + '，起盈点：' + data.StartProfitCriteria + '，开仓点：' + OpenCriteria + '，开仓顺势：' + data.FollowTrend;
-        //        $('#summary').html(optimizationResult);
-        //    });
-        //});
+            //$('#optimize').click(function (event) {
+            //    event.preventDefault();
+            //    var $inputs = $('#form input');
+            //    var values = {};
+            //    $inputs.each(function() {
+            //        values[this.name] = $(this).val();
+            //    });
+            //    values['SelectedProductName'] = $('#SelectedProductName').val();
+            //    values['FollowTrend'] = $('#FollowTrend')[0].checked;
+            //    $.post('home/optimize', values, function(data) {
+            //        $('#chart').hide();
+            //        var optimizationResult = '优化结果<br/>止损点：' + data.StopLossCriteria + '，止盈点：' + data.StopProfitCriteria + '，起盈点：' + data.StartProfitCriteria + '，开仓点：' + OpenCriteria + '，开仓顺势：' + data.FollowTrend;
+            //        $('#summary').html(optimizationResult);
+            //    });
+            //});
     </script>
 }

@@ -5,12 +5,13 @@
     "bootstrap": "3.3.7",
     "jquery": "3.3.1",
     "jquery-validation": "1.17.0",
-    "jquery-validation-unobtrusive": "3.2.6",
-    "highcharts": "v6.0.7"
+    "jquery-validation-unobtrusive": "v3.2.9",
+    "highcharts": "v6.1.0"
   },
   "resolutions": {
     "jquery": "3.3.1",
     "jquery-validation": "1.17.0",
-    "highcharts": "v6.0.7"
+    "highcharts": "v6.1.0",
+    "jquery-validation-unobtrusive": "v3.2.9"
   }
 }

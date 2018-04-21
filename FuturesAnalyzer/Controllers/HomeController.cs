@@ -69,7 +69,7 @@ namespace FuturesAnalyzer.Controllers
                 );
         }
 
-        public JsonResult Replay(string settings, string filePath, decimal transactionFeeRate)
+        public JsonResult Replay(string settings, string filePath, decimal transactionFeeRate, decimal minimumPriceUnit)
         {
             var fileName = filePath.Substring(filePath.LastIndexOf('\\') + 1);
             var dateIndex = fileName.IndexOf("20");
@@ -104,6 +104,7 @@ namespace FuturesAnalyzer.Controllers
                             StartDate = startDate,
                             EndDate = endDate,
                             TransactionFeeRate = transactionFeeRate,
+                            MinimumPriceUnit = minimumPriceUnit,
                             StopLossCriteria = csvReader.GetField<decimal>(0),
                             StopProfitCriteria = csvReader.GetField<decimal>(1),
                             StartProfitCriteria = csvReader.GetField<decimal>(2),
@@ -297,6 +298,11 @@ namespace FuturesAnalyzer.Controllers
                             $"{settings.Setting.StopLossCriteria},{settings.Setting.StopProfitCriteria},{settings.Setting.StartProfitCriteria},{settings.Setting.OpenCriteria},{settings.Setting.FollowTrend},{settings.Result}");
                     }
                 }
+            }
+
+            for (var i = 0; i < 100; i++)
+            {
+                Console.Beep();
             }
 
             return Json(

@@ -12570,7 +12570,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\shife\\.nuget\\packages\\": {},
+    "C:\\Users\\ship\\.nuget\\packages\\": {},
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
@@ -12579,14 +12579,14 @@
       "projectUniqueName": "D:\\Repos\\FuturesAnalyzer\\FuturesAnalyzer\\FuturesAnalyzer.csproj",
       "projectName": "FuturesAnalyzer",
       "projectPath": "D:\\Repos\\FuturesAnalyzer\\FuturesAnalyzer\\FuturesAnalyzer.csproj",
-      "packagesPath": "C:\\Users\\shife\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\ship\\.nuget\\packages\\",
       "outputPath": "D:\\Repos\\FuturesAnalyzer\\FuturesAnalyzer\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
       ],
       "configFilePaths": [
-        "C:\\Users\\shife\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ship\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
