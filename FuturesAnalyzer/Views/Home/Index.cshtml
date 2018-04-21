@@ -170,7 +170,7 @@
     <button id="analyze" type="submit" class="btn btn-primary">分析</button>
     <button id="optimize" class="btn btn-default">优化</button>
     <div class="form-horizontal">
-        <input id="replayFile" type="file" style="float: left;" />
+        <input id="replayFile" type="file" style="float: left;" multiple />
         <button id="replay" class="btn btn-default">回溯</button>
     </div>
 </form>
@@ -247,31 +247,44 @@
 
         $('#replay').click(function (event) {
             event.preventDefault();
-            var filePath = $('#replayFile').val();
-            var fileName = filePath.slice(filePath.lastIndexOf('\\') + 1);
-            var productName = fileName.slice(0, fileName.indexOf('20'));
-            $.post("home/replay",
-                {
-                    filePath: filePath,
-                    settings: reader.result,
-                    transactionFeeRate: settings[productName].TransactionFeeRate,
-                    minimumPriceUnit: settings[productName].MinimumPriceUnit
-                },
-                function (data) {
-                    var bestSettings = data.bestSettings;
-                    $('#SelectedProductName').val(bestSettings.selectedProductName);
-                    setDefaultSettings();
-                    $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
-                    $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
-                    $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
-                    $("#OpenCriteria").val(bestSettings.openCriteria);
-                    $('#FollowTrend').prop('checked', bestSettings.followTrend);
-                    $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
-                    $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
-                    $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
-                    $("#results").show();
-                    showResult(data);
+            var files = $('#replayFile')[0].files;
+            var bestResult = 0;
+            var bestData;
+            for (var i = 0; i < files.length; i++) {
+                var fileName = files[i].name;
+                var productName = fileName.slice(0, fileName.indexOf('20'));
+                $.ajax({
+                    url: "home/replay",
+                    type: "POST",
+                    data: {
+                        filePath: fileName,
+                        settings: reader.result,
+                        transactionFeeRate: settings[productName].TransactionFeeRate,
+                        minimumPriceUnit: settings[productName].MinimumPriceUnit
+                    },
+                    success: function (data) {
+                        var result = data.report[data.report.length - 1].balance;
+                        if (result > bestResult) {
+                            bestResult = result;
+                            bestData = data;
+                        }
+                    },
+                    async: false
                 });
+            };
+            var bestSettings = bestData.bestSettings;
+            $('#SelectedProductName').val(bestSettings.selectedProductName);
+            setDefaultSettings();
+            $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
+            $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
+            $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
+            $("#OpenCriteria").val(bestSettings.openCriteria);
+            $('#FollowTrend').prop('checked', bestSettings.followTrend);
+            $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
+            $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
+            $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
+            $("#results").show();
+            showResult(bestData);
         });
 
         $('#form').submit(function(event) {

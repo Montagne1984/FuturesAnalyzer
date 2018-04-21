@@ -300,6 +300,11 @@ namespace FuturesAnalyzer.Controllers
                 }
             }
 
+            for (var i = 0; i < 100; i++)
+            {
+                Console.Beep();
+            }
+
             return Json(
                 new
                 {
