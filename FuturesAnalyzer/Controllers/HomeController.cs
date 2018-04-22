@@ -283,6 +283,10 @@ namespace FuturesAnalyzer.Controllers
             foreach (var key in topSettingsDictionary.Keys)
             {
                 var topSettings = topSettingsDictionary[key];
+                if (!topSettings.Any())
+                {
+                    continue;
+                }
                 using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{key}.csv", FileMode.Create))
                 using (var streamWriter = new StreamWriter(fileStream))
                 {
