@@ -235,10 +235,10 @@
         });
 
         var readers = [];
-        $('#replayFile').change(function (e) {
+        $('#replayFile').change(function (event) {
             event.preventDefault();
             readers = [];
-            var files = e.target.files;
+            var files = event.target.files;
             for (var i = 0; i < files.length; i++) {
                 var reader = new FileReader();
                 reader.readAsText(files[i]);
@@ -251,11 +251,12 @@
             var files = $('#replayFile')[0].files;
             var bestResult = 0;
             var bestData;
+            var deferreds = [];
             for (var i = 0; i < files.length; i++) {
                 var fileName = files[i].name;
                 var reader = readers[i];
                 var productName = fileName.slice(0, fileName.indexOf('20'));
-                $.ajax({
+                var deferred = $.ajax({
                     url: "home/replay",
                     type: "POST",
                     data: {
@@ -273,23 +274,25 @@
                     },
                     fail: function (jqXHR, textStatus, errorThrown) {
                         alert(textStatus);
-                    },
-                    async: false
+                    }
                 });
+                deferreds.push(deferred);
             };
-            var bestSettings = bestData.bestSettings;
-            $('#SelectedProductName').val(bestSettings.selectedProductName);
-            setDefaultSettings();
-            $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
-            $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
-            $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
-            $("#OpenCriteria").val(bestSettings.openCriteria);
-            $('#FollowTrend').prop('checked', bestSettings.followTrend);
-            $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
-            $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
-            $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
-            $("#results").show();
-            showResult(bestData);
+            $.when.apply($, deferreds).then(function () {
+                var bestSettings = bestData.bestSettings;
+                $('#SelectedProductName').val(bestSettings.selectedProductName);
+                setDefaultSettings();
+                $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
+                $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
+                $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
+                $("#OpenCriteria").val(bestSettings.openCriteria);
+                $('#FollowTrend').prop('checked', bestSettings.followTrend);
+                $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
+                $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
+                $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
+                $("#results").show();
+                showResult(bestData);
+            });
         });
 
         $('#form').submit(function (event) {

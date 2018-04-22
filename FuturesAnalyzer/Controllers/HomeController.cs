@@ -8,6 +8,7 @@ using FuturesAnalyzer.Services;
 using System.IO;
 using FuturesAnalyzer.Models;
 using CsvHelper;
+using Microsoft.Extensions.Logging;
 
 namespace FuturesAnalyzer.Controllers
 {
@@ -15,6 +16,7 @@ namespace FuturesAnalyzer.Controllers
     {
         private IReportService _reportService;
         private object lockObject = new object();
+        private readonly ILogger _logger;
 
         public IActionResult Index()
         {
@@ -71,74 +73,82 @@ namespace FuturesAnalyzer.Controllers
 
         public JsonResult Replay(string settings, string filePath, decimal transactionFeeRate, decimal minimumPriceUnit)
         {
-            var fileName = filePath.Substring(filePath.LastIndexOf('\\') + 1);
-            var dateIndex = fileName.IndexOf("20");
-            var productName = fileName.Substring(0, dateIndex);
-            var index = dateIndex + 8;
-            var notUseClosePrice = fileName[index] == 'T';
-            index += notUseClosePrice ? 4 : 5;
-            var onlyUseClosePrice = fileName[index] == 'T';
-            index += onlyUseClosePrice ? 4 : 5;
-            var closeAmbiguousStateToday = fileName[index] == 'T';
-
-            var topSettings = new SortedList<decimal, List<SettingResult>>();
-            var number = settings.Split("\n").Length;
-            var dailyPrices = _reportService.LoadDailyPrices("Data/" + productName + ".csv");
-            var startDate = new DateTime(2000, 1, 1);
-            var endDate = DateTime.Now;
-            using (var textReader = new StringReader(settings))
-            using (var csvReader = new CsvReader(textReader))
+            try
             {
-                csvReader.Configuration.HasHeaderRecord = true;
-                csvReader.Read();
-                while (csvReader.Read())
+                var fileName = filePath.Substring(filePath.LastIndexOf('\\') + 1);
+                var dateIndex = fileName.IndexOf("20");
+                var productName = fileName.Substring(0, dateIndex);
+                var index = dateIndex + 8;
+                var notUseClosePrice = fileName[index] == 'T';
+                index += notUseClosePrice ? 4 : 5;
+                var onlyUseClosePrice = fileName[index] == 'T';
+                index += onlyUseClosePrice ? 4 : 5;
+                var closeAmbiguousStateToday = fileName[index] == 'T';
+
+                var topSettings = new SortedList<decimal, List<SettingResult>>();
+                var number = settings.Split("\n").Length;
+                var dailyPrices = _reportService.LoadDailyPrices("Data/" + productName + ".csv");
+                var startDate = new DateTime(2000, 1, 1);
+                var endDate = DateTime.Now;
+                using (var textReader = new StringReader(settings))
+                using (var csvReader = new CsvReader(textReader))
                 {
-                    var setting = new SettingResult
+                    csvReader.Configuration.HasHeaderRecord = true;
+                    csvReader.Read();
+                    while (csvReader.Read())
                     {
-                        Setting = new ReportSettingViewModel
+                        var setting = new SettingResult
                         {
-                            NotUseClosePrice = notUseClosePrice,
-                            OnlyUseClosePrice = onlyUseClosePrice,
-                            CloseAmbiguousStateToday = closeAmbiguousStateToday,
-                            SelectedProductName = productName,
-                            StartDate = startDate,
-                            EndDate = endDate,
-                            TransactionFeeRate = transactionFeeRate,
-                            MinimumPriceUnit = minimumPriceUnit,
-                            StopLossCriteria = csvReader.GetField<decimal>(0),
-                            StopProfitCriteria = csvReader.GetField<decimal>(1),
-                            StartProfitCriteria = csvReader.GetField<decimal>(2),
-                            OpenCriteria = csvReader.GetField<decimal>(3),
-                            FollowTrend = csvReader.GetField<bool>(4)
-                        }
-                    };
-                    var report = GetReport(setting.Setting, dailyPrices);
-                    setting.Result = report.Last().PercentageBalance;
-                    UpdateTopThreeSettings(ref topSettings, setting, number);
-                }
-            }
-
-            using (var fileStream = new FileStream($"Results\\{productName}\\{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now.ToString("yyyyMMdd")}.csv", FileMode.Create))
-            using (var streamWriter = new StreamWriter(fileStream))
-            {
-                streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
-                for (var i = topSettings.Count - 1; i >= 0; i--)
-                {
-                    foreach (var s in topSettings.ElementAt(i).Value)
-                    {
-                        streamWriter.WriteLine(
-                            $"{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Result}");
+                            Setting = new ReportSettingViewModel
+                            {
+                                NotUseClosePrice = notUseClosePrice,
+                                OnlyUseClosePrice = onlyUseClosePrice,
+                                CloseAmbiguousStateToday = closeAmbiguousStateToday,
+                                SelectedProductName = productName,
+                                StartDate = startDate,
+                                EndDate = endDate,
+                                TransactionFeeRate = transactionFeeRate,
+                                MinimumPriceUnit = minimumPriceUnit,
+                                StopLossCriteria = csvReader.GetField<decimal>(0),
+                                StopProfitCriteria = csvReader.GetField<decimal>(1),
+                                StartProfitCriteria = csvReader.GetField<decimal>(2),
+                                OpenCriteria = csvReader.GetField<decimal>(3),
+                                FollowTrend = csvReader.GetField<bool>(4)
+                            }
+                        };
+                        var report = GetReport(setting.Setting, dailyPrices);
+                        setting.Result = report.Last().PercentageBalance;
+                        UpdateTopThreeSettings(ref topSettings, setting, number);
                     }
                 }
-            }
 
-            var bestSettings = topSettings.Last().Value.First().Setting;
-            return Json(
-                new
+                using (var fileStream = new FileStream($"Results\\{productName}\\{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now.ToString("yyyyMMdd")}.csv", FileMode.Create))
+                using (var streamWriter = new StreamWriter(fileStream))
                 {
-                    BestSettings = bestSettings,
-                    Report = GetReport(bestSettings, dailyPrices)
-                });
+                    streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
+                    for (var i = topSettings.Count - 1; i >= 0; i--)
+                    {
+                        foreach (var s in topSettings.ElementAt(i).Value)
+                        {
+                            streamWriter.WriteLine(
+                                $"{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Result}");
+                        }
+                    }
+                }
+
+                var bestSettings = topSettings.Last().Value.First().Setting;
+                return Json(
+                    new
+                    {
+                        BestSettings = bestSettings,
+                        Report = GetReport(bestSettings, dailyPrices)
+                    });
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return null;
+            }
         }
 
         public JsonResult Optimize(ReportSettingViewModel model)
@@ -383,9 +393,10 @@ namespace FuturesAnalyzer.Controllers
             }
         }
 
-        public HomeController(IReportService reportService)
+        public HomeController(IReportService reportService, ILogger<HomeController> logger)
         {
             _reportService = reportService;
+            _logger = logger;
             ranges = new Dictionary<string, OptimizeRange>();
             ranges.Add("big",
                 new OptimizeRange
