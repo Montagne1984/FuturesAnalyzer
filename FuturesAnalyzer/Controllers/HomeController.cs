@@ -71,11 +71,10 @@ namespace FuturesAnalyzer.Controllers
                 );
         }
 
-        public JsonResult Replay(string settings, string filePath, decimal transactionFeeRate, decimal minimumPriceUnit)
+        public JsonResult Replay(string settings, string fileName, decimal transactionFeeRate, decimal minimumPriceUnit)
         {
             try
             {
-                var fileName = filePath.Substring(filePath.LastIndexOf('\\') + 1);
                 var dateIndex = fileName.IndexOf("20");
                 var productName = fileName.Substring(0, dateIndex);
                 var index = dateIndex + 8;
@@ -144,10 +143,14 @@ namespace FuturesAnalyzer.Controllers
                         Report = GetReport(bestSettings, dailyPrices)
                     });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
-                return null;
+                return Json(
+                    new
+                    {
+                        ex.Message
+                    });
             }
         }
 
