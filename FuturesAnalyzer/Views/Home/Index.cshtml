@@ -251,6 +251,7 @@
             var files = $('#replayFile')[0].files;
             var bestResult = 0;
             var bestData;
+            var replayData = [];
             var deferreds = [];
             for (var i = 0; i < files.length; i++) {
                 var fileName = files[i].name;
@@ -266,11 +267,7 @@
                         minimumPriceUnit: settings[productName].MinimumPriceUnit
                     },
                     success: function (data) {
-                        var result = data.report[data.report.length - 1].balance;
-                        if (result > bestResult) {
-                            bestResult = result;
-                            bestData = data;
-                        }
+                        replayData.push(data);
                     },
                     fail: function (jqXHR, textStatus, errorThrown) {
                         alert(textStatus);
@@ -279,6 +276,14 @@
                 deferreds.push(deferred);
             };
             $.when.apply($, deferreds).then(function () {
+                for (var i = 0; i < files.length; i++) {
+                    var data = replayData[i];
+                    var result = data.report[data.report.length - 1].percentageBalance;
+                    if (result > bestResult) {
+                        bestResult = result;
+                        bestData = data;
+                    }
+                }
                 var bestSettings = bestData.bestSettings;
                 $('#SelectedProductName').val(bestSettings.selectedProductName);
                 setDefaultSettings();
