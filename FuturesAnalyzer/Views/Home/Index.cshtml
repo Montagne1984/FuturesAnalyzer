@@ -248,6 +248,7 @@
 
         $('#replay').click(function (event) {
             event.preventDefault();
+            $("#results").hide();
             var files = $('#replayFile')[0].files;
             var bestResult = 0;
             var bestData;
@@ -295,6 +296,7 @@
                 $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
                 $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
                 $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
+                $('#CloseAmbiguousStateToday').prop('checked', bestSettings.closeAmbiguousStateToday);
                 $("#results").show();
                 showResult(bestData);
             });
