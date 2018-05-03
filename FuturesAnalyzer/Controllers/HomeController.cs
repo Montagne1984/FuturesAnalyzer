@@ -121,7 +121,7 @@ namespace FuturesAnalyzer.Controllers
                     }
                 }
 
-                using (var fileStream = new FileStream($"Results\\{productName}\\{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now.ToString("yyyyMMdd")}.csv", FileMode.Create))
+                using (var fileStream = new FileStream($"Results\\{productName}\\{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 3)}.csv", FileMode.Create))
                 using (var streamWriter = new StreamWriter(fileStream))
                 {
                     streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
