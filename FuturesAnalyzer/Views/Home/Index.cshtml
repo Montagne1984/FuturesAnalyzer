@@ -3,41 +3,41 @@
     ViewData["Title"] = "Futures Analyzer";
 }
 <form id="form" asp-action="Report" method="post" class="form-inline" style="margin-top: 20px;">
-    <div class="form-group form-inline">
-        <label asp-for="TransactionFeeRate">交易手续费率</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="TransactionFeeRate">交易手续费率</label>
         <input type="number" min="0" step="0.000001" asp-for="TransactionFeeRate" class="form-control" />
     </div>
-    <div class="form-group form-inline">
-        <label asp-for="MinimumPriceUnit">最小价格单位</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="MinimumPriceUnit">最小价格单位</label>
         <input type="number" min="0" step="0.01" asp-for="MinimumPriceUnit" class="form-control" />
     </div>
-    <div class="form-group form-inline">
-        <label for="BudgetFactor">成本扩大系数</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" for="BudgetFactor">成本扩大系数</label>
         <input type="number" min="0" step="0.01" id="BudgetFactor" class="form-control" value="1" required />
     </div>
-    <div class="checkbox">
-        <label for="UseBudgetFactor">
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" for="UseBudgetFactor">
             <input id="UseBudgetFactor" type="checkbox"> 使用成本扩大系数
         </label>
     </div>
-    <div class="form-group form-inline">
-        <label for="BondPercentage">最低保证金比例</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" for="BondPercentage">最低保证金比例</label>
         <input type="number" min="0" step="1" id="BondPercentage" class="form-control" value="13" required />
     </div>
     @*<div class="form-group">
             <label asp-for="StopLossUnit">止损份数</label>
             <input type="number" min="0" step="1" asp-for="StopLossUnit" class="form-control" />
         </div>*@
-    <div class="form-group">
-        <label asp-for="StopLossCriteria">止损点</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="StopLossCriteria">止损点</label>
         <input type="number" min="0" step="0.001" asp-for="StopLossCriteria" class="form-control" />
     </div>
-    <div class="form-group form-inline">
-        <label asp-for="StopProfitCriteria">止盈点</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="StopProfitCriteria">止盈点</label>
         <input type="number" min="0" step="0.01" asp-for="StopProfitCriteria" class="form-control" />
     </div>
-    <div class="form-group form-inline">
-        <label asp-for="StartProfitCriteria">起盈点</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="StartProfitCriteria">起盈点</label>
         <input type="number" min="0" step="0.001" asp-for="StartProfitCriteria" class="form-control" />
     </div>
     @*<div class="form-group form-inline">
@@ -48,26 +48,26 @@
             <label asp-for="AppendUnitCountAfterProfitStart">起盈点后加仓份数</label>
             <input type="number" min="0" step="1" asp-for="AppendUnitCountAfterProfitStart" class="form-control" />
         </div>*@
-    <div class="checkbox hidden">
+    <div class="checkbox mb-2 mr-sm-2 form-inline" hidden>
         <label asp-for="NeverEnterAmbiguousState">
             <input asp-for="NeverEnterAmbiguousState" type="checkbox"> 禁用观望期
         </label>
     </div>
-    <div class="checkbox">
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
         <label asp-for="NotUseClosePrice">
             <input asp-for="NotUseClosePrice" type="checkbox"> 使用日最大最小值
         </label>
     </div>
-    <div class="form-group form-inline">
-        <label asp-for="OpenCriteria">开仓点</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="OpenCriteria">开仓点</label>
         <input type="number" min="0" step="0.001" asp-for="OpenCriteria" class="form-control" />
     </div>
-    <div class="checkbox">
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
         <label asp-for="FollowTrend">
             <input asp-for="FollowTrend" type="checkbox"> 开仓顺势
         </label>
     </div>
-    <select asp-for="SelectedProductName" class="form-control">
+    <select asp-for="SelectedProductName" class="form-control mb-2 mr-sm-2 form-inline">
         <option>热轧卷板</option>
         <option>螺纹钢</option>
         <option>焦炭</option>
@@ -96,10 +96,10 @@
         <option value="菜粕" data-setting="菜粕20161122-20180302">菜粕20161122-20180302</option>
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         @*<option>热轧卷板1610</option>
-        <option>热轧卷板1605</option>
-        <option>螺纹钢1605</option>
-        <option>焦炭1605</option>
-        <option>焦煤1605</option>*@
+            <option>热轧卷板1605</option>
+            <option>螺纹钢1605</option>
+            <option>焦炭1605</option>
+            <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -129,54 +129,52 @@
         <option>PVC</option>
         <option>豆油</option>
     </select>
-    <div class="form-group form-inline">
-        <label asp-for="StartDate">起始日期</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="StartDate">起始日期</label>
         <input type="date" asp-for="StartDate" class="form-control" />
     </div>
-    <div class="form-group form-inline">
-        <label asp-for="EndDate">结束日期</label>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2" asp-for="EndDate">结束日期</label>
         <input type="date" asp-for="EndDate" class="form-control" />
     </div>
-    <div class="checkbox hidden">
+    <div class="checkbox mb-2 mr-sm-2 form-inline" hidden>
         <label asp-for="UseAverageMarketState">
             <input asp-for="UseAverageMarketState" type="checkbox"> 使用五日均线
         </label>
     </div>
-    <div class="checkbox hidden">
+    <div class="checkbox mb-2 mr-sm-2 form-inline" hidden>
         <label asp-for="CloseAfterProfit">
             <input asp-for="CloseAfterProfit" type="checkbox"> 止盈后平仓
         </label>
     </div>
-    <div class="checkbox">
-        <label asp-for="OnlyUseClosePrice">
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
+        <label asp-for="OnlyUseClosePrice" class="my-1 mr-2">
             <input asp-for="OnlyUseClosePrice" type="checkbox"> 止盈仅看收盘价
         </label>
     </div>
-    <div class="checkbox hidden">
+    <div class="checkbox mb-2 mr-sm-2 form-inline" hidden>
         <label asp-for="UseCrossStarStrategy">
             <input asp-for="UseCrossStarStrategy" type="checkbox"> 十字星策略
         </label>
     </div>
-    <div class="checkbox hidden">
+    <div class="checkbox mb-2 mr-sm-2 form-inline" hidden>
         <label asp-for="UseInternalProfit">
             <input asp-for="UseInternalProfit" type="checkbox"> 到达起盈点临时止盈
         </label>
     </div>
-    <div class="checkbox">
-        <label asp-for="CloseAmbiguousStateToday">
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
+        <label asp-for="CloseAmbiguousStateToday" class="my-1 mr-2">
             <input asp-for="CloseAmbiguousStateToday" type="checkbox"> 到达两端点平今
         </label>
     </div>
-    <button id="analyze" type="submit" class="btn btn-primary">分析</button>
-    <button id="optimize" class="btn btn-default">优化</button>
-    <div class="form-horizontal">
-        <input id="replayFile" type="file" style="float: left;" multiple />
-        <button id="replay" class="btn btn-default">回溯</button>
-    </div>
+    <button id="analyze" type="submit" class="btn btn-primary my-1 mr-2">分析</button>
+    <button id="optimize" type="button" class="btn btn-outline-primary my-1 mr-2">优化</button>
+    <input id="replayFile" type="file" style="float: left;" multiple class="my-1 mr-2" />
+    <button id="replay" class="btn btn-outline-primary">回溯</button>
 </form>
 <div id="results">
     <div id="chart"></div>
-    <label id="summary"></label>
+    <label id="summary" style="width: 100%"></label>
     <div id="percentageChart"></div>
 </div>
 @section scripts
@@ -579,7 +577,7 @@
             });
             summaryText += '<br/><br/>';
             $.each(annualProfits, function (key, value) {
-                summaryText += key + '盈利：' + value.profit + '(' + value.profitPercentage * 100 + '%)' + '&nbsp;&nbsp;&nbsp;';
+                summaryText += key + '盈利：' + value.profit + ' (' + value.profitPercentage * 100 + '%) ' + '&nbsp;&nbsp;&nbsp;';
             });
 
             $('#summary').html(summaryText);
@@ -1894,7 +1892,7 @@
         });
 
         function setDefaultSettings() {
-            var attribute = $('#SelectedProductName')[0].selectedOptions[0].attributes['data-setting'];
+            var attribute = $('#SelectedProductName').find(":selected")[0].attributes['data-setting'];
             var selectedProductName = attribute ? attribute.value : $('#SelectedProductName').val();
             if (settings[selectedProductName]) {
                 $('#TransactionFeeRate').val(settings[selectedProductName].TransactionFeeRate);
@@ -1919,20 +1917,20 @@
             return (new Date(date)).toLocaleDateString();
         }
 
-            //$('#optimize').click(function (event) {
-            //    event.preventDefault();
-            //    var $inputs = $('#form input');
-            //    var values = {};
-            //    $inputs.each(function() {
-            //        values[this.name] = $(this).val();
-            //    });
-            //    values['SelectedProductName'] = $('#SelectedProductName').val();
-            //    values['FollowTrend'] = $('#FollowTrend')[0].checked;
-            //    $.post('home/optimize', values, function(data) {
-            //        $('#chart').hide();
-            //        var optimizationResult = '优化结果<br/>止损点：' + data.StopLossCriteria + '，止盈点：' + data.StopProfitCriteria + '，起盈点：' + data.StartProfitCriteria + '，开仓点：' + OpenCriteria + '，开仓顺势：' + data.FollowTrend;
-            //        $('#summary').html(optimizationResult);
-            //    });
-            //});
+                    //$('#optimize').click(function (event) {
+                    //    event.preventDefault();
+                    //    var $inputs = $('#form input');
+                    //    var values = {};
+                    //    $inputs.each(function() {
+                    //        values[this.name] = $(this).val();
+                    //    });
+                    //    values['SelectedProductName'] = $('#SelectedProductName').val();
+                    //    values['FollowTrend'] = $('#FollowTrend')[0].checked;
+                    //    $.post('home/optimize', values, function(data) {
+                    //        $('#chart').hide();
+                    //        var optimizationResult = '优化结果<br/>止损点：' + data.StopLossCriteria + '，止盈点：' + data.StopProfitCriteria + '，起盈点：' + data.StartProfitCriteria + '，开仓点：' + OpenCriteria + '，开仓顺势：' + data.FollowTrend;
+                    //        $('#summary').html(optimizationResult);
+                    //    });
+                    //});
     </script>
 }
