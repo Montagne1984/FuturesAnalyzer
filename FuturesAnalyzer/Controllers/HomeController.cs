@@ -121,7 +121,16 @@ namespace FuturesAnalyzer.Controllers
                     }
                 }
 
-                using (var fileStream = new FileStream($"Results\\{productName}\\{DateTime.Now.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 3)}_{Path.GetFileNameWithoutExtension(fileName)}.csv", FileMode.Create))
+
+
+                var resultFileName = $"{DateTime.Now.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 3)}_{Path.GetFileNameWithoutExtension(fileName)}.csv";
+                if (fileName.Contains("Detail") || fileName.Contains("Summary"))
+                {
+                    var parts = fileName.Split("_");
+                    var category = parts[0].Substring(productName.Length + 8);
+                    resultFileName = $"{DateTime.Now.ToString("yyyyMMdd")}_{category}_{Math.Round(topSettings.Last().Value.First().Result, 3)}_{parts[1]}_{parts[2]}_{productName}_{(fileName.Contains("Summary") ? "Summary" : string.Empty)}.csv";
+                }
+                using (var fileStream = new FileStream($"Results\\{productName}\\{resultFileName}", FileMode.Create))
                 using (var streamWriter = new StreamWriter(fileStream))
                 {
                     streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
@@ -287,7 +296,7 @@ namespace FuturesAnalyzer.Controllers
                 {
                     continue;
                 }
-                using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}\\Details\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{key}.csv", FileMode.Create))
+                using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}\\Details\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{key}_Detail.csv", FileMode.Create))
                 using (var streamWriter = new StreamWriter(fileStream))
                 {
                     streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
@@ -302,8 +311,9 @@ namespace FuturesAnalyzer.Controllers
                     }
                 }
             }
-            
-            using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}\\Summary\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}.csv", FileMode.Create))
+
+            var filePath = $"Results\\{model.SelectedProductName}\\Summary\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}.csv";
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
             using (var streamWriter = new StreamWriter(fileStream))
             {
                 streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
@@ -316,6 +326,7 @@ namespace FuturesAnalyzer.Controllers
                     }
                 }
             }
+            System.IO.File.Copy(filePath, $"Results\\{model.SelectedProductName}\\Details\\{model.SelectedProductName}{dailyPrices.Last().Date.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}_Summary.csv");
 
             for (var i = 0; i < 100; i++)
             {
