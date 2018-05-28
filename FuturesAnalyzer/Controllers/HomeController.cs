@@ -123,12 +123,12 @@ namespace FuturesAnalyzer.Controllers
 
 
 
-                var resultFileName = $"{DateTime.Now.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 3)}_{Path.GetFileNameWithoutExtension(fileName)}.csv";
+                var resultFileName = $"{DateTime.Now.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{Path.GetFileNameWithoutExtension(fileName)}.csv";
                 if (fileName.Contains("Detail") || fileName.Contains("Summary"))
                 {
                     var parts = fileName.Split("_");
                     var category = parts[0].Substring(productName.Length + 8);
-                    resultFileName = $"{DateTime.Now.ToString("yyyyMMdd")}_{category}_{Math.Round(topSettings.Last().Value.First().Result, 3)}_{parts[1]}_{parts[2]}_{productName}_{(fileName.Contains("Summary") ? "Summary" : string.Empty)}.csv";
+                    resultFileName = $"{DateTime.Now.ToString("yyyyMMdd")}_{category}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{parts[1]}_{parts[2]}_{productName}_{(fileName.Contains("Summary") ? "Summary" : string.Empty)}.csv";
                 }
                 using (var fileStream = new FileStream($"Results\\{productName}\\{resultFileName}", FileMode.Create))
                 using (var streamWriter = new StreamWriter(fileStream))

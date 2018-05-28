@@ -95,11 +95,12 @@
         <option value="镍" data-setting="镍20180130-20180419">镍20180130-20180419</option>
         <option value="菜粕" data-setting="菜粕20161122-20180302">菜粕20161122-20180302</option>
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
+        <option value="PP" data-setting="PP20171109-20180528">PP20171109-20180528</option>
         @*<option>热轧卷板1610</option>
-            <option>热轧卷板1605</option>
-            <option>螺纹钢1605</option>
-            <option>焦炭1605</option>
-            <option>焦煤1605</option>*@
+        <option>热轧卷板1605</option>
+        <option>螺纹钢1605</option>
+        <option>焦炭1605</option>
+        <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -1168,7 +1169,7 @@
                 StopLossCriteria: 0.025,
                 StopProfitCriteria: 0.09,
                 StartProfitCriteria: 0.049,
-                OpenCriteria: 0.009,
+                OpenCriteria: 0.007,
                 FollowTrend: false,
                 BudgetFactor: 1.26,
                 BondPercentage: 12,
@@ -1478,6 +1479,21 @@
                 OpenCriteria: 0.008,
                 FollowTrend: false,
                 BudgetFactor: 1.27,
+                BondPercentage: 12,
+                NeverEnterAmbiguousState: false,
+                MinimumPriceUnit: 1,
+                NotUseClosePrice: true,
+                OnlyUseClosePrice: true,
+                CloseAmbiguousStateToday: false
+            },
+            'PP20171109-20180528': {
+                TransactionFeeRate: 0.00008,
+                StopLossCriteria: 0.025,
+                StopProfitCriteria: 0.09,
+                StartProfitCriteria: 0.049,
+                OpenCriteria: 0.009,
+                FollowTrend: false,
+                BudgetFactor: 1.26,
                 BondPercentage: 12,
                 NeverEnterAmbiguousState: false,
                 MinimumPriceUnit: 1,
