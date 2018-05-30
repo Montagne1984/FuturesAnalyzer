@@ -77,7 +77,7 @@
         <option>PP</option>
         <option value="热轧卷板" data-setting="热轧卷板20160908-20180326">热轧卷板20160908-20180326</option>
         <option value="热轧卷板" data-setting="热轧卷板20170307-20170616">热轧卷板20170307-20170616</option>
-        <option value="热轧卷板" data-setting="热轧卷板20180326-20180515">热轧卷板20180326-20180515</option>
+        <option value="热轧卷板" data-setting="热轧卷板20180515-20180529">热轧卷板20180515-20180529</option>
         <option value="螺纹钢" data-setting="螺纹钢20170128-20171211">螺纹钢20170128-20171211</option>
         <option value="螺纹钢" data-setting="螺纹钢20171211-20180330">螺纹钢20171211-20180330</option>
         <option value="焦炭" data-setting="焦炭20170207-20170601">焦炭20170207-20170601</option>
@@ -1048,14 +1048,15 @@
         //};
 
         var settings = {
+            // 2018.03.26 - 
             '热轧卷板': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.012,
-                StopProfitCriteria: 0.04,
-                StartProfitCriteria: 0.082,
-                OpenCriteria: 0.019,
-                FollowTrend: false,
+                StopLossCriteria: 0.013,
+                StopProfitCriteria: 0.05,
+                StartProfitCriteria: 0.083,
+                OpenCriteria: 0.016,
+                FollowTrend: true,
                 BudgetFactor: 1.38,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
@@ -1212,14 +1213,14 @@
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: false
             },
-            '热轧卷板20180326-20180515': {
+            '热轧卷板20180515-20180529': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
-                StopLossCriteria: 0.013,
-                StopProfitCriteria: 0.05,
-                StartProfitCriteria: 0.083,
-                OpenCriteria: 0.016,
-                FollowTrend: true,
+                StopLossCriteria: 0.012,
+                StopProfitCriteria: 0.04,
+                StartProfitCriteria: 0.082,
+                OpenCriteria: 0.019,
+                FollowTrend: false,
                 BudgetFactor: 1.38,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
