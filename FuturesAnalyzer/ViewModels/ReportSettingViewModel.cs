@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace FuturesAnalyzer.ViewModels
 {
@@ -74,6 +75,34 @@ namespace FuturesAnalyzer.ViewModels
                 && EndDate == settings.EndDate
                 && MinimumPriceUnit == settings.MinimumPriceUnit
                 && CloseAmbiguousStateToday == settings.CloseAmbiguousStateToday;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -1306938562;
+            hashCode = hashCode * -1521134295 + StopLossUnit.GetHashCode();
+            hashCode = hashCode * -1521134295 + StopLossCriteria.GetHashCode();
+            hashCode = hashCode * -1521134295 + OpenCriteria.GetHashCode();
+            hashCode = hashCode * -1521134295 + StartProfitCriteria.GetHashCode();
+            hashCode = hashCode * -1521134295 + StopProfitCriteria.GetHashCode();
+            hashCode = hashCode * -1521134295 + StartProfitCriteriaForMultiUnits.GetHashCode();
+            hashCode = hashCode * -1521134295 + NeverEnterAmbiguousState.GetHashCode();
+            hashCode = hashCode * -1521134295 + FollowTrend.GetHashCode();
+            hashCode = hashCode * -1521134295 + AppendUnitCountAfterProfitStart.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ProductNames);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(SelectedProductName);
+            hashCode = hashCode * -1521134295 + TransactionFeeRate.GetHashCode();
+            hashCode = hashCode * -1521134295 + StartDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + EndDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + MinimumPriceUnit.GetHashCode();
+            hashCode = hashCode * -1521134295 + NotUseClosePrice.GetHashCode();
+            hashCode = hashCode * -1521134295 + UseAverageMarketState.GetHashCode();
+            hashCode = hashCode * -1521134295 + CloseAfterProfit.GetHashCode();
+            hashCode = hashCode * -1521134295 + OnlyUseClosePrice.GetHashCode();
+            hashCode = hashCode * -1521134295 + UseCrossStarStrategy.GetHashCode();
+            hashCode = hashCode * -1521134295 + UseInternalProfit.GetHashCode();
+            hashCode = hashCode * -1521134295 + CloseAmbiguousStateToday.GetHashCode();
+            return hashCode;
         }
     }
 }
