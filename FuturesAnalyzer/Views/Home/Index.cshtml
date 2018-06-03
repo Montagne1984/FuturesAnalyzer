@@ -97,10 +97,10 @@
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         <option value="PP" data-setting="PP20171109-20180528">PP20171109-20180528</option>
         @*<option>热轧卷板1610</option>
-        <option>热轧卷板1605</option>
-        <option>螺纹钢1605</option>
-        <option>焦炭1605</option>
-        <option>焦煤1605</option>*@
+            <option>热轧卷板1605</option>
+            <option>螺纹钢1605</option>
+            <option>焦炭1605</option>
+            <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -169,6 +169,11 @@
         </label>
     </div>
     <button id="analyze" type="submit" class="btn btn-primary my-1 mr-2">分析</button>
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2">
+            <input id="findBestBudgetFactor" type="checkbox"> 寻找最优成本扩大系数
+        </label>
+    </div>
     <button id="optimize" type="button" class="btn btn-outline-primary my-1 mr-2">优化</button>
     <input id="replayFile" type="file" style="float: left;" multiple class="my-1 mr-2" />
     <button id="replay" class="btn btn-outline-primary">回溯</button>
@@ -321,11 +326,26 @@
             values['CloseAmbiguousStateToday'] = $('#CloseAmbiguousStateToday')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
                 $("#results").show();
-                showResult(data);
+                if ($("#findBestBudgetFactor")[0].checked) {
+                    var bestResult = 0;
+                    var bestFactor = 1;
+                    for (var i = 100; i < 300; i++) {
+                        var factor = i / 100;
+                        var result = showResult(data, factor, true);
+                        if (result > bestResult) {
+                            bestResult = result;
+                            bestFactor = factor;
+                        }
+                    }
+                    $("#BudgetFactor").val(bestFactor);
+                    showResult(data, bestFactor);
+                } else {
+                    showResult(data);
+                }
             });
         });
 
-        function showResult(data) {
+        function showResult(data, budgetChangeFactor, hide) {
             var report = data.report;
             var categories = [];
             var contracts = [];
@@ -359,7 +379,9 @@
             var dailyBudgetFactorLevel = [];
             var budgetFactor = 1;
             var budgetFactorLevel = 0;
-            var budgetChangeFactor = $("#UseBudgetFactor").prop("checked") ? $("#BudgetFactor").val() : 1;
+            if (budgetChangeFactor === undefined) {
+                budgetChangeFactor = $("#UseBudgetFactor").prop("checked") ? $("#BudgetFactor").val() : 1;
+            }
             var maxLossRangeStartPoint = 0;
             var maxLossRange = 0;
             var maxLossRangeStartDate = new Date();
@@ -581,187 +603,190 @@
                 summaryText += key + '盈利：' + value.profit + ' (' + value.profitPercentage * 100 + '%) ' + '&nbsp;&nbsp;&nbsp;';
             });
 
-            $('#summary').html(summaryText);
+            if (!hide) {
+                $('#summary').html(summaryText);
 
-            $('#chart').highcharts({
-                chart: {
-                    zoomType: 'x',
-                    resetZoomButton: {
-                        position: {
-                            align: 'right', // by default
-                            verticalAlign: 'top', // by default
-                            x: -10,
-                            y: 10
-                        },
-                        relativeTo: 'chart'
-                    }
-                },
-                title: {
-                    text: $("#SelectedProductName").val()
-                },
-                xAxis: [
-                    {
-                        categories: categories,
-                        crosshair: true
-                    }
-                ],
-                yAxis: [
-                    {
-                        // Primary yAxis
-                        title: {
-                            text: '盈亏',
-                            style: {
-                                color: Highcharts.getOptions().colors[0]
-                            }
-                        },
-                        labels: {
-                            format: '{value}元',
-                            style: {
-                                color: Highcharts.getOptions().colors[0]
-                            }
+                $('#chart').highcharts({
+                    chart: {
+                        zoomType: 'x',
+                        resetZoomButton: {
+                            position: {
+                                align: 'right', // by default
+                                verticalAlign: 'top', // by default
+                                x: -10,
+                                y: 10
+                            },
+                            relativeTo: 'chart'
                         }
-                    }, {
-                        // Secondary yAxis
-                        labels: {
-                            format: '{value}元',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
-                            }
-                        },
-                        title: {
-                            text: '价格',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
-                            }
-                        },
-                        opposite: true
-                    }
-                ],
-                tooltip: {
-                    shared: true
-                },
-                series: [
-                    {
-                        name: '合约价格',
-                        type: 'column',
-                        yAxis: 1,
-                        data: contracts,
-                        tooltip: {
-                            valueSuffix: '元'
+                    },
+                    title: {
+                        text: $("#SelectedProductName").val()
+                    },
+                    xAxis: [
+                        {
+                            categories: categories,
+                            crosshair: true
                         }
+                    ],
+                    yAxis: [
+                        {
+                            // Primary yAxis
+                            title: {
+                                text: '盈亏',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
+                            },
+                            labels: {
+                                format: '{value}元',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
+                            }
+                        }, {
+                            // Secondary yAxis
+                            labels: {
+                                format: '{value}元',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
+                            },
+                            title: {
+                                text: '价格',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
+                            },
+                            opposite: true
+                        }
+                    ],
+                    tooltip: {
+                        shared: true
+                    },
+                    series: [
+                        {
+                            name: '合约价格',
+                            type: 'column',
+                            yAxis: 1,
+                            data: contracts,
+                            tooltip: {
+                                valueSuffix: '元'
+                            }
 
-                    }, {
-                        name: '盈亏',
-                        type: 'spline',
-                        data: balances,
-                        tooltip: {
-                            valueSuffix: '元'
-                        }
-                    },
-                    {
-                        name: '收盘价',
-                        type: 'spline',
-                        yAxis: 1,
-                        data: prices,
-                        tooltip: {
-                            valueSuffix: '元'
-                        }
+                        }, {
+                            name: '盈亏',
+                            type: 'spline',
+                            data: balances,
+                            tooltip: {
+                                valueSuffix: '元'
+                            }
+                        },
+                        {
+                            name: '收盘价',
+                            type: 'spline',
+                            yAxis: 1,
+                            data: prices,
+                            tooltip: {
+                                valueSuffix: '元'
+                            }
 
-                    }
-                ]
-            });
-            $('#percentageChart').highcharts({
-                chart: {
-                    zoomType: 'x',
-                    resetZoomButton: {
-                        position: {
-                            align: 'right', // by default
-                            verticalAlign: 'top', // by default
-                            x: -10,
-                            y: 10
-                        },
-                        relativeTo: 'chart'
-                    }
-                },
-                title: {
-                    text: $("#SelectedProductName").val()
-                },
-                xAxis: [
-                    {
-                        categories: categories,
-                        crosshair: true
-                    }
-                ],
-                yAxis: [
-                    {
-                        // Primary yAxis
-                        title: {
-                            text: '盈亏',
-                            style: {
-                                color: Highcharts.getOptions().colors[0]
-                            }
-                        },
-                        labels: {
-                            format: '{value}',
-                            style: {
-                                color: Highcharts.getOptions().colors[0]
-                            }
+                        }
+                    ]
+                });
+                $('#percentageChart').highcharts({
+                    chart: {
+                        zoomType: 'x',
+                        resetZoomButton: {
+                            position: {
+                                align: 'right', // by default
+                                verticalAlign: 'top', // by default
+                                x: -10,
+                                y: 10
+                            },
+                            relativeTo: 'chart'
                         }
                     },
-                    {
-                        // Secondary yAxis
-                        title: {
-                            text: '成本系数',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
-                            }
-                        },
-                        labels: {
-                            format: '{value}',
-                            style: {
-                                color: Highcharts.getOptions().colors[1]
-                            }
+                    title: {
+                        text: $("#SelectedProductName").val()
+                    },
+                    xAxis: [
+                        {
+                            categories: categories,
+                            crosshair: true
                         }
-                    },
-                    {
-                        // Secondary yAxis
-                        title: {
-                            text: '成本系数等级',
-                            style: {
-                                color: Highcharts.getOptions().colors[2]
+                    ],
+                    yAxis: [
+                        {
+                            // Primary yAxis
+                            title: {
+                                text: '盈亏',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
+                            },
+                            labels: {
+                                format: '{value}',
+                                style: {
+                                    color: Highcharts.getOptions().colors[0]
+                                }
                             }
                         },
-                        labels: {
-                            format: '{value}',
-                            style: {
-                                color: Highcharts.getOptions().colors[2]
+                        {
+                            // Secondary yAxis
+                            title: {
+                                text: '成本系数',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
+                            },
+                            labels: {
+                                format: '{value}',
+                                style: {
+                                    color: Highcharts.getOptions().colors[1]
+                                }
                             }
                         },
-                        opposite: true
-                    }
-                ],
-                tooltip: {
-                    shared: true
-                },
-                series: [
-                    {
-                        name: '盈亏',
-                        type: 'spline',
-                        data: dailyPercentageBalance
+                        {
+                            // Secondary yAxis
+                            title: {
+                                text: '成本系数等级',
+                                style: {
+                                    color: Highcharts.getOptions().colors[2]
+                                }
+                            },
+                            labels: {
+                                format: '{value}',
+                                style: {
+                                    color: Highcharts.getOptions().colors[2]
+                                }
+                            },
+                            opposite: true
+                        }
+                    ],
+                    tooltip: {
+                        shared: true
                     },
-                    {
-                        name: '成本系数',
-                        type: 'spline',
-                        data: dailyBudgetFactor
-                    },
-                    {
-                        name: '成本系数等级',
-                        type: 'spline',
-                        data: dailyBudgetFactorLevel,
-                        yAxis: 2
-                    }
-                ]
-            });
+                    series: [
+                        {
+                            name: '盈亏',
+                            type: 'spline',
+                            data: dailyPercentageBalance
+                        },
+                        {
+                            name: '成本系数',
+                            type: 'spline',
+                            data: dailyBudgetFactor
+                        },
+                        {
+                            name: '成本系数等级',
+                            type: 'spline',
+                            data: dailyBudgetFactorLevel,
+                            yAxis: 2
+                        }
+                    ]
+                });
+            }
+            return percentageBalance;
         }
 
         //var settings = {
