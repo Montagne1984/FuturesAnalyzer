@@ -84,6 +84,7 @@
         <option value="焦炭" data-setting="焦炭20170601-20171205">焦炭20170601-20171205</option>
         <option value="焦炭" data-setting="焦炭20171205-20180321">焦炭20171205-20180321</option>
         <option value="焦炭" data-setting="焦炭20180321-20180508">焦炭20180321-20180508</option>
+        <option value="焦炭" data-setting="焦炭20180321-20180508">焦炭20180508-20180619</option>
         <option value="焦煤" data-setting="焦煤20161227-20170620">焦煤20161227-20170620</option>
         <option value="焦煤" data-setting="焦煤20170620-20170810">焦煤20170620-20170810</option>
         <option value="焦煤" data-setting="焦煤20170810-20170905">焦煤20170810-20170905</option>
@@ -97,10 +98,10 @@
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         <option value="PP" data-setting="PP20171109-20180528">PP20171109-20180528</option>
         @*<option>热轧卷板1610</option>
-            <option>热轧卷板1605</option>
-            <option>螺纹钢1605</option>
-            <option>焦炭1605</option>
-            <option>焦煤1605</option>*@
+        <option>热轧卷板1605</option>
+        <option>螺纹钢1605</option>
+        <option>焦炭1605</option>
+        <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -1118,32 +1119,20 @@
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
-            //'焦炭': {
-            //    TransactionFeeRate: 0.000864,
-            //    MinimumPriceUnit: 0.5,
-            //    StopLossCriteria: 0.014,
-            //    StopProfitCriteria: 0.18,
-            //    StartProfitCriteria: 0.164,
-            //    OpenCriteria: 0.02,
-            //    FollowTrend: false,
-            //    BudgetFactor: 1.89,
-            //    BondPercentage: 13
-            //},
-            // 2018.03.21 -
             '焦炭': {
                 TransactionFeeRate: 0.00008,
                 MinimumPriceUnit: 0.5,
-                StopLossCriteria: 0.015,
-                StopProfitCriteria: 0.03,
-                StartProfitCriteria: 0.157,
-                OpenCriteria: 0.019,
+                StopLossCriteria: 0.009,
+                StopProfitCriteria: 0.17,
+                StartProfitCriteria: 0.198,
+                OpenCriteria: 0.007,
                 FollowTrend: false,
                 BudgetFactor: 1.47,
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: true
+                CloseAmbiguousStateToday: false
             },
             '焦煤': {
                 TransactionFeeRate: 0.00008,
@@ -1344,6 +1333,21 @@
                 BondPercentage: 17,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: true,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
+            },
+            '焦炭20180508-20180619': {
+                TransactionFeeRate: 0.00008,
+                MinimumPriceUnit: 0.5,
+                StopLossCriteria: 0.015,
+                StopProfitCriteria: 0.03,
+                StartProfitCriteria: 0.157,
+                OpenCriteria: 0.019,
+                FollowTrend: false,
+                BudgetFactor: 1.47,
+                BondPercentage: 17,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
