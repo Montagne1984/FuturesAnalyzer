@@ -69,7 +69,8 @@ namespace FuturesAnalyzer.Services
                     CloseTransaction = i == startIndex ? null : account.MarketState.TryClose(dailyPrice),
                     OpenTransaction = i == startIndex ? firstDayOpenTransaction : account.MarketState.TryOpen(dailyPrice),
                     Balance = account.Balance,
-                    Contract = account.Contract
+                    Contract = account.Contract,
+                    InternalProfit = account.MarketState.InternalProfit
                 };
                 report.Add(dailyAccountData);
                 var currentState = account.MarketState;
@@ -91,13 +92,30 @@ namespace FuturesAnalyzer.Services
                     {
                         report[i].PercentageBalance += (report[i].Balance - report[i - 1].Balance) / report[i - 1].Contract.Price;
                     }
+                    if (report[i].Contract != null)
+                    {
+                        report[i].RealTimePercentageBalance = report[i].PercentageBalance + ((report[i].DailyPrice.ClosePrice - report[i].Contract.Price) * (int)report[i].Contract.Direction + report[i].InternalProfit) / report[i].Contract.Price;
+                    }
+                    else
+                    {
+                        report[i].RealTimePercentageBalance = report[i].PercentageBalance + report[i].InternalProfit / report[i - 1].DailyPrice.ClosePrice;
+                    }
                 }
             }
-            if (report.Count > 0 && account.Contract != null)
+            if (report.Count > 0)
             {
-                var finalPrice = dailyPrices.Last().ClosePrice;
-                report.Last().Balance += ((finalPrice - account.Contract.Price) * (int)account.Contract.Direction + account.MarketState.InternalProfit) * account.Contract.Unit;
-                report.Last().PercentageBalance += ((finalPrice - account.Contract.Price) * (int)account.Contract.Direction + account.MarketState.InternalProfit) / account.Contract.Price;
+                if (account.Contract != null)
+                {
+                    var finalPrice = dailyPrices.Last().ClosePrice;
+                    report.Last().Balance += ((finalPrice - account.Contract.Price) * (int)account.Contract.Direction + account.MarketState.InternalProfit) * account.Contract.Unit;
+                    report.Last().PercentageBalance += ((finalPrice - account.Contract.Price) * (int)account.Contract.Direction + account.MarketState.InternalProfit) / account.Contract.Price;
+                }
+                else
+                {
+                    report.Last().Balance += account.MarketState.InternalProfit;
+                    report.Last().PercentageBalance += account.MarketState.InternalProfit / report[report.Count - 2].DailyPrice.ClosePrice;
+                }
+                report.Last().RealTimePercentageBalance = report.Last().PercentageBalance;
             }
             return report;
         }

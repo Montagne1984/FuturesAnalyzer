@@ -98,10 +98,10 @@
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         <option value="PP" data-setting="PP20171109-20180528">PP20171109-20180528</option>
         @*<option>热轧卷板1610</option>
-        <option>热轧卷板1605</option>
-        <option>螺纹钢1605</option>
-        <option>焦炭1605</option>
-        <option>焦煤1605</option>*@
+            <option>热轧卷板1605</option>
+            <option>螺纹钢1605</option>
+            <option>焦炭1605</option>
+            <option>焦煤1605</option>*@
         <option>铝</option>
         <option>黄金</option>
         <option>锌</option>
@@ -177,7 +177,21 @@
     </div>
     <button id="optimize" type="button" class="btn btn-outline-primary my-1 mr-2">优化</button>
     <input id="replayFile" type="file" style="float: left;" multiple class="my-1 mr-2" />
-    <button id="replay" class="btn btn-outline-primary">回溯</button>
+    <button id="replay" class="btn btn-outline-primary my-1 mr-2">回溯</button>
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2">
+            <input id="everyDay" type="checkbox"> 比较每天结果
+        </label>
+    </div>
+    <div class="checkbox mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2">
+            <input id="passive" type="checkbox"> 被动策略
+        </label>
+    </div>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2">开始计算日期</label>
+        <input type="date" id="replayStartDate" class="form-control" />
+    </div>
 </form>
 <div id="results">
     <div id="chart"></div>
@@ -194,6 +208,8 @@
             $('#EndDate').val(toDateFormat(d));
             d.setDate(d.getDate() - 365);
             $('#StartDate').val('2000-01-01');
+
+            $('#replayStartDate').val('2017-01-01');
 
             setDefaultSettings();
         });
@@ -251,59 +267,70 @@
             }
         });
 
+        function formatDate(date) {
+            var d = new Date(date),
+                month = '' + (d.getMonth() + 1),
+                day = '' + d.getDate(),
+                year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+
         $('#replay').click(function (event) {
             event.preventDefault();
             $("#results").hide();
             var files = $('#replayFile')[0].files;
-            var bestResult = 0;
-            var bestData;
-            var replayData = [];
-            var deferreds = [];
+            var startDate = new Date($("#StartDate").val());
+            var endDate = new Date($("#EndDate").val());
+            var everyDay = $("#everyDay")[0].checked;
+            var replayStartDate = $("#replayStartDate").val();
+            var passive = $("#passive")[0].checked;
+            var fileInfos = [];
             for (var i = 0; i < files.length; i++) {
                 var fileName = files[i].name;
                 var reader = readers[i];
                 var productName = fileName.slice(0, fileName.indexOf('20'));
-                var deferred = $.ajax({
-                    url: "home/replay",
-                    type: "POST",
-                    data: {
-                        fileName: fileName,
-                        settings: reader.result,
-                        transactionFeeRate: settings[productName].TransactionFeeRate,
-                        minimumPriceUnit: settings[productName].MinimumPriceUnit
-                    },
-                    success: function (data) {
-                        replayData.push(data);
-                    },
-                    fail: function (jqXHR, textStatus, errorThrown) {
-                        alert(textStatus);
-                    }
+                fileInfos.push({
+                    fileName: files[i].name,
+                    settings: readers[i].result,
+                    transactionFeeRate: settings[productName].TransactionFeeRate,
+                    minimumPriceUnit: settings[productName].MinimumPriceUnit
                 });
-                deferreds.push(deferred);
-            };
-            $.when.apply($, deferreds).then(function () {
-                for (var i = 0; i < files.length; i++) {
-                    var data = replayData[i];
+            }
+            $.ajax({
+                url: "home/replay",
+                type: "POST",
+                data: {
+                    fileInfos: fileInfos,
+                    startDate: formatDate(startDate),
+                    endDate: formatDate(endDate),
+                    getBestChangeDates: everyDay,
+                    replayStartDate: replayStartDate,
+                    passive: passive
+                },
+                success: function (data) {
                     var result = data.report[data.report.length - 1].percentageBalance;
-                    if (result > bestResult) {
-                        bestResult = result;
-                        bestData = data;
-                    }
+                    var bestSettings = data.bestSettings;
+                    $('#SelectedProductName').val(bestSettings.selectedProductName);
+                    setDefaultSettings();
+                    $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
+                    $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
+                    $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
+                    $("#OpenCriteria").val(bestSettings.openCriteria);
+                    $('#FollowTrend').prop('checked', bestSettings.followTrend);
+                    $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
+                    $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
+                    $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
+                    $('#CloseAmbiguousStateToday').prop('checked', bestSettings.closeAmbiguousStateToday);
+                    $("#results").show();
+                    showResult(data);
+                },
+                fail: function (jqXHR, textStatus, errorThrown) {
+                    alert(textStatus);
                 }
-                var bestSettings = bestData.bestSettings;
-                $('#SelectedProductName').val(bestSettings.selectedProductName);
-                setDefaultSettings();
-                $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
-                $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
-                $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
-                $("#OpenCriteria").val(bestSettings.openCriteria);
-                $('#FollowTrend').prop('checked', bestSettings.followTrend);
-                $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
-                $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
-                $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
-                $('#CloseAmbiguousStateToday').prop('checked', bestSettings.closeAmbiguousStateToday);
-                $("#results").show();
-                showResult(bestData);
             });
         });
 
@@ -373,9 +400,11 @@
             var profitCount = 0;
             var lossCount = 0;
             var percentageBalance = 0;
+            var realTimePercentageBalance = 0;
             var lastYearPercentageBalance = 0;
             var profitFactor = 100 / $("#BondPercentage").val();
             var dailyPercentageBalance = [];
+            var realTimeDailyPercentageBalance = [];
             var dailyBudgetFactor = [];
             var dailyBudgetFactorLevel = [];
             var budgetFactor = 1;
@@ -478,7 +507,7 @@
                         if (!report[index].contract) {
                             emptyCount++;
                         }
-                    } else if (index === report.length - 1 && report[index].contract) {
+                    } else if (index === report.length - 1) {
                         var percentageDelta = report[index].percentageBalance - report[index - 1].percentageBalance;
                         percentageDelta *= budgetFactor;
                         percentageBalance += percentageDelta * profitFactor;
@@ -490,7 +519,9 @@
                             maxLossRangeEndDate = value.dailyPrice.date;
                         }
                     }
+                    realTimePercentageBalance = percentageBalance + (report[index].realTimePercentageBalance - report[index].percentageBalance) * profitFactor * budgetFactor;
                     dailyPercentageBalance.push(percentageBalance);
+                    realTimeDailyPercentageBalance.push(realTimePercentageBalance);
                     dailyBudgetFactor.push(budgetFactor);
                     dailyBudgetFactorLevel.push(budgetFactorLevel);
                     maxBalance = Math.max(maxBalance, value.balance);
@@ -762,6 +793,20 @@
                                 }
                             },
                             opposite: true
+                        },
+                        {
+                            title: {
+                                text: '实时盈亏',
+                                style: {
+                                    color: Highcharts.getOptions().colors[3]
+                                }
+                            },
+                            labels: {
+                                format: '{value}',
+                                style: {
+                                    color: Highcharts.getOptions().colors[3]
+                                }
+                            }
                         }
                     ],
                     tooltip: {
@@ -783,6 +828,11 @@
                             type: 'spline',
                             data: dailyBudgetFactorLevel,
                             yAxis: 2
+                        },
+                        {
+                            name: '实时盈亏',
+                            type: 'spline',
+                            data: realTimeDailyPercentageBalance
                         }
                     ]
                 });

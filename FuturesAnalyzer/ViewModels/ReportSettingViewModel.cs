@@ -57,8 +57,7 @@ namespace FuturesAnalyzer.ViewModels
 
         public override bool Equals(object obj)
         {
-            var settings = obj as ReportSettingViewModel;
-            return settings != null
+            return obj is ReportSettingViewModel settings
                 && StopLossUnit == settings.StopLossUnit
                 && StopLossCriteria == settings.StopLossCriteria
                 && OpenCriteria == settings.OpenCriteria

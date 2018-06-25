@@ -30,6 +30,14 @@ namespace FuturesAnalyzer.Models.States
 
         public abstract decimal GetStopProfitPrice();
         public abstract decimal GetStopLossPrice();
+        public virtual decimal GetCeilingOpenPrice()
+        {
+            return decimal.MaxValue;
+        }
+        public virtual decimal GetFloorOpenPrice()
+        {
+            return decimal.MinValue;
+        }
 
         protected virtual decimal Ceiling(decimal price)
         {

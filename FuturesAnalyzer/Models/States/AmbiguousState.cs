@@ -8,7 +8,6 @@ namespace FuturesAnalyzer.Models.States
         private decimal _ceilingOpenPrice;
         private decimal _floorOpenPrice;
         private bool _hitBothCriteria;
-        private decimal _internalProfit;
 
         public override Transaction TryOpen(DailyPrice dailyPrice)
         {
@@ -51,7 +50,7 @@ namespace FuturesAnalyzer.Models.States
                     Account.HitBothCriteriaInAmbiguousStateCount++;
                     if (Account.CloseAmbiguousStateToday)
                     {
-                        _internalProfit += (floorOpenPrice - ceilingOpenPrice)* (Account.FollowTrend ? 1 : -1) -
+                        InternalProfit += (floorOpenPrice - ceilingOpenPrice)* (Account.FollowTrend ? 1 : -1) -
                                            (ceilingOpenPrice + floorOpenPrice)*Account.TransactionFeeRate;
                         return null;
                     }
@@ -77,7 +76,7 @@ namespace FuturesAnalyzer.Models.States
                         newState = new DownState();
                     }
                     newState.StartPrice = Math.Max(dailyPrice.OpenPrice, ceilingOpenPrice);
-                    newState.InternalProfit = _internalProfit;
+                    newState.InternalProfit = InternalProfit;
                 }
                 else if (dailyPrice.LowestPrice <= floorOpenPrice)
                 {
@@ -90,7 +89,7 @@ namespace FuturesAnalyzer.Models.States
                         newState = new UpState();
                     }
                     newState.StartPrice = Math.Min(dailyPrice.OpenPrice, floorOpenPrice);
-                    newState.InternalProfit = _internalProfit;
+                    newState.InternalProfit = InternalProfit;
                 }
             }
             if (newState == null)
@@ -126,12 +125,12 @@ namespace FuturesAnalyzer.Models.States
             return 0;
         }
 
-        public virtual decimal GetCeilingOpenPrice()
+        public override decimal GetCeilingOpenPrice()
         {
             return Ceiling(PreviousPrice.ClosePrice*(1 + Account.OpenCriteria));
         }
 
-        public virtual decimal GetFloorOpenPrice()
+        public override decimal GetFloorOpenPrice()
         {
             return Floor(PreviousPrice.ClosePrice*(1 - Account.OpenCriteria));
         }
