@@ -327,6 +327,19 @@
                     $('#CloseAmbiguousStateToday').prop('checked', bestSettings.closeAmbiguousStateToday);
                     $("#results").show();
                     showResult(data);
+
+                    var currentSettings = settings[bestSettings.selectedProductName];
+                    if (!everyDay && (
+                        currentSettings.StopLossCriteria != bestSettings.stopLossCriteria ||
+                        currentSettings.StopProfitCriteria != bestSettings.stopProfitCriteria ||
+                        currentSettings.StartProfitCriteria != bestSettings.startProfitCriteria ||
+                        currentSettings.OpenCriteria != bestSettings.openCriteria ||
+                        currentSettings.FollowTrend != bestSettings.followTrend ||
+                        currentSettings.NotUseClosePrice != bestSettings.notUseClosePrice ||
+                        currentSettings.OnlyUseClosePrice != bestSettings.onlyUseClosePrice ||
+                        currentSettings.CloseAmbiguousStateToday != bestSettings.closeAmbiguousStateToday)) {
+                        alert("New!");
+                    }
                 },
                 fail: function (jqXHR, textStatus, errorThrown) {
                     alert(textStatus);
@@ -389,6 +402,8 @@
             var minSinglePercentageDeltaDate = new Date();
             var minBalance = 0;
             var maxBalance = 0;
+            var maxPercentageBalance = 0;
+            var maxPercentageBalanceDate = new Date();
             var lastBalance = 0;
             var annualProfits = {};
             var lastYearEndBalance = 0;
@@ -525,6 +540,10 @@
                     dailyBudgetFactor.push(budgetFactor);
                     dailyBudgetFactorLevel.push(budgetFactorLevel);
                     maxBalance = Math.max(maxBalance, value.balance);
+                    if (percentageBalance > maxPercentageBalance) {
+                        maxPercentageBalance = percentageBalance;
+                        maxPercentageBalanceDate = value.dailyPrice.date;
+                    }
                     minBalance = Math.min(minBalance, value.balance);
                     lastBalance = value.balance;
                     var date = new Date(value.dailyPrice.date);
@@ -598,6 +617,7 @@
                 '下一交易日：' + report[report.length - 1].nextTransaction + "<br/>" +
                 '每笔交易本金相同：' +
                 '最终盈利倍数：' + percentageBalance +
+                ' 历史最高盈利倍数：' + maxPercentageBalance + " (" + formatDate(maxLossRangeStartDate) + ")" +
                 ' 最终盈利（初始25000）：' + 25000 * percentageBalance +
                 '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +

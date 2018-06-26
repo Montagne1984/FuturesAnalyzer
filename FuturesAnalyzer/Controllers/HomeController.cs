@@ -77,6 +77,7 @@ namespace FuturesAnalyzer.Controllers
             var topSettingsArray = new SortedList<decimal, List<SettingResult>>[fileInfos.Length];
             var everyDayBest = new SortedList<DateTime, SortedList<decimal, List<SettingResult>>>();
             var taskList = new List<Task>();
+            var allSettings = new Dictionary<SettingResult, SortedList<decimal, List<SettingResult>>>();
             for (var i = 0; i < fileInfos.Length; i++)
             {
                 var fileName = fileInfos[i].FileName;
@@ -87,7 +88,6 @@ namespace FuturesAnalyzer.Controllers
                 {
                     var fileDateIndex = fileName.IndexOf("20");
                     var productName = fileName.Substring(0, fileDateIndex);
-                    var dailyPrices = _reportService.LoadDailyPrices("Data/" + productName + ".csv");
                     var index = fileName.IndexOf("20") + 8;
                     var notUseClosePrice = fileName[index] == 'T';
                     index += notUseClosePrice ? 4 : 5;
@@ -97,7 +97,6 @@ namespace FuturesAnalyzer.Controllers
 
                     var topSettings = new SortedList<decimal, List<SettingResult>>();
                     topSettingsArray[i] = topSettings;
-                    var number = settings.Split("\n").Length;
                     using (var textReader = new StringReader(settings))
                     using (var csvReader = new CsvReader(textReader))
                     {
@@ -110,52 +109,29 @@ namespace FuturesAnalyzer.Controllers
                             var startProfitCriteria = csvReader.GetField<decimal>(2);
                             var openCriteria = csvReader.GetField<decimal>(3);
                             var followTrend = csvReader.GetField<bool>(4);
-                            taskList.Add(new Task(() => {
-                                var setting = new SettingResult
+                            var setting = new SettingResult
+                            {
+                                Setting = new ReportSettingViewModel
                                 {
-                                    Setting = new ReportSettingViewModel
-                                    {
-                                        NotUseClosePrice = notUseClosePrice,
-                                        OnlyUseClosePrice = onlyUseClosePrice,
-                                        CloseAmbiguousStateToday = closeAmbiguousStateToday,
-                                        SelectedProductName = productName,
-                                        StartDate = startDate,
-                                        EndDate = endDate,
-                                        TransactionFeeRate = transactionFeeRate,
-                                        MinimumPriceUnit = minimumPriceUnit,
-                                        StopLossCriteria = stopLossCriteria,
-                                        StopProfitCriteria = stopProfitCriteria,
-                                        StartProfitCriteria = startProfitCriteria,
-                                        OpenCriteria = openCriteria,
-                                        FollowTrend = followTrend
-                                    }
-                                };
-                                var report = GetReport(setting.Setting, dailyPrices);
-                                if (getBestChangeDates)
-                                {
-                                    for (var reportIndex = 250; reportIndex < report.Count(); reportIndex++)
-                                    {
-                                        var reportDay = report.ElementAt(reportIndex);
-                                        var reportDate = reportDay.DailyPrice.Date;
-                                        lock (everyDayBest)
-                                        {
-                                            if (!everyDayBest.ContainsKey(reportDate))
-                                            {
-                                                everyDayBest.Add(reportDate, new SortedList<decimal, List<SettingResult>>());
-                                            }
-                                            var reportDateBest = everyDayBest[reportDate];
-                                            var cloneSetting = new SettingResult
-                                            {
-                                                Setting = setting.Setting,
-                                                Result = reportDay.RealTimePercentageBalance
-                                            };
-                                            UpdateTopThreeSettings(ref reportDateBest, cloneSetting, number);
-                                        }
-                                    }
+                                    NotUseClosePrice = notUseClosePrice,
+                                    OnlyUseClosePrice = onlyUseClosePrice,
+                                    CloseAmbiguousStateToday = closeAmbiguousStateToday,
+                                    SelectedProductName = productName,
+                                    StartDate = startDate,
+                                    EndDate = endDate,
+                                    TransactionFeeRate = transactionFeeRate,
+                                    MinimumPriceUnit = minimumPriceUnit,
+                                    StopLossCriteria = stopLossCriteria,
+                                    StopProfitCriteria = stopProfitCriteria,
+                                    StartProfitCriteria = startProfitCriteria,
+                                    OpenCriteria = openCriteria,
+                                    FollowTrend = followTrend
                                 }
-                                setting.Result = report.Last().RealTimePercentageBalance;
-                                UpdateTopThreeSettings(ref topSettings, setting, number);
-                            }));
+                            };
+                            if (!allSettings.ContainsKey(setting))
+                            {
+                                allSettings.Add(setting, topSettings);
+                            }
                         }
                     }
                 }
@@ -168,6 +144,42 @@ namespace FuturesAnalyzer.Controllers
                             ex.Message
                         });
                 }
+            }
+            
+            var dailyPrices = _reportService.LoadDailyPrices("Data/" + allSettings.ElementAt(0).Key.Setting.SelectedProductName + ".csv");
+            var number = 100;
+            foreach (var key in allSettings.Keys.Distinct())
+            {
+                var setting = key;
+                var topSettings = allSettings[key];
+                taskList.Add(new Task(() =>
+                {
+                    var report = GetReport(setting.Setting, dailyPrices);
+                    if (getBestChangeDates)
+                    {
+                        for (var reportIndex = 250; reportIndex < report.Count(); reportIndex++)
+                        {
+                            var reportDay = report.ElementAt(reportIndex);
+                            var reportDate = reportDay.DailyPrice.Date;
+                            lock (everyDayBest)
+                            {
+                                if (!everyDayBest.ContainsKey(reportDate))
+                                {
+                                    everyDayBest.Add(reportDate, new SortedList<decimal, List<SettingResult>>());
+                                }
+                                var reportDateBest = everyDayBest[reportDate];
+                                var cloneSetting = new SettingResult
+                                {
+                                    Setting = setting.Setting,
+                                    Result = reportDay.RealTimePercentageBalance
+                                };
+                                UpdateTopThreeSettings(ref reportDateBest, cloneSetting, number);
+                            }
+                        }
+                    }
+                    setting.Result = report.Last().RealTimePercentageBalance;
+                    UpdateTopThreeSettings(ref topSettings, setting, number);
+                }));
             }
 
             Parallel.For(0, taskList.Count, (i) =>
@@ -185,33 +197,37 @@ namespace FuturesAnalyzer.Controllers
                 var topSettings = topSettingsArray[i];
                 var fileDateIndex = fileName.IndexOf("20");
                 var productName = fileName.Substring(0, fileDateIndex);
-                if (!getBestChangeDates)
+
+                if (topSettings.Any())
                 {
-                    var resultFileName = $"{endDate.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{Path.GetFileNameWithoutExtension(fileName)}.csv";
-                    if (fileName.Contains("Detail") || fileName.Contains("Summary"))
+                    if (!getBestChangeDates)
                     {
-                        var parts = fileName.Split("_");
-                        var category = parts[0].Substring(productName.Length + 8);
-                        resultFileName = $"{endDate.ToString("yyyyMMdd")}_{category}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{parts[1]}_{parts[2]}_{productName}_{(fileName.Contains("Summary") ? "Summary" : string.Empty)}.csv";
-                    }
-                    using (var fileStream = new FileStream($"Results\\{productName}\\{resultFileName}", FileMode.Create))
-                    using (var streamWriter = new StreamWriter(fileStream))
-                    {
-                        streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
-                        for (var j = topSettings.Count - 1; j >= 0; j--)
+                        var resultFileName = $"{endDate.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{Path.GetFileNameWithoutExtension(fileName)}.csv";
+                        if (fileName.Contains("Detail") || fileName.Contains("Summary"))
                         {
-                            foreach (var s in topSettings.ElementAt(j).Value)
+                            var parts = fileName.Split("_");
+                            var category = parts[0].Substring(productName.Length + 8);
+                            resultFileName = $"{endDate.ToString("yyyyMMdd")}_{category}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{parts[1]}_{parts[2]}_{productName}_{(fileName.Contains("Summary") ? "Summary" : string.Empty)}.csv";
+                        }
+                        using (var fileStream = new FileStream($"Results\\{productName}\\{resultFileName}", FileMode.Create))
+                        using (var streamWriter = new StreamWriter(fileStream))
+                        {
+                            streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
+                            for (var j = topSettings.Count - 1; j >= 0; j--)
                             {
-                                streamWriter.WriteLine(
-                                    $"{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Result}");
+                                foreach (var s in topSettings.ElementAt(j).Value)
+                                {
+                                    streamWriter.WriteLine(
+                                        $"{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Result}");
+                                }
                             }
                         }
                     }
-                }
 
-                foreach (var topSetting in topSettings.Last().Value)
-                {
-                    UpdateTopThreeSettings(ref topOfTopSettings, topSetting, fileInfos.Length);
+                    foreach (var topSetting in topSettings.Last().Value)
+                    {
+                        UpdateTopThreeSettings(ref topOfTopSettings, topSetting, fileInfos.Length);
+                    }
                 }
             }
 
@@ -787,6 +803,16 @@ namespace FuturesAnalyzer.Controllers
     {
         public ReportSettingViewModel Setting { get; set; }
         public decimal Result { get; set; }
+        public override bool Equals(object obj)
+        {
+            var settingResult = obj as SettingResult;
+            return settingResult != null && Setting.Equals(settingResult.Setting) && Result == settingResult.Result;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Setting, Result);
+        }
     }
 
     public class FileInfo
