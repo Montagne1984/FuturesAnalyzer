@@ -27,6 +27,7 @@ namespace FuturesAnalyzer.ViewModels
         public bool UseCrossStarStrategy { get; set; }
         public bool UseInternalProfit { get; set; }
         public bool CloseAmbiguousStateToday { get; set; }
+        public bool NeverReverse { get; set; }
 
         public ReportSettingViewModel Clone()
         {
@@ -51,7 +52,8 @@ namespace FuturesAnalyzer.ViewModels
                 UseAverageMarketState = UseAverageMarketState,
                 CloseAfterProfit = CloseAfterProfit,
                 OnlyUseClosePrice = OnlyUseClosePrice,
-                CloseAmbiguousStateToday = CloseAmbiguousStateToday
+                CloseAmbiguousStateToday = CloseAmbiguousStateToday,
+                NeverReverse = NeverReverse
             };
         }
 
@@ -73,7 +75,8 @@ namespace FuturesAnalyzer.ViewModels
                 && StartDate == settings.StartDate
                 && EndDate == settings.EndDate
                 && MinimumPriceUnit == settings.MinimumPriceUnit
-                && CloseAmbiguousStateToday == settings.CloseAmbiguousStateToday;
+                && CloseAmbiguousStateToday == settings.CloseAmbiguousStateToday
+                && NeverReverse == settings.NeverReverse;
         }
 
         public override int GetHashCode()
@@ -101,6 +104,7 @@ namespace FuturesAnalyzer.ViewModels
             hashCode = hashCode * -1521134295 + UseCrossStarStrategy.GetHashCode();
             hashCode = hashCode * -1521134295 + UseInternalProfit.GetHashCode();
             hashCode = hashCode * -1521134295 + CloseAmbiguousStateToday.GetHashCode();
+            hashCode = hashCode * -1521134295 + NeverReverse.GetHashCode();
             return hashCode;
         }
     }

@@ -94,6 +94,7 @@
         <option value="镍" data-setting="镍20160426-20171016">镍20160426-20171016</option>
         <option value="镍" data-setting="镍20171016-20180130">镍20171016-20180130</option>
         <option value="镍" data-setting="镍20180130-20180419">镍20180130-20180419</option>
+        <option value="镍" data-setting="镍20180419-20180702">镍20180419-20180702</option>
         <option value="菜粕" data-setting="菜粕20161122-20180302">菜粕20161122-20180302</option>
         <option value="PP" data-setting="PP20161213-20171109">PP20161213-20171109</option>
         <option value="PP" data-setting="PP20171109-20180528">PP20171109-20180528</option>
@@ -149,6 +150,11 @@
             <input asp-for="CloseAfterProfit" type="checkbox"> 止盈后平仓
         </label>
     </div>
+    <div class="checkbox mb-2 mr-sm-2 form-inline" hidden>
+        <label asp-for="NeverReverse" class="my-1 mr-2">
+            <input asp-for="NeverReverse" type="checkbox"> 不反手
+        </label>
+    </div>
     <div class="checkbox mb-2 mr-sm-2 form-inline">
         <label asp-for="OnlyUseClosePrice" class="my-1 mr-2">
             <input asp-for="OnlyUseClosePrice" type="checkbox"> 止盈仅看收盘价
@@ -191,6 +197,10 @@
     <div class="form-group mb-2 mr-sm-2 form-inline">
         <label class="my-1 mr-2">开始计算日期</label>
         <input type="date" id="replayStartDate" class="form-control" />
+    </div>
+    <div class="form-group mb-2 mr-sm-2 form-inline">
+        <label class="my-1 mr-2">排名</label>
+        <input type="number" min="0" step="1" id="rank" class="form-control" value="1" />
     </div>
 </form>
 <div id="results">
@@ -240,6 +250,7 @@
             values['UseCrossStarStrategy'] = $('#UseCrossStarStrategy')[0].checked;
             values['UseInternalProfit'] = $('#UseInternalProfit')[0].checked;
             values['CloseAmbiguousStateToday'] = $('#CloseAmbiguousStateToday')[0].checked;
+            values['NeverReverse'] = $('#NeverReverse')[0].checked;
             $.post("home/optimize",
                 values,
                 function (data) {
@@ -280,71 +291,80 @@
         }
 
         $('#replay').click(function (event) {
-            event.preventDefault();
-            $("#results").hide();
-            var files = $('#replayFile')[0].files;
-            var startDate = new Date($("#StartDate").val());
-            var endDate = new Date($("#EndDate").val());
-            var everyDay = $("#everyDay")[0].checked;
-            var replayStartDate = $("#replayStartDate").val();
-            var passive = $("#passive")[0].checked;
-            var fileInfos = [];
-            for (var i = 0; i < files.length; i++) {
-                var fileName = files[i].name;
-                var reader = readers[i];
-                var productName = fileName.slice(0, fileName.indexOf('20'));
-                fileInfos.push({
-                    fileName: files[i].name,
-                    settings: readers[i].result,
-                    transactionFeeRate: settings[productName].TransactionFeeRate,
-                    minimumPriceUnit: settings[productName].MinimumPriceUnit
+            try {
+                event.preventDefault();
+                $("#results").hide();
+                var files = $('#replayFile')[0].files;
+                var startDate = new Date($("#StartDate").val());
+                var endDate = new Date($("#EndDate").val());
+                var everyDay = $("#everyDay")[0].checked;
+                var replayStartDate = $("#replayStartDate").val();
+                var passive = $("#passive")[0].checked;
+                var rank = $("#rank").val();
+                var fileInfos = [];
+                for (var i = 0; i < files.length; i++) {
+                    var fileName = files[i].name;
+                    var reader = readers[i];
+                    var productName = fileName.slice(0, fileName.indexOf('20'));
+                    fileInfos.push({
+                        fileName: files[i].name,
+                        settings: readers[i].result,
+                        transactionFeeRate: settings[productName].TransactionFeeRate,
+                        minimumPriceUnit: settings[productName].MinimumPriceUnit
+                    });
+                }
+                $.ajax({
+                    url: "home/replay",
+                    type: "POST",
+                    data: {
+                        fileInfos: fileInfos,
+                        startDate: formatDate(startDate),
+                        endDate: formatDate(endDate),
+                        getBestChangeDates: everyDay,
+                        replayStartDate: replayStartDate,
+                        passive: passive,
+                        rank: rank
+                    },
+                    success: function (data) {
+                        var result = data.report[data.report.length - 1].percentageBalance;
+                        var bestSettings = data.bestSettings;
+                        $('#SelectedProductName').val(bestSettings.selectedProductName);
+                        setDefaultSettings();
+                        $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
+                        $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
+                        $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
+                        $("#OpenCriteria").val(bestSettings.openCriteria);
+                        $('#FollowTrend').prop('checked', bestSettings.followTrend);
+                        $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
+                        $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
+                        $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
+                        $('#CloseAmbiguousStateToday').prop('checked', bestSettings.closeAmbiguousStateToday);
+                        $('#NeverReverse').prop('checked', bestSettings.NeverReverse);
+                        $("#results").show();
+                        showResult(data);
+
+                        var currentSettings = settings[bestSettings.selectedProductName];
+                        if (!everyDay && (
+                            currentSettings.StopLossCriteria != bestSettings.stopLossCriteria ||
+                            currentSettings.StopProfitCriteria != bestSettings.stopProfitCriteria ||
+                            currentSettings.StartProfitCriteria != bestSettings.startProfitCriteria ||
+                            currentSettings.OpenCriteria != bestSettings.openCriteria ||
+                            currentSettings.FollowTrend != bestSettings.followTrend ||
+                            currentSettings.NotUseClosePrice != bestSettings.notUseClosePrice ||
+                            currentSettings.OnlyUseClosePrice != bestSettings.onlyUseClosePrice ||
+                            currentSettings.CloseAmbiguousStateToday != bestSettings.closeAmbiguousStateToday ||
+                            currentSettings.NeverReverse != bestSettings.NeverReverse)) {
+                            alert("New!");
+                        }
+                    },
+                    fail: function (jqXHR, textStatus, errorThrown) {
+                        alert(textStatus);
+                    }
                 });
             }
-            $.ajax({
-                url: "home/replay",
-                type: "POST",
-                data: {
-                    fileInfos: fileInfos,
-                    startDate: formatDate(startDate),
-                    endDate: formatDate(endDate),
-                    getBestChangeDates: everyDay,
-                    replayStartDate: replayStartDate,
-                    passive: passive
-                },
-                success: function (data) {
-                    var result = data.report[data.report.length - 1].percentageBalance;
-                    var bestSettings = data.bestSettings;
-                    $('#SelectedProductName').val(bestSettings.selectedProductName);
-                    setDefaultSettings();
-                    $("#StopLossCriteria").val(bestSettings.stopLossCriteria);
-                    $("#StartProfitCriteria").val(bestSettings.startProfitCriteria);
-                    $("#StopProfitCriteria").val(bestSettings.stopProfitCriteria);
-                    $("#OpenCriteria").val(bestSettings.openCriteria);
-                    $('#FollowTrend').prop('checked', bestSettings.followTrend);
-                    $('#NeverEnterAmbiguousState').prop('checked', bestSettings.neverEnterAmbiguousState);
-                    $('#NotUseClosePrice').prop('checked', bestSettings.notUseClosePrice);
-                    $('#OnlyUseClosePrice').prop('checked', bestSettings.onlyUseClosePrice);
-                    $('#CloseAmbiguousStateToday').prop('checked', bestSettings.closeAmbiguousStateToday);
-                    $("#results").show();
-                    showResult(data);
-
-                    var currentSettings = settings[bestSettings.selectedProductName];
-                    if (!everyDay && (
-                        currentSettings.StopLossCriteria != bestSettings.stopLossCriteria ||
-                        currentSettings.StopProfitCriteria != bestSettings.stopProfitCriteria ||
-                        currentSettings.StartProfitCriteria != bestSettings.startProfitCriteria ||
-                        currentSettings.OpenCriteria != bestSettings.openCriteria ||
-                        currentSettings.FollowTrend != bestSettings.followTrend ||
-                        currentSettings.NotUseClosePrice != bestSettings.notUseClosePrice ||
-                        currentSettings.OnlyUseClosePrice != bestSettings.onlyUseClosePrice ||
-                        currentSettings.CloseAmbiguousStateToday != bestSettings.closeAmbiguousStateToday)) {
-                        alert("New!");
-                    }
-                },
-                fail: function (jqXHR, textStatus, errorThrown) {
-                    alert(textStatus);
-                }
-            });
+            catch (err) {
+                alert(err.message);
+            }
         });
 
         $('#form').submit(function (event) {
@@ -365,6 +385,7 @@
             values['UseCrossStarStrategy'] = $('#UseCrossStarStrategy')[0].checked;
             values['UseInternalProfit'] = $('#UseInternalProfit')[0].checked;
             values['CloseAmbiguousStateToday'] = $('#CloseAmbiguousStateToday')[0].checked;
+            values['NeverReverse'] = $('#NeverReverse')[0].checked;
             $.post($('#form').attr('action'), values, function (data) {
                 $("#results").show();
                 if ($("#findBestBudgetFactor")[0].checked) {
@@ -617,7 +638,7 @@
                 '下一交易日：' + report[report.length - 1].nextTransaction + "<br/>" +
                 '每笔交易本金相同：' +
                 '最终盈利倍数：' + percentageBalance +
-                ' 历史最高盈利倍数：' + maxPercentageBalance + " (" + formatDate(maxLossRangeStartDate) + ")" +
+                ' 历史最高盈利倍数：' + maxPercentageBalance + " (" + formatDate(maxPercentageBalanceDate) + ")" +
                 ' 最终盈利（初始25000）：' + 25000 * percentageBalance +
                 '，年化盈利倍数：' + (budgetChangeFactor === 1 ? percentageBalance / yearCount : Math.pow(percentageBalance, 1 / yearCount)) +
                 '，最大亏损倍数区间：' + maxLossRange + "（" + formatDate(maxLossRangeStartDate) + " - " + formatDate(maxLossRangeEndDate) + "）" +
@@ -1144,7 +1165,7 @@
         //};
 
         var settings = {
-            // 2018.03.26 - 
+            // 2018.03.26 -
             '热轧卷板': {
                 TransactionFeeRate: 0.00012,
                 MinimumPriceUnit: 1,
@@ -1222,17 +1243,17 @@
             '镍': {
                 MinimumPriceUnit: 10,
                 TransactionFeeRate: 0.00006,
-                StopLossCriteria: 0.027,
+                StopLossCriteria: 0.033,
                 StopProfitCriteria: 0.07,
-                StartProfitCriteria: 0.053,
-                OpenCriteria: 0.013,
+                StartProfitCriteria: 0.032,
+                OpenCriteria: 0.028,
                 FollowTrend: false,
-                BudgetFactor: 1.25,
+                BudgetFactor: 1.24,
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
-                NotUseClosePrice: true,
+                NotUseClosePrice: false,
                 OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: true
+                CloseAmbiguousStateToday: false
             },
             '菜粕': {
                 TransactionFeeRate: 0.000078,
@@ -1247,7 +1268,7 @@
                 MinimumPriceUnit: 1,
                 NotUseClosePrice: true,
                 OnlyUseClosePrice: false,
-                CloseAmbiguousStateToday: true
+                CloseAmbiguousStateToday: false
             },
             'PP': {
                 TransactionFeeRate: 0.00008,
@@ -1553,6 +1574,21 @@
                 BondPercentage: 13,
                 NeverEnterAmbiguousState: false,
                 NotUseClosePrice: false,
+                OnlyUseClosePrice: false,
+                CloseAmbiguousStateToday: true
+            },
+            '镍20180419-20180702': {
+                MinimumPriceUnit: 10,
+                TransactionFeeRate: 0.00006,
+                StopLossCriteria: 0.027,
+                StopProfitCriteria: 0.07,
+                StartProfitCriteria: 0.053,
+                OpenCriteria: 0.013,
+                FollowTrend: false,
+                BudgetFactor: 1.25,
+                BondPercentage: 13,
+                NeverEnterAmbiguousState: false,
+                NotUseClosePrice: true,
                 OnlyUseClosePrice: false,
                 CloseAmbiguousStateToday: true
             },
@@ -2033,20 +2069,20 @@
             return (new Date(date)).toLocaleDateString();
         }
 
-                    //$('#optimize').click(function (event) {
-                    //    event.preventDefault();
-                    //    var $inputs = $('#form input');
-                    //    var values = {};
-                    //    $inputs.each(function() {
-                    //        values[this.name] = $(this).val();
-                    //    });
-                    //    values['SelectedProductName'] = $('#SelectedProductName').val();
-                    //    values['FollowTrend'] = $('#FollowTrend')[0].checked;
-                    //    $.post('home/optimize', values, function(data) {
-                    //        $('#chart').hide();
-                    //        var optimizationResult = '优化结果<br/>止损点：' + data.StopLossCriteria + '，止盈点：' + data.StopProfitCriteria + '，起盈点：' + data.StartProfitCriteria + '，开仓点：' + OpenCriteria + '，开仓顺势：' + data.FollowTrend;
-                    //        $('#summary').html(optimizationResult);
-                    //    });
-                    //});
+                        //$('#optimize').click(function (event) {
+                        //    event.preventDefault();
+                        //    var $inputs = $('#form input');
+                        //    var values = {};
+                        //    $inputs.each(function() {
+                        //        values[this.name] = $(this).val();
+                        //    });
+                        //    values['SelectedProductName'] = $('#SelectedProductName').val();
+                        //    values['FollowTrend'] = $('#FollowTrend')[0].checked;
+                        //    $.post('home/optimize', values, function(data) {
+                        //        $('#chart').hide();
+                        //        var optimizationResult = '优化结果<br/>止损点：' + data.StopLossCriteria + '，止盈点：' + data.StopProfitCriteria + '，起盈点：' + data.StartProfitCriteria + '，开仓点：' + OpenCriteria + '，开仓顺势：' + data.FollowTrend;
+                        //        $('#summary').html(optimizationResult);
+                        //    });
+                        //});
     </script>
 }

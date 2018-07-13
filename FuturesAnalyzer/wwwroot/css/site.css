@@ -28,3 +28,11 @@
         display: none;
     }
 }
+
+
+/* Hide/rearrange for smaller screens */
+@media screen and (min-width: 768px) {
+    input[type="number"] {
+        max-width: 80px;
+    }
+}

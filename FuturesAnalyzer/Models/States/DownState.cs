@@ -168,8 +168,9 @@ namespace FuturesAnalyzer.Models.States
         protected override MarketState GetNewState(decimal closePrice)
         {
             MarketState newState;
-            if (Account.NeverEnterAmbiguousState || closePrice < Account.Contract.Price ||
-                !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)
+            if (!Account.NeverReverse && (
+                Account.NeverEnterAmbiguousState || closePrice < Account.Contract.Price ||
+                !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value))
             {
                 newState = new UpState();
                 Account.IsLastTransactionLoss = closePrice > Account.Contract.Price;

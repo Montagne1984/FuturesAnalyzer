@@ -43,6 +43,7 @@ namespace FuturesAnalyzer.Models
         public bool UseCrossStarStrategy = false;
         public bool UseInternalProfit = false;
         public bool CloseAmbiguousStateToday = false;
+        public bool NeverReverse = false;
 
         public decimal DeductTransactionFee(decimal price, int unit = 1)
         {
