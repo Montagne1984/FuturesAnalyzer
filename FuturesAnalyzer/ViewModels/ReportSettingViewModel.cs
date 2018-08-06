@@ -20,6 +20,8 @@ namespace FuturesAnalyzer.ViewModels
         public DateTime StartDate { get; set; } = DateTime.Now.AddYears(-1);
         public DateTime EndDate { get; set; } = DateTime.Now.AddDays(-1);
         public decimal MinimumPriceUnit { get; set; } = 1;
+        public decimal BudgetFactor { get; set; } = 1;
+        public int BondPercentage { get; set; } = 1;
         public bool NotUseClosePrice { get; set; } = false;
         public bool UseAverageMarketState { get; set; }
         public bool CloseAfterProfit { get; set; }
@@ -48,6 +50,7 @@ namespace FuturesAnalyzer.ViewModels
                 StartDate = StartDate,
                 EndDate = EndDate,
                 MinimumPriceUnit = MinimumPriceUnit,
+                BudgetFactor = BudgetFactor,
                 NotUseClosePrice = NotUseClosePrice,
                 UseAverageMarketState = UseAverageMarketState,
                 CloseAfterProfit = CloseAfterProfit,

@@ -14,5 +14,22 @@ namespace FuturesAnalyzer.Models
         public Transaction OpenTransaction { get; set; }
         public string NextTransaction { get; set; }
         public decimal InternalProfit { get; set; }
+
+        public DailyAccountData Clone()
+        {
+            var data = new DailyAccountData
+            {
+                DailyPrice = DailyPrice,
+                Balance = Balance,
+                PercentageBalance = PercentageBalance,
+                RealTimePercentageBalance = RealTimePercentageBalance,
+                Contract = Contract,
+                CloseTransaction = CloseTransaction,
+                OpenTransaction = OpenTransaction,
+                NextTransaction = NextTransaction,
+                InternalProfit = InternalProfit
+            };
+            return data;
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace FuturesAnalyzer.Models.States
 {
@@ -188,7 +189,14 @@ namespace FuturesAnalyzer.Models.States
             //{
             //    return decimal.MaxValue;
             //}
-            return Floor(Account.Contract.Price*(1 - Account.StopLossCriteria));
+            return Floor(Account.Contract.Price * (1 - Account.StopLossCriteria));
+
+            //var stopLossPrice = Math.Max(HighestPrice, Account.Contract.Price) * (1 - Account.StopLossCriteria);
+            //if(stopLossPrice > Account.Contract.Price)
+            //{
+            //    stopLossPrice = Account.Contract.Price;
+            //}
+            //return Floor(stopLossPrice);
         }
 
         public override decimal GetStopProfitPrice()

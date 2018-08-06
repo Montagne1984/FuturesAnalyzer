@@ -71,7 +71,7 @@ namespace FuturesAnalyzer.Controllers
                 );
         }
 
-        public JsonResult Replay(FileInfo[] fileInfos, DateTime startDate, DateTime endDate, DateTime replayStartDate, bool getBestChangeDates = false, int rank = 1, bool passive = false)
+        public JsonResult Replay(FileInfo[] fileInfos, DateTime startDate, DateTime endDate, DateTime replayStartDate, bool getBestChangeDates = false, int rank = 1, bool passive = false, int bondPercentage = 100, bool findBestBudgetFactor = false)
         {
             var topOfTopSettings = new SortedList<decimal, List<SettingResult>>();
             var topSettingsArray = new SortedList<decimal, List<SettingResult>>[fileInfos.Length];
@@ -165,6 +165,10 @@ namespace FuturesAnalyzer.Controllers
                 taskList.Add(new Task(() =>
                 {
                     var report = GetReport(setting.Setting, dailyPrices);
+                    //if(bondPercentage > 0 && _reportService.GetMaxLossRange(report) * 100 > bondPercentage)
+                    //{
+                    //    return;
+                    //}
                     if (getBestChangeDates)
                     {
                         for (var reportIndex = 0; reportIndex < report.Count(); reportIndex++)
@@ -250,6 +254,7 @@ namespace FuturesAnalyzer.Controllers
                 .First().Setting;
             var bestDailyPrices = _reportService.LoadDailyPrices("Data/" + bestSettings.SelectedProductName + ".csv").Where(d => d.Date >= startDate && d.Date <= endDate).ToList();
 
+            var resultReport = new List<DailyAccountData>();
             if (getBestChangeDates && bestDailyPrices.First().Date <= replayStartDate)
             {
                 var startIndex = 5;
@@ -296,7 +301,7 @@ namespace FuturesAnalyzer.Controllers
                     //if (previousDayCandidate.Setting != thisDayCandidate.Setting)
                     if (previousDayCandidate.Setting != thisDayCandidate.Setting && 
                         (passive && (!thisTopSettings.Contains(previousBest.Setting) || !thisTopSettings.Contains(previousDayCandidate.Setting)) ||
-                        !passive && thisDayCandidate.Setting != previousDayCandidate.Setting))
+                        !passive))
                     {
                         //thisDayBest.Result = everyDayBest.ElementAt(dayIndex).Value.Last().Key;
                         thisDayCandidate.Result = candiditeList.Key;
@@ -304,15 +309,19 @@ namespace FuturesAnalyzer.Controllers
                         settingResults.Add(everyDayBest.ElementAt(dayIndex).Key, thisDayCandidate);
                         previousDayCandidate = thisDayCandidate;
                     }
+                    else if(everyDayBest.ElementAt(dayIndex).Key.Year != everyDayBest.ElementAt(dayIndex - 1).Key.Year)
+                    {
+                        settingResults.Add(everyDayBest.ElementAt(dayIndex).Key, thisDayCandidate);
+                    }
                 }
 
                 var content = new List<string>();
-                var resultFileName = GenerateChangeReport(fileInfos, endDate, replayStartDate, bestDailyPrices, settingResults, content, passive, rank);
+                var resultFileName = GenerateChangeReport(fileInfos, endDate, replayStartDate, bestDailyPrices, settingResults, content, passive, rank, ref resultReport, bondPercentage, findBestBudgetFactor);
                 
                 using (var fileStream = new FileStream($"Results\\{productName}\\{resultFileName}", FileMode.Create))
                 using (var streamWriter = new StreamWriter(fileStream))
                 {
-                    streamWriter.WriteLine("Date,StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,NotUseClosePrice,OnlyUseClosePrice,CloseAmbiguousStateToday,Result,PreviousResult,Delta,Profit");
+                    streamWriter.WriteLine("Date,StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,NotUseClosePrice,OnlyUseClosePrice,CloseAmbiguousStateToday,Result,PreviousResult,Delta,Gain,TotalDelta,Profit");
                     foreach(var c in content)
                     {
                         streamWriter.WriteLine(c);
@@ -324,11 +333,11 @@ namespace FuturesAnalyzer.Controllers
                 new
                 {
                     BestSettings = bestSettings,
-                    Report = GetReport(bestSettings, bestDailyPrices)
+                    Report = getBestChangeDates ? resultReport : GetReport(bestSettings, bestDailyPrices)
                 });
         }
 
-        private string GenerateChangeReport(FileInfo[] fileInfos, DateTime endDate, DateTime replayStartDate, List<DailyPrice> dailyPrices, Dictionary<DateTime, SettingResult> settingResults, List<string> content, bool passive, int rank)
+        private string GenerateChangeReport(FileInfo[] fileInfos, DateTime endDate, DateTime replayStartDate, List<DailyPrice> dailyPrices, Dictionary<DateTime, SettingResult> settingResults, List<string> content, bool passive, int rank, ref List<DailyAccountData> report, int bondPercentage = 100, bool findBestBudgetFactor = false)
         {
             string resultFileName = null;
             IEnumerable<DailyAccountData> previousDayBestReport = null;
@@ -402,37 +411,151 @@ namespace FuturesAnalyzer.Controllers
             {
                 decimal totalLoss = 0;
                 decimal previousDayBestResultToday = 0;
+                var previousDate = settingResults.First().Key;
                 var initialResult = settingResults.First().Value.Result;
+                var previousBestStartResult = initialResult;
+                var previousBestStartProfit = 0m;
+                previousDayBestReport = GetReport(settingResults.First().Value.Setting, dailyPrices);
+                report = new List<DailyAccountData>
+                {
+                    previousDayBestReport.First(r => r.DailyPrice.Date == previousDate).Clone()
+                };
+                report.First().RealTimePercentageBalance -= report.First().PercentageBalance;
+                report.First().PercentageBalance = 0m;
+                var budgetFactor = 1m;
+                var bestBudgetChangeFactor = 1m;
                 foreach (var settingResult in settingResults)
                 {
                     var date = settingResult.Key;
                     var s = settingResult.Value;
+                    var openPriceDelta = 0m;
+                    var thisDayBestReport = GetReport(s.Setting, dailyPrices);
+
+                    var thisDayBestReportDelta = 0m;
                     if (previousDayBestReport != null)
                     {
                         previousDayBestResultToday = previousDayBestReport.First(r => r.DailyPrice.Date == date).RealTimePercentageBalance;
+                        if (previousDayBestResultToday != s.Result)
+                        {
+                            openPriceDelta += GetThisDayOpenPriceDelta(previousDayBestReport, date);
+                            thisDayBestReportDelta = GetThisDayOpenPriceDelta(thisDayBestReport, date);
+                            openPriceDelta -= thisDayBestReportDelta;
+                            openPriceDelta -= s.Setting.TransactionFeeRate * 2;
+                        }
                     }
                     else
                     {
                         previousDayBestResultToday = s.Result;
+                        previousDate = date;
                     }
-                    var loss = previousDayBestResultToday - s.Result;
+
+                    if (previousDayBestReport != null)
+                    {
+                        budgetFactor = AppendDailyData(report, previousDayBestReport, previousDate, previousBestStartResult, previousBestStartProfit, date, budgetFactor, findBestBudgetFactor, bondPercentage);
+                    }
+
+                    var loss = previousDayBestResultToday - s.Result + openPriceDelta;
                     totalLoss += loss;
-                    var profit = s.Result - initialResult + totalLoss;
+                    var gain = s.Result - initialResult;
+                    var profit = gain + totalLoss;
                     content.Add(
-                        $"{date.ToString("MM/dd/yy")},{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Setting.NotUseClosePrice},{s.Setting.OnlyUseClosePrice},{s.Setting.CloseAmbiguousStateToday},{s.Result},{previousDayBestResultToday},{loss},{profit}");
-                    previousDayBestReport = GetReport(s.Setting, dailyPrices);
+                        $"{date.ToString("MM/dd/yy")},{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Setting.NotUseClosePrice},{s.Setting.OnlyUseClosePrice},{s.Setting.CloseAmbiguousStateToday},{s.Result},{previousDayBestResultToday},{loss},{gain},{totalLoss},{profit}");
+
+                    previousDayBestReport = thisDayBestReport;
+                    previousDate = date;
+                    previousBestStartResult = s.Result + thisDayBestReportDelta;
+                    previousBestStartProfit = report.Last().RealTimePercentageBalance + openPriceDelta * budgetFactor;
+                    
+                    if (findBestBudgetFactor)
+                    {
+                        bestBudgetChangeFactor = _reportService.GetBestBudgetChangeFactor(thisDayBestReport, bondPercentage);
+                        var nextBudgetFactor = 1m;
+                        while(nextBudgetFactor * bestBudgetChangeFactor < budgetFactor)
+                        {
+                            nextBudgetFactor *= bestBudgetChangeFactor;
+                        }
+                        budgetFactor = nextBudgetFactor;
+                    }
                 }
+
+                budgetFactor = AppendDailyData(report, previousDayBestReport, previousDate, previousBestStartResult, previousBestStartProfit, endDate, budgetFactor, findBestBudgetFactor, bondPercentage);
+                
                 var lastSetting = settingResults.Last().Value.Setting;
-                var lastResult = GetReport(lastSetting, dailyPrices).Last().RealTimePercentageBalance;
+                var lastReport = GetReport(lastSetting, dailyPrices);
+                var lastResult = lastReport.Last().RealTimePercentageBalance;
 
                 var totalGain = lastResult - initialResult;
                 var finalResult = totalGain + totalLoss;
+                lastReport.Last().Balance = finalResult * previousDayBestReport.First().DailyPrice.ClosePrice;
+                lastReport.Last().PercentageBalance = finalResult;
+                //report.Add(lastReport.Last());
                 content.Add(
-                    $"{endDate.ToString("MM/dd/yy")},{lastSetting.StopLossCriteria},{lastSetting.StopProfitCriteria},{lastSetting.StartProfitCriteria},{lastSetting.OpenCriteria},{lastSetting.FollowTrend},{lastSetting.NotUseClosePrice},{lastSetting.OnlyUseClosePrice},{lastSetting.CloseAmbiguousStateToday},{lastResult},{lastResult},0,{finalResult}");
+                    $"{endDate.ToString("MM/dd/yy")},{lastSetting.StopLossCriteria},{lastSetting.StopProfitCriteria},{lastSetting.StartProfitCriteria},{lastSetting.OpenCriteria},{lastSetting.FollowTrend},{lastSetting.NotUseClosePrice},{lastSetting.OnlyUseClosePrice},{lastSetting.CloseAmbiguousStateToday},{lastResult},{lastResult},0,{totalGain},{totalLoss},{finalResult}");
 
                 resultFileName = $"Change\\{(passive ? "Passive" : string.Empty)}Change_{DateTime.Now.ToString("yyMMddHHmm")}_{rank}_{Math.Round(finalResult, 4)}_{Math.Round(totalGain, 4)}_{Math.Round(totalLoss, 4)}_{replayStartDate.ToString("yyMMdd")}_{Path.GetFileNameWithoutExtension(fileInfos[0].FileName)}_{fileInfos.Length}.csv";
             }
             return resultFileName;
+        }
+
+        private decimal AppendDailyData(List<DailyAccountData> report, IEnumerable<DailyAccountData> previousDayBestReport, DateTime previousDate, decimal previousBestStartResult, decimal previousBestStartProfit, DateTime date, decimal budgetFactor, bool findBestBudgetFactor, int bondPercentage)
+        {
+            var initialBudgetFactor = budgetFactor;
+            var budgetFactorChange = false;
+            var budgetChangeFactor = _reportService.GetBestBudgetChangeFactor(previousDayBestReport, bondPercentage);
+            //var profitFactor = 100m / bondPercentage;
+            var bondPercentageValue = bondPercentage / 100m;
+            IEnumerable<DailyAccountData> dailyData = previousDayBestReport.Where(r => r.DailyPrice.Date > previousDate && r.DailyPrice.Date <= date);
+            var percentageBalance = previousBestStartProfit;
+            for (var i = 0; i < dailyData.Count(); i++)
+            {
+                var dailyDataI = dailyData.ElementAt(i).Clone();
+                var percentageDelta = i == 0 ? dailyData.ElementAt(i).PercentageBalance - previousBestStartResult : dailyData.ElementAt(i).PercentageBalance - dailyData.ElementAt(i - 1).PercentageBalance;
+                percentageDelta *= budgetFactor;
+                percentageBalance += percentageDelta;
+
+                if (findBestBudgetFactor)
+                {
+                    if (percentageDelta > 0)
+                    {
+                        if ((percentageBalance + bondPercentageValue) * 0.8m >= bondPercentageValue * budgetFactor * budgetChangeFactor)
+                        {
+                            budgetFactor *= budgetChangeFactor;
+                            budgetFactorChange = true;
+                        }
+                    }
+                    else
+                    {
+                        while ((percentageBalance + bondPercentageValue) * 0.8m < bondPercentageValue * budgetFactor && budgetFactor > 1)
+                        {
+                            budgetFactor /= budgetChangeFactor;
+                            budgetFactorChange = true;
+                        }
+                    }
+                }
+
+                dailyDataI.Balance = percentageBalance * previousDayBestReport.First().DailyPrice.ClosePrice;
+                dailyDataI.PercentageBalance = percentageBalance;
+                dailyDataI.RealTimePercentageBalance = dailyDataI.PercentageBalance + (dailyData.ElementAt(i).RealTimePercentageBalance - dailyData.ElementAt(i).PercentageBalance) * budgetFactor;
+                report.Add(dailyDataI);
+            }
+
+            if(budgetFactorChange)
+                return budgetFactor;
+
+            return initialBudgetFactor;
+        }
+
+        private static decimal GetThisDayOpenPriceDelta(IEnumerable<DailyAccountData> dayBestReport, DateTime date)
+        {
+            var dayBestData = dayBestReport.First(r => r.DailyPrice.Date == date);
+            var dayBestNextData = dayBestReport.FirstOrDefault(r => r.DailyPrice.Date > date);
+            if (dayBestNextData != null && dayBestData.Contract != null)
+            {
+                var priceDelta = dayBestNextData.DailyPrice.OpenPrice - dayBestData.DailyPrice.ClosePrice;
+                return priceDelta / dayBestData.Contract.Price * (int)dayBestData.Contract.Direction;
+            }
+
+            return 0m;
         }
 
         private decimal? GetCurrentContractResult(DailyPrice dailyPrice, DailyAccountData currentDailyAccountData, ReportSettingViewModel currentSetting, DailyAccountData targetDailyAccountData, ReportSettingViewModel targetSetting)
@@ -620,7 +743,7 @@ namespace FuturesAnalyzer.Controllers
                 Console.Beep();
             }
 
-            return Json(
+             return Json(
                 new
                 {
                     BestSettings = bestSettings,
@@ -663,6 +786,7 @@ namespace FuturesAnalyzer.Controllers
                 OpenCriteria = model.OpenCriteria,
                 FollowTrend = model.FollowTrend,
                 NotUseClosePrice = model.NotUseClosePrice,
+                BudgetFactor = model.BudgetFactor,
                 UseAverageMarketState = model.UseAverageMarketState,
                 CloseAfterProfit = model.CloseAfterProfit,
                 OnlyUseClosePrice = model.OnlyUseClosePrice,

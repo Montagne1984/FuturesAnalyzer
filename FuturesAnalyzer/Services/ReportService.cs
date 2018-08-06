@@ -167,5 +167,97 @@ namespace FuturesAnalyzer.Services
                    && dailyPrice.ClosePrice >= dailyPrice.LowestPrice && dailyPrice.ClosePrice <= dailyPrice.HighestPrice
                    && dailyPrice.OpenPrice >= dailyPrice.LowestPrice && dailyPrice.OpenPrice <= dailyPrice.HighestPrice;
         }
+
+        public decimal GetMaxLossRange(IEnumerable<DailyAccountData> report)
+        {
+            decimal max = 0;
+            DateTime maxDate = report.First().DailyPrice.Date;
+            DateTime maxLossRangeStartDate;
+            DateTime maxLossRangeEndDate;
+            decimal maxLossRange = 0;
+            foreach(var dailyData in report)
+            {
+                if (dailyData.PercentageBalance > max)
+                {
+                    max = dailyData.PercentageBalance;
+                    maxDate = dailyData.DailyPrice.Date;
+                }
+                else if (max - dailyData.PercentageBalance > maxLossRange)
+                {
+                    maxLossRangeStartDate = maxDate;
+                    maxLossRangeEndDate = dailyData.DailyPrice.Date;
+                    maxLossRange = max - dailyData.PercentageBalance;
+                }
+            }
+            return maxLossRange;
+        }
+
+        public decimal GetBestBudgetChangeFactor(IEnumerable<DailyAccountData> report, int bondPercentage)
+        {
+            var bestResult = 0m;
+            var bestFactor = 1m;
+            for (var i = 100; i < 300; i++)
+            {
+                var factor = i / 100m;
+                var result = GetReportWithBudgetFactor(report.ToArray(), factor, bondPercentage).Last().PercentageBalance;
+                if (result > bestResult)
+                {
+                    bestResult = result;
+                    bestFactor = factor;
+                }
+            }
+            return bestFactor;
+        }
+
+        public IEnumerable<DailyAccountData> GetReportWithBudgetFactor(DailyAccountData[] report, decimal budgetChangeFactor, int bondPercentage)
+        {
+            var budgetFactor = 1m;
+            var budgetFactorLevel = 0m;
+            //var profitFactor = 100m / bondPercentage;
+            var bondPercentageValue = bondPercentage / 100m;
+            decimal percentageBalance = 0m;
+            var newReport = new DailyAccountData[report.Length];
+            for (var index = 0; index < report.Length; index++)
+            {
+                if (index > 0)
+                {
+                    var percentageDelta = report[index].PercentageBalance - report[index - 1].PercentageBalance;
+                    percentageDelta *= budgetFactor;
+                    percentageBalance += percentageDelta;
+                    if (percentageDelta > 0)
+                    {
+                        if ((percentageBalance + bondPercentageValue) * 0.8m >= bondPercentageValue * budgetFactor * budgetChangeFactor)
+                        {
+                            if (budgetChangeFactor != 1)
+                            {
+                                budgetFactorLevel++;
+                            }
+                            budgetFactor *= budgetChangeFactor;
+                        }
+                    }
+                    else
+                    {
+                        while ((percentageBalance + bondPercentageValue) * 0.8m < bondPercentageValue * budgetFactor && budgetFactor > 1)
+                        {
+                            if (budgetChangeFactor != 1)
+                            {
+                                budgetFactorLevel--;
+                            }
+                            budgetFactor /= budgetChangeFactor;
+                        }
+                    }
+                }
+                else if (index == report.Length - 1)
+                {
+                    var percentageDelta = report[index].PercentageBalance - report[index - 1].PercentageBalance;
+                    percentageDelta *= budgetFactor;
+                    percentageBalance += percentageDelta;
+                }
+                newReport[index] = report[index].Clone();
+                newReport[index].PercentageBalance = percentageBalance;
+                newReport[index].RealTimePercentageBalance = percentageBalance + (report[index].RealTimePercentageBalance - report[index].PercentageBalance) * budgetFactor;
+            }
+            return newReport;
+        }
     }
 }

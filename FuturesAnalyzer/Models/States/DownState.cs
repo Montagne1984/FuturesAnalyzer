@@ -208,7 +208,14 @@ namespace FuturesAnalyzer.Models.States
             //{
             //    return decimal.MinValue;
             //}
-            return Ceiling(Account.Contract.Price*(1 + Account.StopLossCriteria));
+            return Ceiling(Account.Contract.Price * (1 + Account.StopLossCriteria));
+
+            //var stopLossPrice = Math.Min(LowestPrice, Account.Contract.Price) * (1 + Account.StopLossCriteria);
+            //if (stopLossPrice < Account.Contract.Price)
+            //{
+            //    stopLossPrice = Account.Contract.Price;
+            //}
+            //return Ceiling(stopLossPrice);
         }
 
         public override string GetNextTransaction()
