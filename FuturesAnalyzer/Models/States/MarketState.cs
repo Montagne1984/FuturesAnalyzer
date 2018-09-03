@@ -13,6 +13,8 @@ namespace FuturesAnalyzer.Models.States
         public bool StopInternalProfit { get; set; }
         public bool New { get; set; }
         public decimal InternalProfit { get; set; }
+        public decimal TopPrice { get; set; }
+        public decimal BottomPrice { get; set; }
 
         public virtual bool CloseWithinStartProfitPrice(DailyPrice dailyPrice) => false;
         public virtual bool HitStartProfitPrice(DailyPrice dailyPrice) => false;

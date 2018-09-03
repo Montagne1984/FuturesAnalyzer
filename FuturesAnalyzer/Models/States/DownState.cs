@@ -161,6 +161,16 @@ namespace FuturesAnalyzer.Models.States
             newState.StartPrice = closePrice;
             newState.HighestPrice = Account.NotUseClosePrice ? dailyPrice.HighestPrice : dailyPrice.ClosePrice;
             newState.LowestPrice = Account.NotUseClosePrice ? dailyPrice.LowestPrice : dailyPrice.ClosePrice;
+            if (closePrice < Account.Contract.Price)
+            {
+                newState.TopPrice = newState.HighestPrice;
+                newState.BottomPrice = closePrice;
+            }
+            else
+            {
+                newState.TopPrice = Math.Max(TopPrice, Account.NotUseClosePrice ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
+                newState.BottomPrice = Math.Min(BottomPrice, Account.NotUseClosePrice ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
+            }
             Account.MarketState = newState;
             Account.Contract = null;
         }
@@ -170,7 +180,7 @@ namespace FuturesAnalyzer.Models.States
             MarketState newState;
             if (!Account.NeverReverse && (
                 Account.NeverEnterAmbiguousState || closePrice < Account.Contract.Price ||
-                !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value))
+                !Account.BreakThroughStratgy && (!Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)))
             {
                 newState = new UpState();
                 Account.IsLastTransactionLoss = closePrice > Account.Contract.Price;
@@ -208,6 +218,10 @@ namespace FuturesAnalyzer.Models.States
             //{
             //    return decimal.MinValue;
             //}
+            if (Account.BreakThroughStratgy)
+            {
+                return Ceiling(Math.Max(Account.Contract.Price * (1 + Account.StopLossCriteria), (TopPrice + BottomPrice) / 2));
+            }
             return Ceiling(Account.Contract.Price * (1 + Account.StopLossCriteria));
 
             //var stopLossPrice = Math.Min(LowestPrice, Account.Contract.Price) * (1 + Account.StopLossCriteria);

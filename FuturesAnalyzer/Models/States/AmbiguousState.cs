@@ -99,6 +99,8 @@ namespace FuturesAnalyzer.Models.States
 
             newState.HighestPrice = Math.Max(newState.StartPrice, Account.FollowTrend && Account.NotUseClosePrice ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
             newState.LowestPrice = Math.Min(newState.StartPrice, Account.FollowTrend && Account.NotUseClosePrice ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
+            newState.TopPrice = Math.Max(TopPrice, Account.NotUseClosePrice ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
+            newState.BottomPrice = Math.Min(BottomPrice, Account.NotUseClosePrice ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
             newState.Account = Account;
             var transaction = newState.TryOpen(dailyPrice);
             Account.MarketState = newState;
@@ -127,12 +129,12 @@ namespace FuturesAnalyzer.Models.States
 
         public override decimal GetCeilingOpenPrice()
         {
-            return Ceiling(PreviousPrice.ClosePrice*(1 + Account.OpenCriteria));
+            return Account.BreakThroughStratgy ? TopPrice : Ceiling(PreviousPrice.ClosePrice*(1 + Account.OpenCriteria));
         }
 
         public override decimal GetFloorOpenPrice()
         {
-            return Floor(PreviousPrice.ClosePrice*(1 - Account.OpenCriteria));
+            return Account.BreakThroughStratgy ? BottomPrice : Floor(PreviousPrice.ClosePrice*(1 - Account.OpenCriteria));
         }
 
         public override string GetNextTransaction()

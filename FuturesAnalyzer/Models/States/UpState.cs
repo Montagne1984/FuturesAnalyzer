@@ -161,6 +161,16 @@ namespace FuturesAnalyzer.Models.States
             newState.StartPrice = closePrice;
             newState.HighestPrice = Account.NotUseClosePrice ? dailyPrice.HighestPrice : dailyPrice.ClosePrice;
             newState.LowestPrice = Account.NotUseClosePrice ? dailyPrice.LowestPrice : dailyPrice.ClosePrice;
+            if(closePrice > Account.Contract.Price)
+            {
+                newState.TopPrice = closePrice;
+                newState.BottomPrice = newState.LowestPrice;
+            }
+            else
+            {
+                newState.TopPrice = Math.Max(TopPrice, Account.NotUseClosePrice ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
+                newState.BottomPrice = Math.Min(BottomPrice, Account.NotUseClosePrice ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
+            }
             Account.MarketState = newState;
             Account.Contract = null;
         }
@@ -169,8 +179,8 @@ namespace FuturesAnalyzer.Models.States
         {
             MarketState newState;
             if (!Account.NeverReverse &&
-                (Account.NeverEnterAmbiguousState || closePrice > Account.Contract.Price ||
-                !Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value))
+                (Account.NeverEnterAmbiguousState || closePrice > Account.Contract.Price || 
+                !Account.BreakThroughStratgy && (!Account.IsLastTransactionLoss.HasValue || !Account.IsLastTransactionLoss.Value)))
             {
                 newState = new DownState();
                 Account.IsLastTransactionLoss = closePrice < Account.Contract.Price;
@@ -189,6 +199,10 @@ namespace FuturesAnalyzer.Models.States
             //{
             //    return decimal.MaxValue;
             //}
+            if(Account.BreakThroughStratgy)
+            {
+                return Floor(Math.Min(Account.Contract.Price * (1 - Account.StopLossCriteria), (TopPrice + BottomPrice) / 2));
+            }
             return Floor(Account.Contract.Price * (1 - Account.StopLossCriteria));
 
             //var stopLossPrice = Math.Max(HighestPrice, Account.Contract.Price) * (1 - Account.StopLossCriteria);

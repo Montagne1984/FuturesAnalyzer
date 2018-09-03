@@ -76,6 +76,8 @@ namespace FuturesAnalyzer.Services
                 var currentState = account.MarketState;
                 currentState.HighestPrice = Math.Max(currentState.HighestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
                 currentState.LowestPrice = Math.Min(currentState.LowestPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
+                currentState.TopPrice = Math.Max(currentState.TopPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.HighestPrice : dailyPrice.ClosePrice);
+                currentState.BottomPrice = Math.Min(currentState.BottomPrice, account.NotUseClosePrice && dailyAccountData.OpenTransaction == null ? dailyPrice.LowestPrice : dailyPrice.ClosePrice);
                 currentState.PreviousPrice = dailyPrice;
                 account.PreviousFiveDayPrices.Dequeue();
                 account.PreviousFiveDayPrices.Enqueue(dailyPrice.ClosePrice);
@@ -143,6 +145,9 @@ namespace FuturesAnalyzer.Services
             else
             {
                 account.MarketState = account.UseAverageMarketState ? new AverageAmbiguousState() : new AmbiguousState();
+                var firstDailyPrices = dailyPrices.Take(WarmUpLength);
+                account.MarketState.TopPrice = account.NotUseClosePrice ? firstDailyPrices.Max(p => p.HighestPrice) : firstDailyPrices.Max(p => p.ClosePrice);
+                account.MarketState.BottomPrice = account.NotUseClosePrice ? firstDailyPrices.Min(p => p.LowestPrice) : firstDailyPrices.Min(p => p.ClosePrice);
             }
             account.MarketState.HighestPrice = dailyPrices[WarmUpLength].OpenPrice;
             account.MarketState.LowestPrice = dailyPrices[WarmUpLength].OpenPrice;

@@ -1,992 +1,967 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using FuturesAnalyzer.ViewModels;
-using FuturesAnalyzer.Services;
-using System.IO;
-using FuturesAnalyzer.Models;
-using CsvHelper;
-using Microsoft.Extensions.Logging;
+using System.Web.Security;
+using CsvHelper.Configuration;
+using Dlw.ScBase.Common.Infrastructure.Collections;
+using Dlw.ScBase.Common.Infrastructure.Logging;
+using Dlw.ScBase.Content.Cms.Config.WeChat;
+using Dlw.ScBase.Content.Cms.Globalization;
+using Dlw.ScBase.Content.Cms.SiteTree;
+using Dlw.ScBase.Content.eCampus.Analytics.BaseHelper;
+using Dlw.ScBase.Content.eCampus.CustomData.MultiChannelUserRelationship;
+using Dlw.ScBase.Content.eCampus.Services;
+using Dlw.ScBase.Website.Infrastructure.Config;
+using Dlw.ScBase.Website.Infrastructure.Ioc;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using Sitecore.Analytics.Data.DataAccess.MongoDb;
+using Sitecore.Security.Accounts;
+using Sitecore.Configuration;
+using Sitecore.Data;
+using Dlw.ScBase.Content.Ctx;
+using MongoDB.Driver.Builders;
+using CsvHelper.TypeConversion;
+using Sitecore.Shell.Applications.MarketingAutomation.Extensions;
 
-namespace FuturesAnalyzer.Controllers
+namespace Dlw.ScBase.Website.Components.eCampus._Shared.Models
 {
-    public class HomeController : Controller
+    /// <summary>
+    /// Get HCP Data 
+    /// </summary>
+    public static class ExportDataHelper
     {
-        private IReportService _reportService;
-        private object lockObject = new object();
-        private readonly ILogger _logger;
+        private static IWeChatPublicAccountStore WeChatPublicAccountStore => WebContainer.Resolve<IWeChatPublicAccountStore>();
+        private static IUserRelationshipService UserRelationshipService => WebContainer.Resolve<IUserRelationshipService>();
+        private static readonly ILogger Log = LogProvider.GetLogger(typeof(ExportDataHelper));
+        private static readonly Database MasterDb = Factory.GetDatabase("master");
+        private const string ScRootId = "{26E8AC4C-6F40-4544-AE84-23DF746BE4D6}";
+        private static readonly ContentStore ContentStoreHelper;
+        private static readonly DataContext DataContext;
 
-        public IActionResult Index()
+        static ExportDataHelper()
         {
-            var model = new ReportSettingViewModel();
-            return View(model);
+            ContentStoreHelper = new ContentStore(AppSettings.SitecoreContentDatabaseName);
+            var site = new Site(Factory.GetSite("Sanf"), new SiteConfiguration());
+            DataContext = new DataContext(site, new Locale(site.SiteContext.ContentLanguage));
         }
 
-        public JsonResult Report(ReportSettingViewModel model)
+        public static List<MasterDataDto> GetHcpMasterData(string targetChannel = null)
         {
-            _reportService = model.UseCrossStarStrategy ? new CrossStarReportService() : new ReportService();
-            //if (report.Any())
-            //{
-            //    var bestBalance = report.Last().Balance;
-            //    for (var stopLoss = 0.01m; stopLoss <= 0.04m; stopLoss += 0.001m)
-            //    {
-            //        for (var startProfit = 0.02m; startProfit <= 0.2m; startProfit += 0.001m)
-            //        {
-            //            for (var stopProfit = 0.1m; stopProfit <= 0.3m; stopProfit += 0.01m)
-            //            {
-            //                for (var openCriteria = 0.01m; openCriteria <= 0.03m; openCriteria += 0.001m)
-            //                {
-            //                    MarketState.StopLossCriteria = stopLoss;
-            //                    MarketState.StartProfitCriteria = startProfit;
-            //                    MarketState.StopProfitCriteria = stopProfit;
-            //                    AmbiguousState.OpenCriteria = openCriteria;
-            //                    AmbiguousState.FollowTrend = true;
-            //                    account = new Account { TransactionFeeRate = model.TransactionFeeRate };
-            //                    var result = _reportService.GenerateReport(account, dateRange).ToList();
-            //                    if (result.Last().Balance > bestBalance)
-            //                    {
-            //                        bestBalance = result.Last().Balance;
-            //                    }
-            //                    AmbiguousState.FollowTrend = false;
-            //                    account = new Account { TransactionFeeRate = model.TransactionFeeRate };
-            //                    result = _reportService.GenerateReport(account, dateRange).ToList();
-            //                    if (result.Last().Balance > bestBalance)
-            //                    {
-            //                        bestBalance = result.Last().Balance;
-            //                    }
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
-            var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");
-            var report = GetReport(model, dailyPrices);
-            return Json(
-                new
-                {
-                    Report = report
-                }
-                );
-        }
+            var hcpMasterData = new List<MasterDataDto>();
 
-        public JsonResult Replay(FileInfo[] fileInfos, DateTime startDate, DateTime endDate, DateTime replayStartDate, bool getBestChangeDates = false, int rank = 1, bool passive = false, int bondPercentage = 100, bool findBestBudgetFactor = false)
-        {
-            var topOfTopSettings = new SortedList<decimal, List<SettingResult>>();
-            var topSettingsArray = new SortedList<decimal, List<SettingResult>>[fileInfos.Length];
-            var everyDayBest = new SortedList<DateTime, SortedList<decimal, List<SettingResult>>>();
-            var taskList = new List<Task>();
-            var allSettings = new Dictionary<SettingResult, SortedList<decimal, List<SettingResult>>>();
-            for (var i = 0; i < fileInfos.Length; i++)
+            var users = new List<User>();
+            if (!string.IsNullOrEmpty(targetChannel))
             {
-                var fileName = fileInfos[i].FileName;
-                var settings = fileInfos[i].Settings;
-                var transactionFeeRate = fileInfos[i].TransactionFeeRate;
-                var minimumPriceUnit = fileInfos[i].MinimumPriceUnit;
+                List<string> contactIdentifies = null;
+                var query = Query.And(Query.Exists("Identifiers.Identifier"),
+                    Query.Exists("Personal.FirstName"),
+                    Query.Or(Query.EQ("Personal.Registry.Channel", targetChannel),
+                             Query.EQ("Personal.Channel", targetChannel)));
+                var contacts = QueryContacts(query);
+                contactIdentifies = contacts.Select(c => c.Key).ToList();
+                users = contactIdentifies.Select(c => User.FromName(c, true)).ToList();
+                Log.Info("ExportDataHelper - GetHcpMasterData -  Filter user by MongoDB - Done");
+                Log.Info("ExportDataHelper - GetHcpMasterData - user count: " + users.Count);
+            }
+            else
+            {
+                var filterUserByRoles = new List<User>();
+
+                IEnumerable<User> filterUserByIncompleteUser =
+                    RolesInRolesManager.GetUsersInRole(Role.FromName($"extranet\\{CommonConstants.UserRole.IncompleteUser}"), true);
+                IEnumerable<User> filterUserByBasicUser =
+                    RolesInRolesManager.GetUsersInRole(Role.FromName($"extranet\\{CommonConstants.UserRole.BasicUser}"), true);
+                IEnumerable<User> filterUserByAdvanceUser =
+                    RolesInRolesManager.GetUsersInRole(Role.FromName($"extranet\\{CommonConstants.UserRole.AdvanceUser}"), true);
+
+                filterUserByRoles.AddRange(filterUserByIncompleteUser);
+                filterUserByRoles.AddRange(filterUserByBasicUser);
+                filterUserByRoles.AddRange(filterUserByAdvanceUser);
+                users = filterUserByRoles.DistinctBy(u => u.Name).ToList();
+
+                Log.Info("ExportDataHelper - GetHcpMasterData -  Filter user by Roles - Done");
+                Log.Info("ExportDataHelper - GetHcpMasterData - user count: " + users.Count);
+            }
+
+
+            //var users = Membership.GetAllUsers(); 
+
+            var filterUserByDomains = users.Where(u => !u.GetDomainName().ToLower().StartsWith("default")
+                                                                   && !u.GetDomainName().ToLower().StartsWith("sitecore")
+                                                                   && !u.GetDomainName().ToLower().Contains("anonymous")
+                                                                   && !u.GetDomainName().ToLower().Contains("dam")
+                                                                   && ((!string.IsNullOrEmpty(targetChannel) && (u.IsInRole($"extranet\\{CommonConstants.UserRole.IncompleteUser}")
+                                                                                                            || u.IsInRole($"extranet\\{CommonConstants.UserRole.BasicUser}")
+                                                                                                            || u.IsInRole($"extranet\\{CommonConstants.UserRole.AdvanceUser}")))
+                                                                        || string.IsNullOrEmpty(targetChannel))
+                                                                  );
+
+            var filterUsersResult = filterUserByDomains.ToList();
+            Log.Info("ExportDataHelper - GetHcpMasterData - Filter domain default,sitecore anonymous and dam - done: user count: " + filterUsersResult.Count);
+
+            var contactHelper = new ContactHelper();
+            foreach (User sitecoreUser in filterUsersResult)
+            {
                 try
                 {
-                    var fileDateIndex = fileName.IndexOf("20");
-                    var productName = fileName.Substring(0, fileDateIndex);
-                    var index = fileName.IndexOf("20") + 8;
-                    var notUseClosePrice = fileName[index] == 'T';
-                    index += notUseClosePrice ? 4 : 5;
-                    var onlyUseClosePrice = fileName[index] == 'T';
-                    index += onlyUseClosePrice ? 4 : 5;
-                    var closeAmbiguousStateToday = fileName[index] == 'T';
+                    //if (user.UserName.ToLower().StartsWith("default") || user.UserName.ToLower().StartsWith("sitecore")
+                    //    || user.UserName.ToLower().Contains("anonymous"))
+                    //{
+                    //    Log.Info($"ExportDataHelper - GetHcpMasterData - {user.UserName} end for not match.");
+                    //    continue;
+                    //}
+                    var user = Membership.GetUser(sitecoreUser.Name);
+                    Log.Info($"ExportDataHelper - GetHcpMasterData - {user.UserName} start.");
+                    var userId = user.UserName;
 
-                    var topSettings = new SortedList<decimal, List<SettingResult>>();
-                    topSettingsArray[i] = topSettings;
-                    using (var textReader = new StringReader(settings))
-                    using (var csvReader = new CsvReader(textReader))
+                    var status = 0;
+                    //var sitecoreUser = User.FromName(userId, true);
+
+                    //if (sitecoreUser != null)
+                    //{
+                    //    //Filter by roles: extranet\Incomplete User, extranet\Basic User, extranet\Advance User 
+                    //    if (!(sitecoreUser.IsInRole($"extranet\\{CommonConstants.UserRole.IncompleteUser}") ||
+                    //          sitecoreUser.IsInRole($"extranet\\{CommonConstants.UserRole.BasicUser}") ||
+                    //          sitecoreUser.IsInRole($"extranet\\{CommonConstants.UserRole.AdvanceUser}")))
+                    //    {
+                    //        Log.Info($"ExportDataHelper - GetHcpMasterData {user.UserName} end for role is not match.");
+                    //        continue;
+                    //    }
+
+
+                    //}
+
+                    if (sitecoreUser.IsInRole($"extranet\\{CommonConstants.UserRole.IncompleteUser}"))
                     {
-                        csvReader.Configuration.HasHeaderRecord = true;
-                        csvReader.Read();
-                        while (csvReader.Read())
+                        status = 1;
+                    }
+                    else if (sitecoreUser.IsInRole($"extranet\\{CommonConstants.UserRole.BasicUser}"))
+                    {
+                        status = 2;
+                    }
+                    else if (sitecoreUser.IsInRole($"extranet\\{CommonConstants.UserRole.AdvanceUser}"))
+                    {
+                        status = 3;
+                    }
+
+                    if (FilterUser(userId, contactHelper))
+                    {
+                        Log.Info($"ExportDataHelper - GetHcpMasterData - {user.UserName} - exist for filtered user.");
+                        continue;
+                    }
+
+                    var personalInfo = contactHelper.GetContactPersonalInfobyIdentifier(userId);
+
+                    var channel = personalInfo?.Registry?.Channel ?? personalInfo?.Channel;
+                    if (targetChannel != null && channel != targetChannel)
+                    {
+                        Log.Info(
+                            $"ExportDataHelper - GetHcpMasterData - {user.UserName} end for channel {channel} not match.");
+                        continue;
+                    }
+                    Log.Info($"ExportDataHelper - GetHcpMasterData - {user.UserName} - {channel}.");
+
+
+                    var weChatPublicAccount = WeChatPublicAccountStore.GetWeChatPublicAccountByChannel(channel);
+                    Log.Info(
+                        $"ExportDataHelper - GetHcpMasterData - {user.UserName} - for WeChat public account {weChatPublicAccount?.AuthorizationAppId}.");
+
+                    var mappings = UserRelationshipService.GetUserRelationshipMappingsByUserName(userId).ToList();
+                    var mapping = mappings.FirstOrDefault(m => m.AppId == weChatPublicAccount?.AuthorizationAppId) ??
+                                  mappings.FirstOrDefault();
+                    Log.Info($"ExportDataHelper - GetHcpMasterData - {user.UserName} - {mapping?.OpenId}.");
+
+                    if (user.ProviderUserKey != null)
+                    {
+                        Log.Info(
+                            $"ExportDataHelper - GetHcpMasterData - {user.UserName} - Generate MasterDataDto start.");
+                        var masterDataDto = new MasterDataDto
                         {
-                            var stopLossCriteria = csvReader.GetField<decimal>(0);
-                            var stopProfitCriteria = csvReader.GetField<decimal>(1);
-                            var startProfitCriteria = csvReader.GetField<decimal>(2);
-                            var openCriteria = csvReader.GetField<decimal>(3);
-                            var followTrend = csvReader.GetField<bool>(4);
-                            var setting = new SettingResult
-                            {
-                                Setting = new ReportSettingViewModel
-                                {
-                                    NotUseClosePrice = notUseClosePrice,
-                                    OnlyUseClosePrice = onlyUseClosePrice,
-                                    CloseAmbiguousStateToday = closeAmbiguousStateToday,
-                                    SelectedProductName = productName,
-                                    StartDate = startDate,
-                                    EndDate = endDate,
-                                    TransactionFeeRate = transactionFeeRate,
-                                    MinimumPriceUnit = minimumPriceUnit,
-                                    StopLossCriteria = stopLossCriteria,
-                                    StopProfitCriteria = stopProfitCriteria,
-                                    StartProfitCriteria = startProfitCriteria,
-                                    OpenCriteria = openCriteria,
-                                    FollowTrend = followTrend
-                                }
-                            };
-                            if (!allSettings.ContainsKey(setting))
-                            {
-                                allSettings.Add(setting, topSettings);
-                            }
+                            UserName = personalInfo?.FirstName,
+                            HcpID = ((Guid)user.ProviderUserKey).ToString(),
+                            WeChatOpenId = mapping?.OpenId,
+                            WeChatAccount =
+                                weChatPublicAccount?.AccountName ?? WeChatPublicAccountStore.GetWeChatPublicAccounts()?
+                                    .FirstOrDefault(w => w.AppId.Equals(personalInfo?.AppId))?.AccountName,
+                            EtmsCode = personalInfo?.EtmsCode,
+                            Province = personalInfo?.Province?.FirstOrDefault(),
+                            City = personalInfo?.City?.FirstOrDefault(),
+                            Department = personalInfo?.Department?.FirstOrDefault(),
+                            JobTitle = personalInfo?.HcpTitle?.FirstOrDefault(),
+                            Email = user.Email,
+                            MobileNumber = personalInfo?.HcpMobile,
+                            Hospital = personalInfo?.Hospital?.FirstOrDefault(),
+                            HospitalCode = personalInfo?.HospitalCode,
+                            ChannelAppId = weChatPublicAccount?.AppId,
+                            AuthorizationAppId = mapping?.AppId,
+                            UnionId = personalInfo?.UnionId,
+                            Status = status,
+                            RegisterType = personalInfo?.Registry?.Type ?? personalInfo?.RegisterSource,
+                            RegisterDate = user.CreationDate.AddHours(8).ToString("yyyy/MM/dd HH:mm:ss")
+                        };
+                        Log.Info($"ExportDataHelper - GetHcpMasterData - {user.UserName} - Generate MasterDataDto end.");
+
+                        if ((string.IsNullOrWhiteSpace(masterDataDto.HospitalCode) ||
+                             masterDataDto.HospitalCode.StartsWith("Dlw.ScBase.Content")) &&
+                            !string.IsNullOrWhiteSpace(masterDataDto.Province) &&
+                            !string.IsNullOrWhiteSpace(masterDataDto.City))
+                        {
+                            masterDataDto.HospitalCode = GetHospitalCode(masterDataDto.Province, masterDataDto.City,
+                                masterDataDto.Hospital);
                         }
+                        Log.Info($"ExportDataHelper - GetHcpMasterData  - {user.UserName} - Generate MasterDataDto end.");
+                        //?? (string.IsNullOrEmpty(masterDataDto.Hospital)?
+                        //string.Empty:HcpLocationModel.GetHospitalCodeByName(masterDataDto.Hospital));
+                        hcpMasterData.Add(masterDataDto);
+                        Log.Info(
+                            $"ExportDataHelper - GetHcpMasterData - {user.UserName} - Generate MasterDataDto added.");
+
+                        Log.Info($"ExportDataHelper - GetHcpMasterData - {user.UserName} end.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.Message, ex);
-                    return Json(
-                        new
-                        {
-                            ex.Message
-                        });
+                    Log.Info(ex.StackTrace);
+                    Log.Error($"ExportDataHelper - GetHcpMasterData - Exception - {ex.Message}");
                 }
             }
-            
-            var dailyPrices = _reportService.LoadDailyPrices("Data/" + allSettings.ElementAt(0).Key.Setting.SelectedProductName + ".csv");
-            var number = 100;
-            var distinctSettings = new List<ReportSettingViewModel>();
-            foreach (var key in allSettings.Keys)
-            {
-                //if (getBestChangeDates)
-                //{
-                //    if (distinctSettings.Contains(key.Setting))
-                //    {
-                //        continue;
-                //    }
-                //    distinctSettings.Add(key.Setting);
-                //}
-                
-                var setting = key;
-                var topSettings = allSettings[key];
-                taskList.Add(new Task(() =>
-                {
-                    var report = GetReport(setting.Setting, dailyPrices);
-                    //if(bondPercentage > 0 && _reportService.GetMaxLossRange(report) * 100 > bondPercentage)
-                    //{
-                    //    return;
-                    //}
-                    if (getBestChangeDates)
-                    {
-                        for (var reportIndex = 0; reportIndex < report.Count(); reportIndex++)
-                        {
-                            var reportDay = report.ElementAt(reportIndex);
-                            var reportDate = reportDay.DailyPrice.Date;
-                            lock (everyDayBest)
-                            {
-                                if (!everyDayBest.ContainsKey(reportDate))
-                                {
-                                    everyDayBest.Add(reportDate, new SortedList<decimal, List<SettingResult>>());
-                                }
-                                var reportDateBest = everyDayBest[reportDate];
-                                var cloneSetting = new SettingResult
-                                {
-                                    Setting = setting.Setting,
-                                    Result = reportDay.RealTimePercentageBalance
-                                };
-                                UpdateTopThreeSettings(ref reportDateBest, cloneSetting, number);
-                            }
-                        }
-                    }
-                    setting.Result = report.Last().RealTimePercentageBalance;
-                    UpdateTopThreeSettings(ref topSettings, setting, number);
-                }));
-            }
+            Log.Info("ExportDataHelper - GetHcpMasterData - hcpMasterData count" + hcpMasterData.Count);
 
-            Parallel.For(0, taskList.Count, (i) =>
-            {
-                taskList[i].Start();
-            });
-            Task.WaitAll(taskList.ToArray());
-
-            for (var i = 0; i < fileInfos.Length; i++)
-            {
-                var fileName = fileInfos[i].FileName;
-                var settings = fileInfos[i].Settings;
-                var transactionFeeRate = fileInfos[i].TransactionFeeRate;
-                var minimumPriceUnit = fileInfos[i].MinimumPriceUnit;
-                var topSettings = topSettingsArray[i];
-                var fileDateIndex = fileName.IndexOf("20");
-                var productName = fileName.Substring(0, fileDateIndex);
-
-                if (topSettings.Any())
-                {
-                    if (!getBestChangeDates)
-                    {
-                        var resultFileName = $"{endDate.ToString("yyyyMMdd")}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{Path.GetFileNameWithoutExtension(fileName)}.csv";
-                        if (fileName.Contains("Detail") || fileName.Contains("Summary"))
-                        {
-                            var parts = fileName.Split("_");
-                            var category = parts[0].Substring(productName.Length + 8);
-                            resultFileName = $"{endDate.ToString("yyyyMMdd")}_{category}_{Math.Round(topSettings.Last().Value.First().Result, 4)}_{parts[1]}_{parts[2]}_{productName}_{(fileName.Contains("Summary") ? "Summary" : string.Empty)}.csv";
-                        }
-                        using (var fileStream = new FileStream($"Results\\{productName}\\{resultFileName}", FileMode.Create))
-                        using (var streamWriter = new StreamWriter(fileStream))
-                        {
-                            streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
-                            for (var j = topSettings.Count - 1; j >= 0; j--)
-                            {
-                                foreach (var s in topSettings.ElementAt(j).Value)
-                                {
-                                    streamWriter.WriteLine(
-                                        $"{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Result}");
-                                }
-                            }
-                        }
-                    }
-
-                    foreach (var topSetting in topSettings.Last().Value)
-                    {
-                        UpdateTopThreeSettings(ref topOfTopSettings, topSetting, fileInfos.Length);
-                    }
-                }
-            }
-
-            var bestSettings = topOfTopSettings.ElementAt(topOfTopSettings.Count - rank).Value
-                .OrderBy(v => v.Setting.StartProfitCriteria)
-                .OrderBy(v => v.Setting.StopLossCriteria)
-                .OrderBy(v => v.Setting.OpenCriteria)
-                .OrderBy(v => v.Setting.StopProfitCriteria)
-                .OrderBy(v => v.Setting.CloseAmbiguousStateToday)
-                .First().Setting;
-            var bestDailyPrices = _reportService.LoadDailyPrices("Data/" + bestSettings.SelectedProductName + ".csv").Where(d => d.Date >= startDate && d.Date <= endDate).ToList();
-
-            var resultReport = new List<DailyAccountData>();
-            if (getBestChangeDates && bestDailyPrices.First().Date <= replayStartDate)
-            {
-                var startIndex = 5;
-                while (everyDayBest.ElementAt(startIndex).Key < replayStartDate)
-                {
-                    startIndex++;
-                }
-                for (var ii = startIndex; ii < everyDayBest.Count; ii++)
-                {
-                    var currentDayBestResult = everyDayBest.ElementAt(ii).Value.Last().Key;
-                    var currentDayBestSetting = everyDayBest.ElementAt(ii).Value[currentDayBestResult];
-                    everyDayBest.ElementAt(ii).Value[currentDayBestResult] = 
-                        currentDayBestSetting
-                        .OrderBy(s => s.Setting.StartProfitCriteria)
-                        .OrderBy(s => s.Setting.StopLossCriteria)
-                        .OrderBy(s => s.Setting.OpenCriteria)
-                        .OrderBy(s => s.Setting.StopProfitCriteria)
-                        .OrderBy(s => s.Setting.CloseAmbiguousStateToday)
-                        .ToList();
-                }
-                var list = everyDayBest.ElementAt(startIndex).Value;
-                var previousDayCandidate = list.ElementAt(list.Count - rank).Value[0];
-
-                var productName = previousDayCandidate.Setting.SelectedProductName;
-                var settingResults = new Dictionary<DateTime, SettingResult>
-                {
-                    { everyDayBest.ElementAt(startIndex).Key, previousDayCandidate }
-                };
-                var previousBest = everyDayBest.ElementAt(startIndex).Value.Last().Value[0];
-                var currentBest = previousBest;
-                for (var dayIndex = startIndex + 1; dayIndex < everyDayBest.Count; dayIndex++)
-                {
-                    var thisDayBest = everyDayBest.ElementAt(dayIndex).Value.Last().Value[0];
-                    if (thisDayBest.Setting != currentBest.Setting)
-                    {
-                        previousBest = currentBest;
-                        currentBest = thisDayBest;
-                    }
-
-                    var candiditeList = everyDayBest.ElementAt(dayIndex).Value.ElementAt(list.Count - rank);
-                    var thisDayCandidate = candiditeList.Value[0];
-                    var thisTopSettings = everyDayBest.ElementAt(dayIndex).Value.TakeLast(rank).SelectMany(v => v.Value.Select(st => st.Setting));
-
-                    //if (previousDayCandidate.Setting != thisDayCandidate.Setting)
-                    if (previousDayCandidate.Setting != thisDayCandidate.Setting && 
-                        (passive && (!thisTopSettings.Contains(previousBest.Setting) || !thisTopSettings.Contains(previousDayCandidate.Setting)) ||
-                        !passive))
-                    {
-                        //thisDayBest.Result = everyDayBest.ElementAt(dayIndex).Value.Last().Key;
-                        thisDayCandidate.Result = candiditeList.Key;
-
-                        settingResults.Add(everyDayBest.ElementAt(dayIndex).Key, thisDayCandidate);
-                        previousDayCandidate = thisDayCandidate;
-                    }
-                    else if(everyDayBest.ElementAt(dayIndex).Key.Year != everyDayBest.ElementAt(dayIndex - 1).Key.Year)
-                    {
-                        settingResults.Add(everyDayBest.ElementAt(dayIndex).Key, thisDayCandidate);
-                    }
-                }
-
-                var content = new List<string>();
-                var resultFileName = GenerateChangeReport(fileInfos, endDate, replayStartDate, bestDailyPrices, settingResults, content, passive, rank, ref resultReport, bondPercentage, findBestBudgetFactor);
-                
-                using (var fileStream = new FileStream($"Results\\{productName}\\{resultFileName}", FileMode.Create))
-                using (var streamWriter = new StreamWriter(fileStream))
-                {
-                    streamWriter.WriteLine("Date,StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,NotUseClosePrice,OnlyUseClosePrice,CloseAmbiguousStateToday,Result,PreviousResult,Delta,Gain,TotalDelta,Profit");
-                    foreach(var c in content)
-                    {
-                        streamWriter.WriteLine(c);
-                    }
-                }
-            }
-
-            return Json(
-                new
-                {
-                    BestSettings = bestSettings,
-                    Report = getBestChangeDates ? resultReport : GetReport(bestSettings, bestDailyPrices)
-                });
+            return hcpMasterData;
         }
 
-        private string GenerateChangeReport(FileInfo[] fileInfos, DateTime endDate, DateTime replayStartDate, List<DailyPrice> dailyPrices, Dictionary<DateTime, SettingResult> settingResults, List<string> content, bool passive, int rank, ref List<DailyAccountData> report, int bondPercentage = 100, bool findBestBudgetFactor = false)
+        public static List<CustomDbHelper.AnalyticsVisitDto> GetVisitDataByDateTime(DateTime startDate, DateTime endDate)
         {
-            string resultFileName = null;
-            IEnumerable<DailyAccountData> previousDayBestReport = null;
-            //if (passive)
-            //{
-            //    var currentSetting = settingResults.First().Value;
-            //    IEnumerable<DailyAccountData> targetReport = null;
-            //    IEnumerable<DailyAccountData> currentReport = null;
-            //    decimal totalDelta = 0m;
-            //    var initialResult = settingResults.First().Value.Result;
+            var visitData = new List<CustomDbHelper.AnalyticsVisitDto>();
+            var dbHelper = new CustomDbHelper();
+            Log.Info($"GetVisitDataByDateTime - Start GetVisitDataByDateTime {startDate} to {endDate}...");
+            var trackingData = dbHelper.GetVisitDataByDateTime(startDate, endDate).ToList();
+            Log.Info("GetVisitDataByDateTime - End GetVisitDataByDateTime.");
+            var contentItemIds = new Dictionary<string, Guid>();
 
-            //    for (var i = 0; i < settingResults.Count; i++)
-            //    {
-            //        var settingResult = settingResults.ElementAt(i);
-            //        var s = settingResult.Value;
-            //        if (currentReport == null)
-            //        {
-            //            currentSetting = s;
-            //            currentReport = GetReport(s.Setting, dailyPrices);
-            //            content.Add(
-            //                $"{settingResult.Key.ToString("MM/dd/yy")},{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Setting.NotUseClosePrice},{s.Setting.OnlyUseClosePrice},{s.Setting.CloseAmbiguousStateToday},{s.Result},{s.Result},0");
-            //            continue;
-            //        }
-            //        if (settingResult.Value == currentSetting)
-            //        {
-            //            continue;
-            //        }
-
-            //        var currentDate = settingResult.Key;
-            //        DateTime nextChangeDate;
-            //        if (i < settingResults.Count - 1)
-            //        {
-            //            nextChangeDate = settingResults.ElementAt(i + 1).Key;
-            //        }
-            //        else
-            //        {
-            //            nextChangeDate = dailyPrices.Last().Date;
-            //        }
-
-            //        var currentDateIndex = dailyPrices.IndexOf(dailyPrices.First(d => d.Date == currentDate));
-            //        targetReport = GetReport(settingResult.Value.Setting, dailyPrices);
-            //        var currentDailyAccountData = currentReport.First(r => r.DailyPrice.Date == currentDate);
-            //        var targetDailyAccountData = targetReport.First(r => r.DailyPrice.Date == currentDate);
-            //        for (var j = currentDateIndex + 1; j < dailyPrices.Count && dailyPrices[j].Date <= nextChangeDate; j++)
-            //        {
-            //            var currentDailyPrice = dailyPrices[j];
-            //            var currentContractResult = GetCurrentContractResult(currentDailyPrice, currentDailyAccountData, currentSetting.Setting, targetDailyAccountData, settingResult.Value.Setting);
-            //            if (currentContractResult.HasValue)
-            //            {
-            //                var delta = currentContractResult.Value - s.Result;
-            //                totalDelta += delta;
-            //                var targetResult = targetReport.First(r => r.DailyPrice.Date == currentDailyPrice.Date).PercentageBalance;
-            //                var profit = s.Result - initialResult + totalDelta;
-            //                content.Add(
-            //                    $"{currentDailyPrice.Date.ToString("MM/dd/yy")},{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Setting.NotUseClosePrice},{s.Setting.OnlyUseClosePrice},{s.Setting.CloseAmbiguousStateToday},{targetResult},{currentContractResult},{delta},{profit}");
-            //                currentReport = targetReport;
-            //                currentSetting = settingResult.Value;
-            //                break;
-            //            }
-            //        }
-            //    }
-            //    var lastSetting = currentSetting.Setting;
-            //    var lastResult = currentReport.Last().RealTimePercentageBalance;
-            //    var totalGain = currentReport.Last().RealTimePercentageBalance - initialResult;
-            //    var finalResult = totalGain + totalDelta;
-            //    content.Add(
-            //        $"{endDate.ToString("MM/dd/yy")},{lastSetting.StopLossCriteria},{lastSetting.StopProfitCriteria},{lastSetting.StartProfitCriteria},{lastSetting.OpenCriteria},{lastSetting.FollowTrend},{lastSetting.NotUseClosePrice},{lastSetting.OnlyUseClosePrice},{lastSetting.CloseAmbiguousStateToday},{lastResult},{lastResult},0,{finalResult}");
-            //    resultFileName = $"PassiveChange_{DateTime.Now.ToString("yyMMddHHmm")}_{Math.Round(finalResult, 4)}_{Math.Round(totalGain, 4)}_{Math.Round(totalDelta, 4)}_{replayStartDate.ToString("yyMMdd")}_{Path.GetFileNameWithoutExtension(fileInfos[0].FileName)}_{fileInfos.Length}.csv";
-            //}
-            //else
+            var contacts = GetRegisteredContacts();
+            if (!contacts.Any())
             {
-                decimal totalLoss = 0;
-                decimal previousDayBestResultToday = 0;
-                var previousDate = settingResults.First().Key;
-                var initialResult = settingResults.First().Value.Result;
-                var previousBestStartResult = initialResult;
-                var previousBestStartProfit = 0m;
-                previousDayBestReport = GetReport(settingResults.First().Value.Setting, dailyPrices);
-                report = new List<DailyAccountData>
+                Log.Info("No valid contacts found in xDB.");
+                return visitData;
+            }
+            var contactIds = contacts.Select(c => c.Value["_id"]?.AsGuid).ToList();
+
+            var weChatPublicAccounts = new Dictionary<string, string>();
+
+            foreach (var trackingItem in trackingData)
+            {
+                var contactId = trackingItem.ContactId;
+                Log.Info("InteractionId: " + trackingItem.InteractionId);
+                if (!contactIds.Contains(contactId))
                 {
-                    previousDayBestReport.First(r => r.DailyPrice.Date == previousDate).Clone()
-                };
-                report.First().RealTimePercentageBalance -= report.First().PercentageBalance;
-                report.First().PercentageBalance = 0m;
-                var budgetFactor = 1m;
-                var bestBudgetChangeFactor = 1m;
-                foreach (var settingResult in settingResults)
-                {
-                    var date = settingResult.Key;
-                    var s = settingResult.Value;
-                    var openPriceDelta = 0m;
-                    var thisDayBestReport = GetReport(s.Setting, dailyPrices);
-
-                    var thisDayBestReportDelta = 0m;
-                    if (previousDayBestReport != null)
-                    {
-                        previousDayBestResultToday = previousDayBestReport.First(r => r.DailyPrice.Date == date).RealTimePercentageBalance;
-                        if (previousDayBestResultToday != s.Result)
-                        {
-                            openPriceDelta += GetThisDayOpenPriceDelta(previousDayBestReport, date);
-                            thisDayBestReportDelta = GetThisDayOpenPriceDelta(thisDayBestReport, date);
-                            openPriceDelta -= thisDayBestReportDelta;
-                            openPriceDelta -= s.Setting.TransactionFeeRate * 2;
-                        }
-                    }
-                    else
-                    {
-                        previousDayBestResultToday = s.Result;
-                        previousDate = date;
-                    }
-
-                    if (previousDayBestReport != null)
-                    {
-                        budgetFactor = AppendDailyData(report, previousDayBestReport, previousDate, previousBestStartResult, previousBestStartProfit, date, budgetFactor, findBestBudgetFactor, bondPercentage);
-                    }
-
-                    var loss = previousDayBestResultToday - s.Result + openPriceDelta;
-                    totalLoss += loss;
-                    var gain = s.Result - initialResult;
-                    var profit = gain + totalLoss;
-                    content.Add(
-                        $"{date.ToString("MM/dd/yy")},{s.Setting.StopLossCriteria},{s.Setting.StopProfitCriteria},{s.Setting.StartProfitCriteria},{s.Setting.OpenCriteria},{s.Setting.FollowTrend},{s.Setting.NotUseClosePrice},{s.Setting.OnlyUseClosePrice},{s.Setting.CloseAmbiguousStateToday},{s.Result},{previousDayBestResultToday},{loss},{gain},{totalLoss},{profit}");
-
-                    previousDayBestReport = thisDayBestReport;
-                    previousDate = date;
-                    previousBestStartResult = s.Result + thisDayBestReportDelta;
-                    previousBestStartProfit = report.Last().RealTimePercentageBalance + openPriceDelta * budgetFactor;
-                    
-                    if (findBestBudgetFactor)
-                    {
-                        bestBudgetChangeFactor = _reportService.GetBestBudgetChangeFactor(thisDayBestReport, bondPercentage);
-                        var nextBudgetFactor = 1m;
-                        while(nextBudgetFactor * bestBudgetChangeFactor < budgetFactor)
-                        {
-                            nextBudgetFactor *= bestBudgetChangeFactor;
-                        }
-                        budgetFactor = nextBudgetFactor;
-                    }
+                    Log.Info($"GetVisitDataByDateTime - Not a registered user {contactId}");
+                    continue;
                 }
 
-                budgetFactor = AppendDailyData(report, previousDayBestReport, previousDate, previousBestStartResult, previousBestStartProfit, endDate, budgetFactor, findBestBudgetFactor, bondPercentage);
-                
-                var lastSetting = settingResults.Last().Value.Setting;
-                var lastReport = GetReport(lastSetting, dailyPrices);
-                var lastResult = lastReport.Last().RealTimePercentageBalance;
+                var contact = contacts[contactId];
+                var identifier =
+                    contact?.Elements?.FirstOrDefault(el => el.Name.Equals("Identifiers"))?
+                        .Value?.AsBsonDocument?.Elements?.FirstOrDefault(b => b.Name.Equals("Identifier"))?
+                        .Value?.AsString;
 
-                var totalGain = lastResult - initialResult;
-                var finalResult = totalGain + totalLoss;
-                lastReport.Last().Balance = finalResult * previousDayBestReport.First().DailyPrice.ClosePrice;
-                lastReport.Last().PercentageBalance = finalResult;
-                //report.Add(lastReport.Last());
-                content.Add(
-                    $"{endDate.ToString("MM/dd/yy")},{lastSetting.StopLossCriteria},{lastSetting.StopProfitCriteria},{lastSetting.StartProfitCriteria},{lastSetting.OpenCriteria},{lastSetting.FollowTrend},{lastSetting.NotUseClosePrice},{lastSetting.OnlyUseClosePrice},{lastSetting.CloseAmbiguousStateToday},{lastResult},{lastResult},0,{totalGain},{totalLoss},{finalResult}");
+                Log.Info("GetVisitDataByDateTime - identifier " + identifier);
+                var user = string.IsNullOrWhiteSpace(identifier) ? null : Membership.GetUser(identifier);
+                if (user != null)
+                {
+                    if (FilterUser(identifier, contact, weChatPublicAccounts))
+                    {
+                        contacts[contactId] = null;
+                        Log.Info("not a valid user");
+                        continue;
+                    }
 
-                resultFileName = $"Change\\{(passive ? "Passive" : string.Empty)}Change_{DateTime.Now.ToString("yyMMddHHmm")}_{rank}_{Math.Round(finalResult, 4)}_{Math.Round(totalGain, 4)}_{Math.Round(totalLoss, 4)}_{replayStartDate.ToString("yyMMdd")}_{Path.GetFileNameWithoutExtension(fileInfos[0].FileName)}_{fileInfos.Length}.csv";
+                    Log.Info("GetVisitDataByDateTime - url " + trackingItem.Url.Replace("{", "{{").Replace("}", "}}"));
+                    var urlParts = trackingItem.Url.Split('/');
+
+                    if (urlParts.Length >= 2 && (
+                        urlParts[urlParts.Length - 2].ToLower() == "news" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "video" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "ematerial" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "meeting" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "medicalinfo" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "summit" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "lecture" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "about-us"))
+                    {
+                        if (!contentItemIds.ContainsKey(trackingItem.Url))
+                        {
+                            contentItemIds.Add(trackingItem.Url,
+                                ContentStoreHelper.GetItemIdByUrl(DataContext, trackingItem.Url).Guid);
+                        }
+                        trackingItem.SitecoreItemId = contentItemIds[trackingItem.Url];
+                    }
+                    trackingItem.HcpId = ((Guid?)user.ProviderUserKey)?.ToString();
+                    //ticket I-224678
+                    visitData.Add(trackingItem);
+                }
+                //ticket I-224678
+                //visitData.Add(trackingItem);
             }
-            return resultFileName;
+            Log.Info("GetVisitDataByDateTime - End.");
+            return visitData;
         }
 
-        private decimal AppendDailyData(List<DailyAccountData> report, IEnumerable<DailyAccountData> previousDayBestReport, DateTime previousDate, decimal previousBestStartResult, decimal previousBestStartProfit, DateTime date, decimal budgetFactor, bool findBestBudgetFactor, int bondPercentage)
+        private static Dictionary<Guid, BsonDocument> GetRegisteredContacts()
         {
-            var initialBudgetFactor = budgetFactor;
-            var budgetFactorChange = false;
-            var budgetChangeFactor = _reportService.GetBestBudgetChangeFactor(previousDayBestReport, bondPercentage);
-            //var profitFactor = 100m / bondPercentage;
-            var bondPercentageValue = bondPercentage / 100m;
-            IEnumerable<DailyAccountData> dailyData = previousDayBestReport.Where(r => r.DailyPrice.Date > previousDate && r.DailyPrice.Date <= date);
-            var percentageBalance = previousBestStartProfit;
-            for (var i = 0; i < dailyData.Count(); i++)
-            {
-                var dailyDataI = dailyData.ElementAt(i).Clone();
-                var percentageDelta = i == 0 ? dailyData.ElementAt(i).PercentageBalance - previousBestStartResult : dailyData.ElementAt(i).PercentageBalance - dailyData.ElementAt(i - 1).PercentageBalance;
-                percentageDelta *= budgetFactor;
-                percentageBalance += percentageDelta;
-
-                if (findBestBudgetFactor)
-                {
-                    if (percentageDelta > 0)
-                    {
-                        if ((percentageBalance + bondPercentageValue) * 0.8m >= bondPercentageValue * budgetFactor * budgetChangeFactor)
-                        {
-                            budgetFactor *= budgetChangeFactor;
-                            budgetFactorChange = true;
-                        }
-                    }
-                    else
-                    {
-                        while ((percentageBalance + bondPercentageValue) * 0.8m < bondPercentageValue * budgetFactor && budgetFactor > 1)
-                        {
-                            budgetFactor /= budgetChangeFactor;
-                            budgetFactorChange = true;
-                        }
-                    }
-                }
-
-                dailyDataI.Balance = percentageBalance * previousDayBestReport.First().DailyPrice.ClosePrice;
-                dailyDataI.PercentageBalance = percentageBalance;
-                dailyDataI.RealTimePercentageBalance = dailyDataI.PercentageBalance + (dailyData.ElementAt(i).RealTimePercentageBalance - dailyData.ElementAt(i).PercentageBalance) * budgetFactor;
-                report.Add(dailyDataI);
-            }
-
-            if(budgetFactorChange)
-                return budgetFactor;
-
-            return initialBudgetFactor;
+            var query = Query.And(Query.Exists("Identifiers.Identifier"),
+                Query.Exists("Personal.FirstName"));
+            var driver = MongoDbDriver.FromConnectionString("analytics");
+            var contacts = driver.Contacts.FindAs<BsonDocument>(query)
+                .EmptyWhenNull().FilterNulls()
+                .ToDictionary(x => x["_id"].AsGuid);
+            return contacts;
         }
 
-        private static decimal GetThisDayOpenPriceDelta(IEnumerable<DailyAccountData> dayBestReport, DateTime date)
+        public static List<CustomDbHelper.AnalyticsVisitDto> GetScVisitDataByDateTime(DateTime startDate, DateTime endDate, bool includeAnonymousUser = false)
         {
-            var dayBestData = dayBestReport.First(r => r.DailyPrice.Date == date);
-            var dayBestNextData = dayBestReport.FirstOrDefault(r => r.DailyPrice.Date > date);
-            if (dayBestNextData != null && dayBestData.Contract != null)
+            var visitData = new List<CustomDbHelper.AnalyticsVisitDto>();
+            var dbHelper = new CustomDbHelper();
+            Log.Info($"GetVisitDataByDateTime - Start GetScVisitDataByDateTime {startDate} to {endDate}...");
+            var trackingData = dbHelper.GetVisitDataByDateTime(startDate, endDate).ToList();
+            Log.Info("GetVisitDataByDateTime - End GetScVisitDataByDateTime.");
+            var scRoot = MasterDb.GetItem(new ID(ScRootId));
+            var contentItemIds = new Dictionary<string, Guid>();
+
+            Dictionary<Guid, BsonDocument> contacts = null;
+            List<Guid?> contactIds = null;
+            if (!includeAnonymousUser)
             {
-                var priceDelta = dayBestNextData.DailyPrice.OpenPrice - dayBestData.DailyPrice.ClosePrice;
-                return priceDelta / dayBestData.Contract.Price * (int)dayBestData.Contract.Direction;
-            }
-
-            return 0m;
-        }
-
-        private decimal? GetCurrentContractResult(DailyPrice dailyPrice, DailyAccountData currentDailyAccountData, ReportSettingViewModel currentSetting, DailyAccountData targetDailyAccountData, ReportSettingViewModel targetSetting)
-        {
-            if (currentDailyAccountData.Contract == null)
-            {
-                return 0;
-            }
-            else if (currentDailyAccountData.Contract.Direction == Direction.Buy)
-            {
-                return 1;
-            }
-            else
-            {
-                return -1;
-            }
-        }
-
-        public JsonResult Optimize(ReportSettingViewModel model)
-        {
-            _reportService = model.UseCrossStarStrategy ? new CrossStarReportService() : new ReportService();
-            ReportSettingViewModel bestSettings = model.Clone();
-            var bestPercentageBalance = 0m;
-
-
-            var startTime = DateTime.Now;
-
-            var dailyPrices = _reportService.LoadDailyPrices("Data/" + model.SelectedProductName + ".csv");
-
-            //var range = ranges.ContainsKey(model.SelectedProductName) ? ranges[model.SelectedProductName] : ranges["big"];
-            var range = model.UseAverageMarketState ? ranges["average"] : ranges["big"];
-            if (model.UseCrossStarStrategy)
-            {
-                range = ranges["crossstar"];
-            }
-            var followTrends = model.UseAverageMarketState ? new[] { true } : new[] { true, false };
-            //var followTrends = new[] { true };
-
-            var topSettingsDictionary = new Dictionary<string, SortedList<decimal, List<SettingResult>>>();
-
-            var startProfitValue = range.BottomStartProfit;
-            for (;
-            startProfitValue <= range.TopStartProfit;
-            startProfitValue += range.StartProfitStep)
-            {
-                var key = GetTopSettingListKey(startProfitValue, range);
-                if (!topSettingsDictionary.ContainsKey(key))
+                contacts = GetRegisteredContacts();
+                if (!contacts.Any())
                 {
-                    topSettingsDictionary.Add(key, new SortedList<decimal, List<SettingResult>>());
+                    Log.Info("No valid contacts found in xDB.");
+                    return visitData;
                 }
-            }
-            if(startProfitValue - range.TopStartProfit < 0.01m)
-            {
-                var key = GetTopSettingListKey(startProfitValue, range);
-                if (!topSettingsDictionary.ContainsKey(key))
-                {
-                    topSettingsDictionary.Add(key, new SortedList<decimal, List<SettingResult>>());
-                }
+                contactIds = contacts.Select(c => c.Value["_id"]?.AsGuid).ToList();
             }
 
-            //var topThreeSettings = new SortedList<decimal, List<SettingResult>>();
-            for (var stopLoss = range.BottomStopLoss; stopLoss <= range.TopStopLoss; stopLoss += range.StopLossStep)
+            foreach (var trackingItem in trackingData)
             {
-                for (var startProfit = range.BottomStartProfit;
-                startProfit <= range.TopStartProfit;
-                startProfit += range.StartProfitStep)
-                {
-                    var taskList = new List<Task>();
-                    for (var stopProfit = range.BottomStopProfit;
-                        stopProfit <= range.TopStopProfit;
-                        stopProfit += range.StopProfitStep)
-                    {
-                        var settings = model.Clone();
-                        settings.StopLossCriteria = stopLoss;
-                        settings.StartProfitCriteria = startProfit;
-                        settings.StopProfitCriteria = stopProfit;
-                        settings.NeverEnterAmbiguousState = true;
-
-                        taskList.Add(new Task(() =>
-                        {
-                            var result = GetReport(settings, dailyPrices);
-                            var percentageBalance = result.Last().RealTimePercentageBalance;
-                            if (percentageBalance > bestPercentageBalance)
-                            {
-                                bestPercentageBalance = percentageBalance;
-                                bestSettings = settings;
-                            }
-                            var settingResult = new SettingResult { Result = percentageBalance, Setting = settings };
-                            var topSettings = topSettingsDictionary[GetTopSettingListKey(startProfit, range)];
-                            UpdateTopThreeSettings(ref topSettings, settingResult);
-                        }
-                            ));
-
-                        if (range.NeverEnterAmbiguousState)
-                        {
-                            continue;
-                        }
-
-                        for (var openCriteria = range.BottomOpenCriteria;
-                            openCriteria <= range.TopOpenCriteria;
-                            openCriteria += range.OpenCriteriaStep)
-                        {
-                            foreach (var followTrend in followTrends)
-                            {
-                                var currentSettings = model.Clone();
-                                currentSettings.StopLossCriteria = stopLoss;
-                                currentSettings.StartProfitCriteria = startProfit;
-                                currentSettings.StopProfitCriteria = stopProfit;
-                                currentSettings.NeverEnterAmbiguousState = false;
-                                currentSettings.OpenCriteria = openCriteria;
-                                currentSettings.FollowTrend = followTrend;
-
-                                taskList.Add(new Task(() =>
-                                {
-                                    var result = GetReport(currentSettings, dailyPrices);
-                                    var percentageBalance = result.Last().RealTimePercentageBalance;
-                                    if (percentageBalance > bestPercentageBalance)
-                                    {
-                                        bestPercentageBalance = percentageBalance;
-                                        bestSettings = currentSettings;
-                                    }
-                                    var settingResult = new SettingResult
-                                    {
-                                        Result = percentageBalance,
-                                        Setting = currentSettings
-                                    };
-                                    var topSettings = topSettingsDictionary[GetTopSettingListKey(startProfit, range)];
-                                    UpdateTopThreeSettings(ref topSettings, settingResult);
-                                }
-                                    ));
-                            }
-                        }
-                    }
-                    Parallel.For(0, taskList.Count, (i) =>
-                    {
-                        taskList[i].Start();
-                    });
-                    Task.WaitAll(taskList.ToArray());
-                }
-            }
-
-            var timeSpan = DateTime.Now.Subtract(startTime);
-            var overallTopSettings = new SortedList<decimal, List<SettingResult>>();
-            foreach (var key in topSettingsDictionary.Keys)
-            {
-                var topSettings = topSettingsDictionary[key];
-                if (!topSettings.Any())
+                if (string.IsNullOrWhiteSpace(trackingItem.Url))
                 {
                     continue;
                 }
-                using (var fileStream = new FileStream($"Results\\{model.SelectedProductName}\\Details\\{model.SelectedProductName}{model.EndDate.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{key}_Detail.csv", FileMode.Create))
-                using (var streamWriter = new StreamWriter(fileStream))
+                try
                 {
-                    streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
-                    for (var i = topSettings.Count - 1; i >= 0; i--)
+                    Log.Info("GetScVisitDataByDateTime - " + trackingItem.VisitUniqueId);
+                    if (!trackingItem.Url.ToLower().Contains("/sc/") &&
+                        !trackingItem.Url.ToLower().Contains("/likecontent") &&
+                        !trackingItem.Url.ToLower().Contains("/addfavoritecontent"))
                     {
-                        foreach (var settings in topSettings.ElementAt(i).Value)
+                        Log.Info("GetScVisitDataByDateTime -  not SC visit");
+                        continue;
+                    }
+                    trackingItem.EntryTime = trackingItem.EntryTime.AddHours(AppSettings.TimeDifference);
+                    var contactId = trackingItem.ContactId;
+                    if (!includeAnonymousUser && !contactIds.Contains(contactId))
+                    {
+                        Log.Info($"GetScVisitDataByDateTime - {contactId} not contained");
+                        continue;
+                    }
+
+                    if (!includeAnonymousUser)
+                    {
+                        var contact = contacts[contactId];
+                        var identifier =
+                            contact?.Elements?.FirstOrDefault(el => el.Name.Equals("Identifiers"))?
+                                .Value?.AsBsonDocument?.Elements?.FirstOrDefault(b => b.Name.Equals("Identifier"))?
+                                .Value?.AsString;
+                        var user = string.IsNullOrWhiteSpace(identifier) ? null : Membership.GetUser(identifier);
+                        if (user == null)
                         {
-                            UpdateTopThreeSettings(ref overallTopSettings, settings);
-                            streamWriter.WriteLine(
-                                $"{settings.Setting.StopLossCriteria},{settings.Setting.StopProfitCriteria},{settings.Setting.StartProfitCriteria},{settings.Setting.OpenCriteria},{settings.Setting.FollowTrend},{settings.Result}");
+                            Log.Info($"GetScVisitDataByDateTime - Not a registered user {contactId}");
+                            continue;
+                        }
+
+                        trackingItem.HcpId = ((Guid?)user.ProviderUserKey)?.ToString();
+                        trackingItem.HcpName = User.FromName(user.UserName, true)?.Profile?.FullName;
+
+                        if (string.IsNullOrWhiteSpace(trackingItem.HcpName))
+                        {
+                            Log.Info($"GetScVisitDataByDateTime - no HCP name {contactId}");
+                            continue;
                         }
                     }
-                }
-            }
 
-            var filePath = $"Results\\{model.SelectedProductName}\\Summary\\{model.SelectedProductName}{model.EndDate.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}.csv";
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            using (var streamWriter = new StreamWriter(fileStream))
-            {
-                streamWriter.WriteLine("StopLoss,StopProfit,StartProfit,OpenCriteria,FollowTrend,Result");
-                for (var i = overallTopSettings.Count - 1; i >= 0; i--)
-                {
-                    foreach (var settings in overallTopSettings.ElementAt(i).Value)
+                    if (!trackingItem.SitecoreItemId.HasValue)
                     {
-                        streamWriter.WriteLine(
-                            $"{settings.Setting.StopLossCriteria},{settings.Setting.StopProfitCriteria},{settings.Setting.StartProfitCriteria},{settings.Setting.OpenCriteria},{settings.Setting.FollowTrend},{settings.Result}");
+                        Log.Info("GetScVisitDataByDateTime - no item ID");
+                        continue;
                     }
+
+                    var urlParts = trackingItem.Url.Split('/');
+                    if (urlParts.Length < 3)
+                    {
+                        Log.Info("GetScVisitDataByDateTime - not an article");
+                        continue;
+                    }
+
+                    if (urlParts[urlParts.Length - 2].ToLower() == "news" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "video" ||
+                        urlParts[urlParts.Length - 2].ToLower() == "ematerial")
+                    {
+                        if (!contentItemIds.ContainsKey(trackingItem.Url))
+                        {
+                            var itemId = ContentStoreHelper.GetItemIdByUrl(DataContext, trackingItem.Url)?.Guid;
+                            if (!itemId.HasValue)
+                            {
+                                Log.Info("GetScVisitDataByDateTime - no item ID");
+                                continue;
+                            }
+                            contentItemIds.Add(trackingItem.Url, itemId.Value);
+                        }
+                        trackingItem.SitecoreItemId = contentItemIds[trackingItem.Url];
+                    }
+
+                    var item = MasterDb.GetItem(new ID(trackingItem.SitecoreItemId.Value));
+
+                    if (!item.Paths.IsDescendantOf(scRoot))
+                    {
+                        Log.Info("GetScVisitDataByDateTime - not SC item");
+                        continue;
+                    }
+                    if (string.IsNullOrWhiteSpace(item["Title"]))
+                    {
+                        Log.Info("GetScVisitDataByDateTime - empty content title");
+                        continue;
+                    }
+                    trackingItem.ContentTitle = item["Title"];
+
+                    visitData.Add(trackingItem);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
                 }
             }
-            System.IO.File.Copy(filePath, $"Results\\{model.SelectedProductName}\\Details\\{model.SelectedProductName}{model.EndDate.ToString("yyyyMMdd")}{model.NotUseClosePrice}{model.OnlyUseClosePrice}{model.CloseAmbiguousStateToday}_{range.BottomStartProfit * 1000}_{range.TopStartProfit * 1000}_Summary.csv");
+            return visitData;
+        }
 
-            for (var i = 0; i < 100; i++)
+        private static bool FilterUser(string identifier, ContactHelper contactHelper)
+        {
+            Log.Info($"FilterUser {identifier}");
+            var sitecoreUser = User.FromName(identifier, true);
+            if (sitecoreUser.IsInRole(Role.FromName(AppSettings.FilterRoleForOds))) return true;
+
+            var personalInfo = contactHelper.GetContactPersonalInfobyIdentifier(identifier);
+            var channel = personalInfo?.Registry?.Channel ?? personalInfo?.Channel;
+            var weChatPublicAccount = WeChatPublicAccountStore.GetWeChatPublicAccountByChannel(channel);
+            var openId = contactHelper.GetOpenId(personalInfo, weChatPublicAccount?.AuthorizationAppId);
+
+            //exclude wechat  without openid user
+            if (weChatPublicAccount != null && string.IsNullOrEmpty(openId))
             {
-                Console.Beep();
+                return true;
             }
 
-             return Json(
-                new
-                {
-                    BestSettings = bestSettings,
-                    Report = GetReport(bestSettings, dailyPrices)
-                });
-        }
-
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
-        public IActionResult Error()
-        {
-            return View();
-        }
-
-        private IEnumerable<DailyAccountData> GetReport(ReportSettingViewModel model, List<DailyPrice> dailyPrices)
-        {
-            var account = new Account
+            if (string.IsNullOrEmpty(personalInfo?.FirstName))
             {
-                TransactionFeeRate = model.TransactionFeeRate,
-                StopLossUnit = model.StopLossUnit,
-                StopLossCriteria = model.StopLossCriteria,
-                StartProfitCriteria = model.StartProfitCriteria,
-                StopProfitCriteria = model.StopProfitCriteria,
-                StartProfitCriteriaForMultiUnits = model.StartProfitCriteriaForMultiUnits,
-                NeverEnterAmbiguousState = model.NeverEnterAmbiguousState,
-                AppendUnitCountAfterProfitStart = model.AppendUnitCountAfterProfitStart,
-                MinimumPriceUnit = model.MinimumPriceUnit,
-                OpenCriteria = model.OpenCriteria,
-                FollowTrend = model.FollowTrend,
-                NotUseClosePrice = model.NotUseClosePrice,
-                BudgetFactor = model.BudgetFactor,
-                UseAverageMarketState = model.UseAverageMarketState,
-                CloseAfterProfit = model.CloseAfterProfit,
-                OnlyUseClosePrice = model.OnlyUseClosePrice,
-                UseCrossStarStrategy = model.UseCrossStarStrategy,
-                UseInternalProfit = model.UseInternalProfit,
-                CloseAmbiguousStateToday = model.CloseAmbiguousStateToday,
-                NeverReverse = model.NeverReverse
-            };
-            var dateRange = dailyPrices.Where(p => p.Date >= model.StartDate && p.Date <= model.EndDate).ToList();
-            return _reportService.GenerateReport(account, dateRange).ToList();
+                return true;
+            }
+            return false;
         }
 
-        private Dictionary<string, OptimizeRange> ranges;
-
-        private void UpdateTopThreeSettings(
-            ref SortedList<decimal, List<SettingResult>> topThreeSettings, SettingResult result, int number = 100)
+        private static bool FilterUser(string identifier, BsonDocument contact,
+            Dictionary<string, string> weChatPublicAccounts)
         {
-            lock (lockObject)
+            Log.Info($"FilterUser {identifier}");
+            //var sitecoreUser = User.FromName(identifier, true);
+            //if (sitecoreUser.IsInRole(Role.FromName(AppSettings.FilterRoleForOds))) return true;
+
+            var personalInfo =
+                contact?.Elements?.FirstOrDefault(el => el.Name.Equals("Personal"))?
+                    .Value?.AsBsonDocument;
+
+            var firstName =
+                personalInfo?.Elements?.FirstOrDefault(el => el.Name.Equals("FirstName"))?
+                    .Value?.AsString;
+
+            if (string.IsNullOrEmpty(firstName))
             {
-                if (topThreeSettings.ContainsKey(result.Result))
+                Log.Info("empty first name");
+                return true;
+            }
+
+            var channel =
+                personalInfo.Elements?.FirstOrDefault(el => el.Name.Equals("Registry"))?
+                    .Value?.AsBsonDocument?.Elements?.FirstOrDefault(b => b.Name.Equals("Channel"))?
+                    .Value?.AsString ?? personalInfo.Elements?.FirstOrDefault(el => el.Name.Equals("Channel"))?
+                        .Value?.AsString;
+
+            if (channel == null)
+            {
+                return false;
+            }
+            if (!weChatPublicAccounts.ContainsKey(channel))
+            {
+                var weChatPublicAccount = WeChatPublicAccountStore.GetWeChatPublicAccountByChannel(channel);
+                if (weChatPublicAccount == null)
                 {
-                    topThreeSettings[result.Result].Add(result);
-                    return;
+                    return false;
                 }
-                if (topThreeSettings.Count >= number && result.Result < topThreeSettings.First().Key)
-                {
-                    return;
-                }
-                topThreeSettings.Add(result.Result, new List<SettingResult> { result });
-                if (topThreeSettings.Count > number)
-                {
-                    topThreeSettings.RemoveAt(0);
-                }
+                weChatPublicAccounts.Add(channel, weChatPublicAccount.AuthorizationAppId);
             }
+
+            var appId = weChatPublicAccounts[channel];
+            var openId =
+                personalInfo.Elements?.FirstOrDefault(el => el.Name.Equals("WeChat Binding"))?
+                    .Value?.AsBsonDocument?.Elements?.FirstOrDefault(
+                        b => b.Name.Equals(appId))?
+                    .Value?.AsString ?? personalInfo.Elements?.FirstOrDefault(el => el.Name.Equals("OpenId"))?
+                        .Value?.AsString;
+
+            if (string.IsNullOrEmpty(openId))
+            {
+                Log.Info("no openid for " + appId);
+                return true;
+            }
+
+            return false;
         }
 
-        public HomeController(IReportService reportService, ILogger<HomeController> logger)
+        public static string GetHospitalCode(string province, string city, string hospital)
         {
-            _reportService = reportService;
-            _logger = logger;
-            ranges = new Dictionary<string, OptimizeRange>();
-            ranges.Add("big",
-                new OptimizeRange
-                {
-                    BottomStopLoss = 0m,
-                    TopStopLoss = 0.04m,
-                    StopLossStep = 0.001m,
-                    BottomStartProfit = 0.081m,
-                    TopStartProfit = 0.16m,
-                    StartProfitStep = 0.001m,
-                    BottomStopProfit = 0m,
-                    TopStopProfit = 0.3m,
-                    StopProfitStep = 0.01m,
-                    BottomOpenCriteria = 0.001m,
-                    TopOpenCriteria = 0.04m,
-                    OpenCriteriaStep = 0.001m,
-                    NeverEnterAmbiguousState = false
-                });
-            ranges.Add("average",
-                new OptimizeRange
-                {
-                    BottomStopLoss = 0.005m,
-                    TopStopLoss = 0.04m,
-                    StopLossStep = 0.001m,
-                    BottomStartProfit = 0.08m,
-                    TopStartProfit = 0.08m,
-                    StartProfitStep = 0.001m,
-                    BottomStopProfit = 0.3m,
-                    TopStopProfit = 0.3m,
-                    StopProfitStep = 0.01m,
-                    BottomOpenCriteria = 0.005m,
-                    TopOpenCriteria = 0.04m,
-                    OpenCriteriaStep = 0.001m,
-                    NeverEnterAmbiguousState = false
-                });
-            ranges.Add("crossstar",
-                new OptimizeRange
-                {
-                    BottomStopLoss = 0.005m,
-                    TopStopLoss = 0.005m,
-                    StopLossStep = 0.001m,
-                    BottomStartProfit = 0.08m,
-                    TopStartProfit = 0.08m,
-                    StartProfitStep = 0.001m,
-                    BottomStopProfit = 0.3m,
-                    TopStopProfit = 0.3m,
-                    StopProfitStep = 0.01m,
-                    BottomOpenCriteria = 0.001m,
-                    TopOpenCriteria = 0.05m,
-                    OpenCriteriaStep = 0.001m,
-                    NeverEnterAmbiguousState = false
-                });
-            ranges.Add("small",
-                new OptimizeRange
-                {
-                    BottomStopLoss = 0.001m,
-                    TopStopLoss = 0.04m,
-                    StopLossStep = 0.001m,
-                    BottomStartProfit = 0.02m,
-                    TopStartProfit = 0.2m,
-                    StartProfitStep = 0.001m,
-                    BottomStopProfit = 0.01m,
-                    TopStopProfit = 0.3m,
-                    StopProfitStep = 0.01m,
-                    BottomOpenCriteria = 0.001m,
-                    TopOpenCriteria = 0.06m,
-                    OpenCriteriaStep = 0.001m,
-                    NeverEnterAmbiguousState = true
-                });
-            //ranges.Add("热轧卷板",
-            //    new OptimizeRange
-            //    {
-            //        BottomStopLoss = 0.005m,
-            //        TopStopLoss = 0.02m,
-            //        StopLossStep = 0.001m,
-            //        BottomStartProfit = 0.09m,
-            //        TopStartProfit = 0.2m,
-            //        StartProfitStep = 0.001m,
-            //        BottomStopProfit = 0.07m,
-            //        TopStopProfit = 0.3m,
-            //        StopProfitStep = 0.01m,
-            //        BottomOpenCriteria = 0.001m,
-            //        TopOpenCriteria = 0.06m,
-            //        OpenCriteriaStep = 0.001m,
-            //        NeverEnterAmbiguousState = true
-            //    });
-            //ranges.Add("螺纹钢",
-            //    new OptimizeRange
-            //    {
-            //        BottomStopLoss = 0.005m,
-            //        TopStopLoss = 0.025m,
-            //        StopLossStep = 0.001m,
-            //        BottomStartProfit = 0.11m,
-            //        TopStartProfit = 0.17m,
-            //        StartProfitStep = 0.001m,
-            //        BottomStopProfit = 0.08m,
-            //        TopStopProfit = 0.12m,
-            //        StopProfitStep = 0.01m,
-            //        BottomOpenCriteria = 0.008m,
-            //        TopOpenCriteria = 0.02m,
-            //        OpenCriteriaStep = 0.001m,
-            //        NeverEnterAmbiguousState = false
-            //    });
+            if (string.IsNullOrWhiteSpace(province) || string.IsNullOrWhiteSpace(city) ||
+                string.IsNullOrWhiteSpace(hospital))
+            {
+                return string.Empty;
+            }
+
+            var hospitalItem =
+                Factory.GetDatabase("master").SelectSingleItem(
+                    $"fast:/sitecore/content/Sites/eCampus/Site Data/External Register/Location/*[@Name='{province}']/*[@Name='{city}']//*[@Name='{hospital}']");
+            return hospitalItem != null ? hospitalItem.Name : string.Empty;
         }
 
-        private string GetTopSettingListKey(decimal startProfit, OptimizeRange range)
+        /// <summary>
+        /// Query contacts through native MongoDB Driver API
+        /// For peroformance consideration, we only need the contact information without interactions, automations, etc.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public static Dictionary<string, BsonDocument> QueryContacts(IMongoQuery query)
         {
-            var currentStartProfitLevelTop = Math.Ceiling(startProfit * 100) / 100m;
-            var currentStartProfitLevelBottom = currentStartProfitLevelTop - 0.009m;
-            if (currentStartProfitLevelTop > range.TopStartProfit)
+            var driver = MongoDbDriver.FromConnectionString("analytics");
+            var contacts = driver.Contacts.FindAs<BsonDocument>(query)
+                .EmptyWhenNull().FilterNulls()
+                .ToDictionary(x => x["Identifiers"]?["Identifier"]?.AsString);
+
+            return contacts;
+        }
+
+        #region Bizconf
+
+        public static List<BizconfBehaviorDto> GetBizconfBehaviorData(DateTime startDate, DateTime endDate, string bu)
+        {
+            var contactHelper = new ContactHelper();
+            var rawData = GetBizconfRawData(startDate, endDate, bu);
+            var liveFlagIndex = 1;
+            foreach (var data in rawData)
             {
-                currentStartProfitLevelTop = range.TopStartProfit;
+                if (data.LiveFlag == "直播")
+                {
+                    data.LiveFlagIndex = 0;
+                }
+                else
+                {
+                    data.LiveFlagIndex = liveFlagIndex;
+                    liveFlagIndex++;
+                }
             }
-            if (currentStartProfitLevelBottom < range.BottomStartProfit)
+            var groups = rawData.GroupBy(d => new { d.MeetingId, d.Uid, d.LiveFlag, d.LiveFlagIndex, d.Name });
+            var bizConfBehaviorData = new List<BizconfBehaviorDto>();
+            foreach (var group in groups)
             {
-                currentStartProfitLevelBottom = range.BottomStartProfit;
+                var dataWithMaxViewerCount = group.OrderByDescending(d => d.ViewerCount).First();
+                var viewerBu = dataWithMaxViewerCount.Bu;
+                var district = string.Empty;
+                var province = dataWithMaxViewerCount.Province;
+                var city = dataWithMaxViewerCount.City;
+                var county = dataWithMaxViewerCount.County;
+                var hospital = dataWithMaxViewerCount.Hospital;
+                var name = dataWithMaxViewerCount.Name;
+                var personalInfo = string.IsNullOrWhiteSpace(dataWithMaxViewerCount.Uid?.ToString()) ? null : contactHelper.GetContactPersonalInfobyIdentifier("extranet\\" + dataWithMaxViewerCount.Uid);
+                var code = personalInfo?.EtmsCode;
+                var role = dataWithMaxViewerCount.Role;
+                var uid = personalInfo?.UnionId;
+                var email = dataWithMaxViewerCount.Email;
+                var mobile = personalInfo?.HcpMobile;
+                var joinTime = group.Min(d => d.FirstLoginTime);
+                var leaveTime = group.Max(d => d.LastOnlineTime);
+                var viewDuration = group.Sum(d => d.ViewDuration);
+                var viewerCount = dataWithMaxViewerCount.ViewerCount;
+                var loginCount = group.Count();
+                var longestViewDuration = group.Max(d => d.ViewDuration);
+                var viewChannel = dataWithMaxViewerCount.LastLoginDevice == "电脑端" ? "电脑" : (dataWithMaxViewerCount.LastLoginDevice == "移动端" ? "微信" : string.Empty);
+                var meetingBu = dataWithMaxViewerCount.Bu;
+                var meetingName = dataWithMaxViewerCount.MeetingName;
+                var meetingId = dataWithMaxViewerCount.MeetingId;
+                var meetingTime = dataWithMaxViewerCount.MeetingTime;
+                var product = dataWithMaxViewerCount.Product;
+                var project = dataWithMaxViewerCount.Project;
+                var field = dataWithMaxViewerCount.Field;
+                var comment = string.Join("|", group.Select(d => d.Comment).ToArray());
+                var liveFlag = dataWithMaxViewerCount.LiveFlag;
+
+                bizConfBehaviorData.Add(new BizconfBehaviorDto
+                {
+                    ViewerBu = viewerBu,
+                    District = county,
+                    Province = province,
+                    City = city,
+                    County = county,
+                    Hospital = hospital,
+                    Name = name,
+                    Role = role,
+                    Code = code,
+                    Uid = uid,
+                    Email = email,
+                    Mobile = mobile,
+                    JoinTime = joinTime,
+                    LeaveTime = leaveTime,
+                    ViewDuration = viewDuration,
+                    ViewerCount = viewerCount,
+                    LoginCount = loginCount,
+                    LongestViewDuration = longestViewDuration,
+                    ViewChannel = viewChannel,
+                    MeetingBu = meetingBu,
+                    MeetingName = meetingName,
+                    MeetingId = meetingId,
+                    MeetingTime = meetingTime,
+                    Product = product,
+                    Project = project,
+                    Field = field,
+                    Comment = comment,
+                    LiveFlag = liveFlag
+                });
             }
-            var key = $"{currentStartProfitLevelBottom * 1000}_{currentStartProfitLevelTop * 1000}";
-            return key;
+            return bizConfBehaviorData;
+        }
+
+        public static List<CustomDbHelper.BizconfData> GetBizconfRawData(DateTime startDate, DateTime endDate, string bu)
+        {
+            var customDbHelper = new CustomDbHelper();
+            return customDbHelper.GetBizconfData(startDate, endDate, bu);
+        }
+        #endregion
+    }
+
+    public class MasterDataDto
+    {
+        public string HcpID { get; set; }
+        public string EtmsCode { get; set; }
+        public string WeChatAccount { get; set; }
+        public string WeChatOpenId { get; set; }
+        public string UserName { get; set; }
+        public string Province { get; set; }
+        public string City { get; set; }
+        public string Hospital { get; set; }
+        public string HospitalCode { get; set; }
+        public string Department { get; set; }
+        public string JobTitle { get; set; }
+        public string Email { get; set; }
+        public string MobileNumber { get; set; }
+        public string Supplier => "Delaware";
+        public string Action => "I";
+        public string ChannelAppId { get; set; }
+        public string AuthorizationAppId { get; set; }
+        public string UnionId { get; set; }
+        public int Status { get; set; }
+        public int Consent => 1;
+        public string RegisterType { get; set; }
+        public string RegisterDate { get; set; }
+    }
+
+    public sealed class WeChatShareClickSummaryMap : CsvClassMap<CustomDbHelper.WeChatShareClickSummaryData>
+    {
+        public WeChatShareClickSummaryMap()
+        {
+            Map(m => m.ItemId).Name("Content Id");
+            Map(m => m.Title).Name("Title");
+            Map(m => m.Link).Name("Link");
+            Map(m => m.Site).Name("Site");
+            Map(m => m.ShareCount).Name("Share Count");
+            Map(m => m.ClickCount).Name("Open Count");
         }
     }
 
-    class OptimizeRange
+    public sealed class UserMap : CsvClassMap<MasterDataDto>
     {
-        public decimal BottomStopLoss { get; set; }
-        public decimal TopStopLoss { get; set; }
-        public decimal StopLossStep { get; set; }
-        public decimal BottomStartProfit { get; set; }
-        public decimal TopStartProfit { get; set; }
-        public decimal StartProfitStep { get; set; }
-        public decimal BottomStopProfit { get; set; }
-        public decimal TopStopProfit { get; set; }
-        public decimal StopProfitStep { get; set; }
-        public decimal BottomOpenCriteria { get; set; }
-        public decimal TopOpenCriteria { get; set; }
-        public decimal OpenCriteriaStep { get; set; }
-        public bool NeverEnterAmbiguousState { get; set; }
+        public UserMap()
+        {
+            Map(m => m.HcpID).Name("HCPId");
+            Map(m => m.UserName).Name("Name");
+            Map(m => m.Province).Name("Province");
+            Map(m => m.City).Name("City");
+            Map(m => m.Hospital).Name("Hospital");
+            Map(m => m.HospitalCode).Name("HospitalCode");
+            Map(m => m.Department).Name("Department");
+            Map(m => m.EtmsCode).Name("ETMSCode");
+            Map(m => m.Email).Name("Email");
+            Map(m => m.MobileNumber).Name("Mobile");
+            Map(m => m.ChannelAppId).Name("channelAppId");
+            Map(m => m.AuthorizationAppId).Name("appId");
+            Map(m => m.WeChatOpenId).Name("openID");
+            Map(m => m.UnionId).Name("unionID");
+            Map(m => m.Status).Name("Status");
+            Map(m => m.Consent).Name("Consent");
+            Map(m => m.RegisterType).Name("RegisterType");
+        }
     }
 
-    class SettingResult
+    public sealed class ScTrackingMap : CsvClassMap<CustomDbHelper.AnalyticsVisitDto>
     {
-        public ReportSettingViewModel Setting { get; set; }
-        public decimal Result { get; set; }
-        //public override bool Equals(object obj)
-        //{
-        //    var settingResult = obj as SettingResult;
-        //    return settingResult != null && Setting.Equals(settingResult.Setting) && Result == settingResult.Result;
-        //}
-
-        //public override int GetHashCode()
-        //{
-        //    return HashCode.Combine(Setting, Result);
-        //}
+        public ScTrackingMap()
+        {
+            Map(m => m.HcpName).Name("HCP name");
+            Map(m => m.HcpId).Name("HCP ID");
+            Map(m => m.ContentTitle).Name("Content Title");
+            Map(m => m.Duration).Name("Duration");
+            Map(m => m.EntryTime).Name("Date").TypeConverter<DateTimeConverter>();
+            Map(m => m.IsLike).Name("Like").TypeConverter<SitecoreExtensions.Tasks.BooleanConverter>();
+            Map(m => m.IsFavorite).Name("Favorite").TypeConverter<SitecoreExtensions.Tasks.BooleanConverter>();
+        }
     }
 
-    public class FileInfo
+    public sealed class ScContentMap : CsvClassMap<ContentDto>
     {
-        public string FileName { get; set; }
-        public string Settings { get; set; }
-        public decimal TransactionFeeRate { get; set; }
-        public decimal MinimumPriceUnit { get; set; }
+        public ScContentMap()
+        {
+            Map(m => m.PageTitle).Name("Content Title");
+            Map(m => m.Tags).Name("Tag");
+            Map(m => m.VisitCount).Name("Times");
+            Map(m => m.Duration).Name("Duration");
+        }
+    }
+
+    public sealed class ScHcpMap : CsvClassMap<MasterDataDto>
+    {
+        public ScHcpMap()
+        {
+            Map(m => m.UserName).Name("HCP Name");
+            Map(m => m.HcpID).Name("HCP ID");
+            Map(m => m.WeChatOpenId).Name("OpenID");
+            Map(m => m.EtmsCode).Name("ETMS code");
+            Map(m => m.Province).Name("Province");
+            Map(m => m.City).Name("City");
+            Map(m => m.Hospital).Name("Hospital");
+            Map(m => m.Department).Name("Department");
+            Map(m => m.Email).Name("Email");
+            Map(m => m.MobileNumber).Name("Phone");
+            Map(m => m.RegisterDate).Name("Date");
+        }
+    }
+    public class DateTimeConverter : DefaultTypeConverter
+    {
+        public override string ConvertToString(TypeConverterOptions options, object value)
+        {
+            if (value is DateTime)
+            {
+                return ((DateTime)value).ToString("yyyy/MM/dd/HH:mm:ss");
+            }
+            return value.ToString();
+        }
+    }
+
+    public sealed class BizconfBehaviorDto
+    {
+        public string ViewerBu { get; set; }
+        public string District { get; set; }
+        public string Province { get; set; }
+        public string City { get; set; }
+        public string County { get; set; }
+        public string Hospital { get; set; }
+        public string Name { get; set; }
+        public string Code { get; set; }
+        public string Role { get; set; }
+        public string Uid { get; set; }
+        public string Email { get; set; }
+        public string Mobile { get; set; }
+        public DateTime JoinTime { get; set; }
+        public DateTime LeaveTime { get; set; }
+        public long ViewDuration { get; set; }
+        public int? ViewerCount { get; set; }
+        public int LoginCount { get; set; }
+        public long LongestViewDuration { get; set; }
+        public string ViewChannel { get; set; }
+        public string MeetingBu { get; set; }
+        public string MeetingName { get; set; }
+        public string MeetingId { get; set; }
+        public DateTime MeetingTime { get; set; }
+        public string Product { get; set; }
+        public string Project { get; set; }
+        public string Field { get; set; }
+        public string Comment { get; set; }
+        public string LiveFlag { get; set; }
+    }
+
+    public sealed class BizconfBehaviorMap : CsvClassMap<BizconfBehaviorDto>
+    {
+        public BizconfBehaviorMap()
+        {
+            Map(m => m.ViewerBu).Name("观众所属BU");
+            Map(m => m.District).Name("区域");
+            Map(m => m.Province).Name("省");
+            Map(m => m.City).Name("市");
+            Map(m => m.County).Name("区/县");
+            Map(m => m.Hospital).Name("医院");
+            Map(m => m.Name).Name("姓名");
+            Map(m => m.Code).Name("Code");
+            Map(m => m.Role).Name("角色");
+            Map(m => m.Uid).Name("UID");
+            Map(m => m.Email).Name("邮箱");
+            Map(m => m.Mobile).Name("手机号码");
+            Map(m => m.JoinTime).Name("加入时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.LeaveTime).Name("离开时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.ViewDuration).Name("观看时长");
+            Map(m => m.ViewerCount).Name("观看人数");
+            Map(m => m.LoginCount).Name("登录次数");
+            Map(m => m.LongestViewDuration).Name("最长一段观看时长");
+            Map(m => m.ViewChannel).Name("观看渠道");
+            Map(m => m.MeetingBu).Name("会议所属BU");
+            Map(m => m.MeetingName).Name("会议名称");
+            Map(m => m.MeetingId).Name("会议ID");
+            Map(m => m.MeetingTime).Name("会议时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.Product).Name("产品");
+            Map(m => m.Project).Name("项目");
+            Map(m => m.Field).Name("治疗领域");
+            Map(m => m.Comment).Name("会议提问");
+            Map(m => m.LiveFlag).Name("直播/录播");
+        }
+    }
+
+    public sealed class BizconfInteractionDto
+    {
+        public string MeetingBu { get; set; }
+        public string MeetingName { get; set; }
+        public string MeetingId { get; set; }
+        public DateTime MeetingTime { get; set; }
+        public string Product { get; set; }
+        public string Project { get; set; }
+        public string Field { get; set; }
+        public string Comment { get; set; }
+        public DateTime CommentTime { get; set; }
+        public string Role { get; set; }
+        public string Uid { get; set; }
+    }
+
+    public sealed class BizconfInteractionMap : CsvClassMap<BizconfInteractionDto>
+    {
+        public BizconfInteractionMap()
+        {
+            Map(m => m.MeetingBu).Name("会议所属BU");
+            Map(m => m.MeetingName).Name("会议名称");
+            Map(m => m.MeetingId).Name("会议ID");
+            Map(m => m.MeetingTime).Name("会议时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.Product).Name("产品");
+            Map(m => m.Project).Name("项目");
+            Map(m => m.Field).Name("治疗领域");
+            Map(m => m.Comment).Name("提问");
+            Map(m => m.CommentTime).Name("提问时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.Role).Name("角色");
+            Map(m => m.Uid).Name("UID");
+        }
+    }
+
+    public sealed class BizconfMeetingDto
+    {
+        public string MeetingBu { get; set; }
+        public string MeetingName { get; set; }
+        public string MeetingId { get; set; }
+        public DateTime MeetingTime { get; set; }
+        public string Product { get; set; }
+        public string Project { get; set; }
+        public string Field { get; set; }
+        public int ViewPoint { get; set; }
+        public string Supplier { get; set; }
+    }
+
+    public sealed class BizconfMeetingMap : CsvClassMap<BizconfMeetingDto>
+    {
+        public BizconfMeetingMap()
+        {
+            Map(m => m.MeetingBu).Name("会议所属BU");
+            Map(m => m.MeetingName).Name("会议名称");
+            Map(m => m.MeetingId).Name("会议ID");
+            Map(m => m.MeetingTime).Name("会议时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.Product).Name("产品");
+            Map(m => m.Project).Name("项目");
+            Map(m => m.Field).Name("治疗领域");
+            Map(m => m.ViewPoint).Name("总观看点数");
+            Map(m => m.Supplier).Name("视频供应商");
+        }
+    }
+    public class BizconfDateTimeConverter : DefaultTypeConverter
+    {
+        public override string ConvertToString(TypeConverterOptions options, object value)
+        {
+            if (value is DateTime)
+            {
+                return ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            return value.ToString();
+        }
+    }
+
+    public sealed class BizconfRawDto
+    {
+        public string Uid { get; set; }
+        public string Role { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Province { get; set; }
+        public string City { get; set; }
+        public string County { get; set; }
+        public string Hospital { get; set; }
+        public string Department { get; set; }
+        public int ViewerCount { get; set; }
+        public string ViewDuration { get; set; }
+        public DateTime FirstLoginTime { get; set; }
+        public DateTime LastOnlineTime { get; set; }
+        public string LastLoginDevice { get; set; }
+        public string Product { get; set; }
+        public string Project { get; set; }
+        public string Field { get; set; }
+        public string MeetingBu { get; set; }
+        public string MeetingId { get; set; }
+        public string MeetingName { get; set; }
+        public string LiveFlag { get; set; }
+        public string Comment { get; set; }
+    }
+
+    public sealed class BizconfRawMap : CsvClassMap<CustomDbHelper.BizconfData>
+    {
+        public BizconfRawMap()
+        {
+            Map(m => m.Uid).Name("UID");
+            Map(m => m.Role).Name("角色");
+            Map(m => m.Name).Name("用户姓名");
+            Map(m => m.Email).Name("邮箱");
+            Map(m => m.Province).Name("医院省份");
+            Map(m => m.City).Name("医院城市");
+            Map(m => m.County).Name("医院区县");
+            Map(m => m.Hospital).Name("医院名称");
+            Map(m => m.Department).Name("医院科室");
+            Map(m => m.ViewerCount).Name("观看人数");
+            Map(m => m.ViewDuration).Name("直播观看时长");
+            Map(m => m.FirstLoginTime).Name("首次登录时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.LastOnlineTime).Name("最后在线时间").TypeConverter<BizconfDateTimeConverter>();
+            Map(m => m.LastLoginDevice).Name("最后登录设备");
+            Map(m => m.Product).Name("产品");
+            Map(m => m.Project).Name("项目");
+            Map(m => m.Field).Name("治疗领域");
+            Map(m => m.Bu).Name("会议所属BU");
+            Map(m => m.MeetingId).Name("Meeting ID");
+            Map(m => m.MeetingName).Name("会议名称");
+            Map(m => m.LiveFlag).Name("直播标签");
+            Map(m => m.Comment).Name("会议提问");
+        }
     }
 }

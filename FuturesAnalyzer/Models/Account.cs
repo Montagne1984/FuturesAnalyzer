@@ -45,6 +45,7 @@ namespace FuturesAnalyzer.Models
         public bool UseInternalProfit { get; set; } = false;
         public bool CloseAmbiguousStateToday { get; set; } = false;
         public bool NeverReverse { get; set; } = false;
+        public bool BreakThroughStratgy { get; set; } = false;
 
         public decimal DeductTransactionFee(decimal price, int unit = 1)
         {

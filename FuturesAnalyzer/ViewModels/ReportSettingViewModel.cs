@@ -30,6 +30,8 @@ namespace FuturesAnalyzer.ViewModels
         public bool UseInternalProfit { get; set; }
         public bool CloseAmbiguousStateToday { get; set; }
         public bool NeverReverse { get; set; }
+        public bool BreakThroughStrategy { get; set; }
+        public bool PercentageSaving { get; set; }
 
         public ReportSettingViewModel Clone()
         {
@@ -56,7 +58,8 @@ namespace FuturesAnalyzer.ViewModels
                 CloseAfterProfit = CloseAfterProfit,
                 OnlyUseClosePrice = OnlyUseClosePrice,
                 CloseAmbiguousStateToday = CloseAmbiguousStateToday,
-                NeverReverse = NeverReverse
+                NeverReverse = NeverReverse,
+                BreakThroughStrategy = BreakThroughStrategy
             };
         }
 
@@ -79,7 +82,8 @@ namespace FuturesAnalyzer.ViewModels
                 && EndDate == settings.EndDate
                 && MinimumPriceUnit == settings.MinimumPriceUnit
                 && CloseAmbiguousStateToday == settings.CloseAmbiguousStateToday
-                && NeverReverse == settings.NeverReverse;
+                && NeverReverse == settings.NeverReverse
+                && BreakThroughStrategy == settings.BreakThroughStrategy;
         }
 
         public override int GetHashCode()
