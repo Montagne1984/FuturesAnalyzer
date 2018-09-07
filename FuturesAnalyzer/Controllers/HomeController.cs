@@ -816,9 +816,9 @@ namespace FuturesAnalyzer.Controllers
                                         {
                                             var annualDictionary = topSettingsAnnualDictionary[key];
                                             var annualSum = topSettingsAnnualSum[key];
-                                            for (var i = result.First().DailyPrice.Date.Year; i <= model.EndDate.Year; i++)
+                                            for (var i = result.First().DailyPrice.Date.Year; i < model.EndDate.Year; i++)
                                             {
-                                                var dailyAccountData = result.FirstOrDefault(d => d.DailyPrice.Date.Year > i);
+                                                var dailyAccountData = result.LastOrDefault(d => d.DailyPrice.Date.Year == i);
                                                 if (dailyAccountData != null)
                                                 {
                                                     var dictionary = annualDictionary[i];
@@ -1059,8 +1059,8 @@ namespace FuturesAnalyzer.Controllers
                     BottomStopLoss = 0m,
                     TopStopLoss = 0.04m,
                     StopLossStep = 0.001m,
-                    BottomStartProfit = 0.161m,
-                    TopStartProfit = 0.2m,
+                    BottomStartProfit = 0.02m,
+                    TopStartProfit = 0.08m,
                     StartProfitStep = 0.001m,
                     BottomStopProfit = 0m,
                     TopStopProfit = 0.3m,
