@@ -816,9 +816,9 @@ namespace FuturesAnalyzer.Controllers
                                         {
                                             var annualDictionary = topSettingsAnnualDictionary[key];
                                             var annualSum = topSettingsAnnualSum[key];
-                                            for (var i = result.First().DailyPrice.Date.Year; i <= model.EndDate.Year; i++)
+                                            for (var i = result.First().DailyPrice.Date.Year; i < model.EndDate.Year; i++)
                                             {
-                                                var dailyAccountData = result.FirstOrDefault(d => d.DailyPrice.Date.Year > i);
+                                                var dailyAccountData = result.LastOrDefault(d => d.DailyPrice.Date.Year == i);
                                                 if (dailyAccountData != null)
                                                 {
                                                     var dictionary = annualDictionary[i];
